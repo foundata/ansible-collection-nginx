@@ -1,0 +1,238 @@
+# Internal role variables and values that must NOT be overridden by the user.
+#
+# Variables defined here usually override earlier definitions due to the high
+# precedence of this file. Each variable should have a concise comment above
+# it, describing its purpose and how it fits into the role's functionality.
+
+---
+
+# List of facts used by the role (gathered on a best-effort basis if needed).
+#
+# To identify which subset a fact belongs to during development, you can use
+# the following snippet:
+#
+# - ansible.builtin.setup:
+#     gather_subset:
+#       - '!min'
+#       - '<subset_name, see parameter doc for details>'
+__run_nginx_used_facts:
+  # from subset "distribution"
+  - "distribution"
+  - "distribution_major_version"
+  - "distribution_version"
+  - "os_family"
+
+
+# List of platforms this role supports and was designed for.
+#
+# A warning will be issued if the list contains values and the role is executed
+# on an unknown (not listed) platform, but execution will continue. Example:
+#
+# - name: "Fedora" # A ansible_facts value ('distribution' or 'os_family')
+#   versions: # A ansible_facts value ('distribution_major_version' or
+#     - "all" # 'distribution_version') or "all"
+# - name: "Ubuntu"
+#   versions:
+#     - "22.04"
+#     - "24.04"
+# - name: "RedHat"
+#   versions:
+#     - "all"
+# - name: "Debian"
+#   versions:
+#     - "all"
+__run_nginx_supported_platforms: []
+
+
+# List of package names to be installed when run_nginx_state is
+# set to "present".
+__run_nginx_packages_install:
+  - "nginx"
+
+
+# List of package names to be uninstalled when run_nginx_state is
+# set to "absent". This variable is useful when __run_nginx_packages_install
+# contains packages that are required for the managed software to function but
+# should not be removed during uninstallation, as doing so could break other
+# software. This is usually the case if there are common dependencies like
+# "curl" or "openssl" which typically should remain installed even after
+# uninstalling the software managed by this role.
+__run_nginx_packages_uninstall: "{{ __run_nginx_packages_install }}"
+
+
+# List of package names to be removed unconditionally before installation
+# (e.g., to prevent conflicts or resolve incompatibilities).
+__run_nginx_packages_removal: []
+
+
+# List of paths of files and directories to be removed unconditionally after
+# installation. This is useful for removing default configuration resources
+# that would otherwise create confusion or conflict with custom configurations
+# managed by this role.
+__run_nginx_paths_removal: []
+
+
+# Configuration file paths, ownership, and permissions. These variables define
+# the different locations of configuration files, include directories, and
+# Ansible-managed files, ensuring consistent file handling across distributions.
+__run_nginx_config_service_file_path: "/etc/nginx/nginx.conf"
+__run_nginx_config_service_file_owner: "root"
+__run_nginx_config_service_file_group: "root"
+__run_nginx_config_service_file_mode: "u=rw,g=r,o=r" # 0644
+
+__run_nginx_config_service_file_distbackup_path: "/etc/nginx/nginx.conf.dist.bak" # backup file of the platform's original config
+__run_nginx_config_service_file_distbackup_owner: "root"
+__run_nginx_config_service_file_distbackup_group: "root"
+__run_nginx_config_service_file_distbackup_mode: "u=rw,g=r,o=r" # 0644
+
+
+__run_nginx_config_service_dropin_dir_owner: "{{ __run_nginx_config_service_file_owner }}"
+__run_nginx_config_service_dropin_dir_group: "{{ __run_nginx_config_service_file_group }}"
+__run_nginx_config_service_dropin_dir_mode: "u=rwx,g=rx,o=rx" # 0755
+
+__run_nginx_config_service_dropin_file_owner: "{{ __run_nginx_config_service_file_owner }}"
+__run_nginx_config_service_dropin_file_group: "{{ __run_nginx_config_service_file_group }}"
+__run_nginx_config_service_dropin_file_mode: "{{ __run_nginx_config_service_file_mode }}"
+
+# Most of the folling directories are "Debian" style (and should be already
+# existing there) but they also make sense for this role's logic on most other
+# platforms.
+__run_nginx_config_service_dropin_sites_available_dir_path: "/etc/nginx/sites-available"
+__run_nginx_config_service_dropin_sites_available_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_sites_available_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_sites_available_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_sites_enabled_dir_path: "/etc/nginx/sites-enabled"
+__run_nginx_config_service_dropin_sites_enabled_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_sites_enabled_dir_group: "{{ __run_nginx_config_service_file_group }}"
+__run_nginx_config_service_dropin_sites_enabled_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_modules_available_dir_path: "/etc/nginx/modules-available"
+__run_nginx_config_service_dropin_modules_available_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_modules_available_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_modules_available_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_modules_enabled_dir_path: "/etc/nginx/modules-enabled"
+__run_nginx_config_service_dropin_modules_enabled_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_modules_enabled_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_modules_enabled_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_snippets_dir_path: "/etc/nginx/snippets"
+__run_nginx_config_service_dropin_snippets_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_snippets_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_snippets_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_snippets_http_dir_path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/http"
+__run_nginx_config_service_dropin_snippets_http_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_snippets_http_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_snippets_http_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_snippets_location_dir_path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/location"
+__run_nginx_config_service_dropin_snippets_location_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_snippets_location_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_snippets_location_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_snippets_server_dir_path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/server"
+__run_nginx_config_service_dropin_snippets_server_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_snippets_server_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_snippets_server_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+
+# Path to the platforms's default / fallback website root and index file.
+# This is highly platform-specific specific, so the variable gets propably
+# overwritten by platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
+__run_nginx_config_defaultwwwroot_dir_path: "/var/www/html"
+__run_nginx_config_defaultindex_file_path: "{{ __run_nginx_config_default_wwwroot_dir_path }}/index.html"
+
+
+# Default configuration directives for NGINX main config.
+__run_nginx_main_directives_defaults:
+  user: "nginx"
+  worker_processes: "auto"
+  error_log: "/var/log/nginx/error.log notice"
+  pid: "/run/nginx.pid"
+
+# Platform-specific overrides for NGINX main config. Overridden by platform
+# vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
+# before user settings are applied.
+__run_nginx_main_directives_overwrite: {}
+
+
+# Default configuration directives for NGINX events{} config.
+__run_nginx_events_directives_defaults:
+  worker_connections: 1024
+
+# Platform-specific overrides for NGINX events{} config. Overridden by platform
+# vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
+# before user settings are applied.
+__run_nginx_events_directives_overwrite: {}
+
+
+# Default configuration directives for NGINX http{} config.
+__run_nginx_http_directives_defaults:
+  log_format: |
+    main
+          '$remote_addr - $remote_user [$time_local] "$request" '
+          '$status $body_bytes_sent "$http_referer" '
+          '"$http_user_agent" "$http_x_forwarded_for"'
+  access_log: '/var/log/nginx/access.log  main'
+  sendfile: true
+  tcp_nopush: true
+  keepalive_timeout: 65
+  types_hash_max_size: 4096
+  include:
+    - '/etc/nginx/mime.types'
+    # FIXME process our run_nginx_modules_enabled run_nginx_modules_disabled
+    #       variables instead maybe by
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    - '/etc/nginx/conf.d/*.conf'
+  default_type: 'application/octet-stream'
+
+# Platform-specific overrides for NGINX http{} config. Overridden by platform
+# vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
+# before user settings are applied.
+__run_nginx_http_directives_overwrite: {}
+
+# Additional default configuration for some NGINX configuration snippets.
+#
+# See run_nginx_snippet_settings in defaults/main.yml for a detailled
+# description of the structure (as this variable is using the same).
+__run_nginx_snippet_settings_defaults:
+  php-fpm:
+    type: "socket"
+    socket: "/run/php/php-fpm.sock"
+    tcp_host: "127.0.0.1"
+    tcp_port: 9000
+
+# Platform-specific overrides for service settings. Overridden by platform
+# vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
+# before user settings are applied.
+__run_nginx_snippet_settings_overwrite: {}
+
+
+# Mapping of module names to additional packages that need to be installed.
+# Modules not listed here do not require extra packages. This is highly
+# platform-specific specific, so the variable gets propably overwritten by
+# platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
+__run_nginx_packages_install_map_modules: {}
+
+
+# # FIXME? We should thing about when run_nginx_modules_enabled run_nginx_modules_disabled
+# #        is implemented
+# # Internal - always enabled for baseline to work
+# __run_ngnix_required_modules:
+#   - "ssl
+#   - "headers"
+#   - "socache_shmcb"
+
+
+# Daemon service name and paths of executables for management and validation.
+__run_nginx_nginx_servicename: "nginx.service"
+__run_nginx_server_exec_path: "/usr/sbin/nginx"
+
+
+### Override defaults of dependencies used by this role (if any).
+
+# nothing right now

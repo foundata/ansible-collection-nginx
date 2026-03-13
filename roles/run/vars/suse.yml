@@ -1,0 +1,15 @@
+# Internal role variables specific to: SUSE (os_family)
+#
+# Only values specific to the platform and its functionality should be included
+# here. Variables in this file override those defined in vars/main.yml.
+
+---
+
+# SUSE maintains "/etc/nginx/vhosts.d/" by default and uses the "vHost" terminology,
+# comparable to Apache HTTPD.
+__run_nginx_config_service_dropin_sites_available_dir_path: /etc/nginx/vhosts.d-available/"
+__run_nginx_config_service_dropin_sites_enabled_dir_path: "/etc/nginx/vhosts.d/"
+
+
+__run_nginx_config_defaultwwwroot_dir_path: "/srv/www/htdocs"
+__run_nginx_config_defaultindex_file_path: "{{ __run_nginx_config_default_wwwroot_dir_path }}/index.html"

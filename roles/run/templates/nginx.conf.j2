@@ -1,0 +1,79 @@
+{#-
+  Render parts of NGINX config into a complete nginx.conf file
+-#}
+{%- from '_nginx_macros.j2' import render_directives -%}
+
+# {{ ansible_managed }}
+
+{# <context>_config #}
+{%- set main_config_block = tpl_main_config_block | ansible.builtin.default('') -%}
+{%- set main_config_baseline_manage = tpl_main_config_baseline_manage | ansible.builtin.default(true) -%}
+{%-  set main_config_baseline_directives = tpl_main_config_baseline_directives | ansible.builtin.default({}, true) -%}
+
+{%- set events_config_block = tpl_events_config_block | ansible.builtin.default('') -%}
+{%- set events_config_baseline_manage = tpl_events_config_baseline_manage | ansible.builtin.default(true) -%}
+{%- set events_config_baseline_directives = tpl_events_config_baseline_directives | ansible.builtin.default({}, true) -%}
+
+{%- set http_config_block = tpl_http_config_block | ansible.builtin.default('') -%}
+{%- set http_config_baseline_manage = tpl_http_config_baseline_manage | ansible.builtin.default(true) -%}
+{%- set http_config_baseline_directives = tpl_http_config_baseline_directives | ansible.builtin.default({}, true) -%}
+{%- set http_config_defaultserver_manage = tpl_http_config_defaultserver_manage | ansible.builtin.default(true) -%}
+
+{{ render_directives(main_config_block, main_config_baseline_manage, main_config_baseline_directives, indent=0) }}
+
+events {
+{{ render_directives(events_config_block, events_config_baseline_manage, events_config_baseline_directives, indent=4) }}
+}
+
+http {
+{{ render_directives(http_config_block, http_config_baseline_manage, http_config_baseline_directives,  indent=4) }}
+
+{%  if http_config_defaultserver_manage == true %}
+    #### Fallback / catch-all server
+    #
+    # Send "444 No Response" without any content as invalid response for all requests
+    # not matching any other server{} block.
+    #
+    # A fallback for TLS is useful because of possible TLS SNI payload tampering, e.g.
+    # when HTTP Host Header and the SNI server_name object are different on purpose.
+    # More information e.g. in following article:
+    #
+    #   Efficiently Bypassing SNI-based HTTPS Filtering (10.1109/INM.2015.7140423f)
+    #   https://hal.inria.fr/hal-01202712/document
+
+    server {
+        server_name  _;
+
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+
+        ssl_reject_handshake on; # requires nginx >= 1.19.4
+
+        # for nginx < 1.19.4: use ssl_ciphers and snakeoil-cert on older ones):
+        #   ssl_ciphers aNULL; # un-satisfiable cipher spec, cf. https://trac.nginx.org/nginx/ticket/195#comment:6
+        #   ssl_certificate /etc/pki/tls/certs/dummy-cert.pem;
+        #   ssl_certificate_key /etc/pki/tls/certs/dummy-cert.pem;
+
+        # Disable the use of the primary server name, specified by the
+        # server_name directive, in absolute redirects issued by NGINX. When
+        # the use of the primary server name is disabled, the name from the
+        # “Host” request header field is used. If this field is not present,
+        # the IP address of the server is used.
+        server_name_in_redirect off;
+
+        # disable logging of errors about not found files into error_log
+        log_not_found off;
+
+        # FIXME this is sane for Red Hat, what to use on Debian-like?
+        root /usr/share/testpage;
+        index index.html index.htm;
+
+        # The non-standard code 444 of NGINX closes a connection without
+        # sending a HTTP response header
+        return 444;
+    }
+{%  endif %}
+}

@@ -1,0 +1,86 @@
+# Main entry point for the role.
+
+---
+
+- name: "Main | Include role initialization tasks"
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/init.yml"
+    apply:
+      tags:
+        - "always"
+        - "run_nginx_always"
+  tags:
+    - "always"
+    - "run_nginx_always"
+
+
+- name: "Main | Include setup tasks (install): best platform matches (if any), then default"
+  ansible.builtin.include_tasks:
+    file: "{{ __run_nginx_task_file }}"
+    apply:
+      tags:
+        - "run_nginx_setup"
+  vars:
+    __run_nginx_task_file: "{{ role_path }}/tasks/setup/install/{{ __run_nginx_loop_item }}"
+  when:
+    - run_nginx_state == 'present'
+    - __run_nginx_task_file is ansible.builtin.file
+  loop: "{{ __run_nginx_platform_filenames_most_specific_first + ['default.yml'] }}"
+  loop_control:
+    loop_var: "__run_nginx_loop_item"
+  tags:
+    - "run_nginx_setup"
+
+
+- name: "Main | Include configuration tasks: best platform matches (if any), then default"
+  ansible.builtin.include_tasks:
+    file: "{{ __run_nginx_task_file }}"
+    apply:
+      tags:
+        - "run_nginx_config"
+  vars:
+    __run_nginx_task_file: "{{ role_path }}/tasks/config/{{ __run_nginx_loop_item }}"
+  when:
+    - run_nginx_state == 'present'
+    - __run_nginx_task_file is ansible.builtin.file
+  loop: "{{ __run_nginx_platform_filenames_most_specific_first + ['default.yml'] }}"
+  loop_control:
+    loop_var: "__run_nginx_loop_item"
+  tags:
+    - "run_nginx_config"
+
+
+- name: "Main | Include service or daemon management tasks: best platform matches (if any), then default"
+  ansible.builtin.include_tasks:
+    file: "{{ __run_nginx_task_file }}"
+    apply:
+      tags:
+        - "run_nginx_service"
+  vars:
+    __run_nginx_task_file: "{{ role_path }}/tasks/service/{{ __run_nginx_loop_item }}"
+  when:
+    - run_nginx_state == 'present'
+    - __run_nginx_task_file is ansible.builtin.file
+  loop: "{{ __run_nginx_platform_filenames_most_specific_first + ['default.yml'] }}"
+  loop_control:
+    loop_var: "__run_nginx_loop_item"
+  tags:
+    - "run_nginx_service"
+
+
+- name: "Main | Include setup tasks (uninstall): best platform matches (if any), then default"
+  ansible.builtin.include_tasks:
+    file: "{{ __run_nginx_task_file }}"
+    apply:
+      tags:
+        - "run_nginx_setup"
+  vars:
+    __run_nginx_task_file: "{{ role_path }}/tasks/setup/uninstall/{{ __run_nginx_loop_item }}"
+  when:
+    - run_nginx_state == 'absent'
+    - __run_nginx_task_file is ansible.builtin.file
+  loop: "{{ __run_nginx_platform_filenames_most_specific_first + ['default.yml'] }}"
+  loop_control:
+    loop_var: "__run_nginx_loop_item"
+  tags:
+    - "run_nginx_setup"

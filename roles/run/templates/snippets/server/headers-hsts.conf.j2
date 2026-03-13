@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+
+#### HSTS: HTTP Strict Transport Security
+
+# HSTS is a HTTP header sent by a server to a client, indicating that the
+# current site must only be accessed over HTTPS until expiration of the HSTS
+# value is reached.
+#
+# ATTENTION: Once the HSTS header is sent to client, HTTPS cannot be disabled
+#            on the site until the last client has expired its HSTS record.
+#
+# References:
+#
+# - https://hstspreload.org/
+# - https://wiki.mozilla.org/Security/Server_Side_TLS#HSTS:_HTTP_Strict_Transport_Security
+# - https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html#HTTP_Strict_Transport_Security
+# - https://raymii.org/s/tutorials/HTTP_Strict_Transport_Security_for_Apache_NGINX_and_Lighttpd.html
+
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";

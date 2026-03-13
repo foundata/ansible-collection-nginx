@@ -1,0 +1,42 @@
+# Handlers: Tasks that are triggered and run only when notified.
+
+---
+
+- name: "Handlers | Validate NGINX configuration"
+  ansible.builtin.command:
+    argv:
+      - "{{ __run_nginx_server_exec_path }}"
+      - "-t"
+  register: __run_nginx_validation_result
+  changed_when:
+    - false
+  failed_when:
+    - __run_nginx_validation_result is ansible.builtin.failed
+  listen:
+    - "run_nginx: validate configuration"
+
+
+- name: "Handlers | NGINX service restart"
+  ansible.builtin.systemd_service:
+    name: "{{ __run_nginx_nginx_servicename }}"
+    state: "restarted"
+  when:
+    - run_nginx_service_state != 'unmanaged'
+  listen:
+    - "run_nginx: restart nginx.service"
+
+
+- name: "Handlers | NGINX service reload"
+  ansible.builtin.systemd_service:
+    name: "{{ __run_nginx_nginx_servicename }}"
+    state: "reloaded"
+  when:
+    - run_nginx_service_state != 'unmanaged'
+  listen:
+    - "run_nginx: reload nginx.service"
+
+
+- name: "Handlers | systemd daemon-reload"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  listen: "run_nginx: systemd daemon-reload"

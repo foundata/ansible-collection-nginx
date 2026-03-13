@@ -1,0 +1,32 @@
+# {{ ansible_managed }}
+
+### Misc security HTTP headers
+
+# When serving user-supplied content, include a "X-Content-Type-Options: nosniff"
+# header along with the Content-Type: header, to disable content-type sniffing
+# on some browsers.
+#
+# References:
+#
+# - https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+add_header X-Content-Type-Options nosniff;
+
+# Enable Cross-site scripting (XSS) filter built into recent web browsers.
+# It is usually enabled by default anyway. However, this header should
+# re-enable the filter for  this particular website if it was disabled by
+# the user.
+#
+# References:
+#
+# - https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+add_header X-XSS-Protection "1; mode=block";
+
+# Control embedding into (i)frames (which might bypass HTTPS with
+# clickjacking). Restricting at least to "sameorigin" should make sense
+# for nearly all sites. "deny" or "allow-from <uri>" are also possible
+#
+# References:
+#
+# - https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+# - https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
+add_header X-Frame-Options sameorigin;

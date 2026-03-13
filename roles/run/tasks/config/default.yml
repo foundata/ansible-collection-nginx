@@ -1,0 +1,348 @@
+# Configuration: Manage settings, like adapting or creating config files.
+
+---
+
+- name: "Config | Default | Ensure existence and permissions of config directories and files"
+  ansible.builtin.file:
+    path: "{{ item['path'] }}"
+    state: "{{ item['state'] }}"
+    owner: "{{ item['owner'] }}"
+    group: "{{ item['group'] }}"
+    mode: "{{ item['mode'] }}"
+    access_time: "preserve"
+    modification_time: "preserve"
+  loop:
+    - path: "{{ __run_nginx_config_service_file_path }}"
+      state: "file"
+      owner: "{{ __run_nginx_config_service_file_owner }}"
+      group: "{{ __run_nginx_config_service_file_group }}"
+      mode: "{{ __run_nginx_config_service_file_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_sites_available_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_sites_available_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_sites_available_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_modules_available_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_modules_available_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_modules_available_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_snippets_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_snippets_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_snippets_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_snippets_http_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_snippets_http_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_snippets_http_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_snippets_http_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_snippets_location_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_snippets_location_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_snippets_location_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_snippets_location_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_snippets_server_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_snippets_server_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_snippets_server_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_snippets_server_dir_mode }}"
+  loop_control:
+    label: "{{ item['path'] }}"
+  notify:
+    - "run_nginx: validate configuration"
+    - "run_nginx: restart nginx.service"
+
+
+## Backup original main config file (nginx.conf) if needed
+
+- name: "Config | Default | Check if platform's original nginx.conf backup already exists"
+  ansible.builtin.stat:
+    path: "{{ __run_nginx_config_service_file_distbackup_path }}"
+  register: __run_nginx_distbackup_stat
+
+
+- name: "Config | Default | Check if current config is already Ansible managed"
+  ansible.builtin.slurp:
+    src: "{{ __run_nginx_config_service_file_path }}"
+  register: __run_nginx_config_current_content
+  when:
+    - not __run_nginx_distbackup_stat['stat']['exists']
+
+
+- name: "Config | Default | Backup the platform's original nginx.conf"
+  ansible.builtin.copy:
+    src: "{{ __run_nginx_config_service_file_path }}"
+    dest: "{{ __run_nginx_config_service_file_distbackup_path }}"
+    owner: "{{ __run_nginx_config_service_file_distbackup_owner }}"
+    group: "{{ __run_nginx_config_service_file_distbackup_group }}"
+    mode: "{{ __run_nginx_config_service_file_distbackup_mode }}"
+    remote_src: true
+  when:
+    - not __run_nginx_distbackup_stat['stat']['exists']
+    - "'Ansible managed' not in (__run_nginx_config_current_content['content'] | ansible.builtin.b64decode)"
+
+
+- name: "Config | Default | Add backup notice comment to the nginx.conf backup"
+  ansible.builtin.lineinfile:
+    path: "{{ __run_nginx_config_service_file_distbackup_path }}"
+    line: >-
+      # This is a backup of the platform's original nginx.conf from
+      {{ ansible_date_time['iso8601'] }} before Ansible took over management
+      of the file
+    insertbefore: "BOF"
+  when:
+    - not __run_nginx_distbackup_stat['stat']['exists']
+    - "'Ansible managed' not in (__run_nginx_config_current_content['content'] | ansible.builtin.b64decode)"
+
+
+## Main config file (nginx.conf)
+
+- name: "Config | Default | Create or update the main configuration file (nginx.conf)"
+  ansible.builtin.template:
+    src: "nginx.conf.j2"
+    dest: "{{ __run_nginx_config_service_file_path }}"
+    owner: "{{ __run_nginx_config_service_file_owner }}"
+    group: "{{ __run_nginx_config_service_file_group }}"
+    mode: "{{ __run_nginx_config_service_file_mode }}"
+  vars:
+    # Pass (and/or adjust) variables needed for the templates
+    tpl_main_config_block: "{{ run_nginx_main_config_block }}"
+    tpl_main_config_baseline_manage: "{{ run_nginx_main_config_baseline_manage }}"
+    tpl_main_config_baseline_directives: "{{ __run_nginx_effective_main_directives }}"
+    tpl_events_config_block: "{{ run_nginx_events_config_block }}"
+    tpl_events_config_baseline_manage: "{{ run_nginx_events_config_baseline_manage }}"
+    tpl_events_config_baseline_directives: "{{ __run_nginx_effective_events_directives }}"
+    tpl_http_config_block: "{{ run_nginx_http_config_block }}"
+    tpl_http_config_baseline_manage: "{{ run_nginx_http_config_baseline_manage }}"
+    tpl_http_config_baseline_directives: "{{ __run_nginx_effective_http_directives }}"
+    tpl_http_config_defaultserver_manage: "{{ run_nginx_sites_defaultserver_manage }}"
+
+
+## Config snippets
+
+- name: "Config | Default | Create or update config snippet files (to provide common, centrally maintained config blocks to include)"
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: >-
+      {{ __run_nginx_config_service_dropin_snippets_dir_path }}/{{
+        item
+        | ansible.builtin.dirname
+        | ansible.builtin.basename
+      }}/
+      {{
+        item
+        | ansible.builtin.basename
+        | ansible.builtin.splitext
+        | ansible.builtin.first
+      }}"
+    owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
+    group: "{{ __run_nginx_config_service_dropin_file_group }}"
+    mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
+  vars:
+    # Pass (and/or adjust) variables needed for the templates
+    tpl_settings: "{{ __run_nginx_effective_snippet_settings }}"
+    tpl_defaultwwwroot_dir_path: "{{ __run_nginx_config_defaultwwwroot_dir_path }}" # FIXME maybe only needed for default fallback host? not here?
+    tpl_defaultindex_file_path: "{{ __run_nginx_config_defaultindex_file_path}}" # FIXME maybe only needed for default fallback host? not here?
+  with_fileglob:
+    - "templates/snippets/http/*.conf.j2"
+    - "templates/snippets/location/*.conf.j2"
+    - "templates/snippets/server/*.conf.j2"
+  notify:
+    - "run_nginx: validate configuration"
+    - "run_nginx: restart nginx.service"
+
+
+- name: "Config | Default | Delete stale / unmanaged config snippets"
+  when:
+    - run_nginx_snippets_delete_unmanaged
+  block:
+
+    - name: "Config | Default | Build list of expected config snippet filenames"
+      ansible.builtin.set_fact:
+        __run_nginx_expected_snippet_filenames: >-
+          {{
+            lookup('ansible.builtin.fileglob', 'templates/snippets/*.conf.j2', wantlist=True)
+            | ansible.builtin.map('ansible.builtin.basename')
+            | ansible.builtin.map('ansible.builtin.regex_replace', '\.j2$', '')
+            | ansible.builtin.list
+          }}
+
+
+    - name: "Config | Default | List existing config snippet files"
+      ansible.builtin.find:
+        paths:
+          - "{{ __run_nginx_config_service_dropin_snippets_dir_path }}"
+        patterns:
+          - "*.conf"
+        file_type: "file"
+        hidden: true
+      register: __run_nginx_snippet_conf_files
+
+
+    - name: "Config | Default | Remove stale, unmanaged site files (not in run_nginx_sites_config)"
+      ansible.builtin.file:
+        path: "{{ item['path'] }}"
+        state: "absent"
+      loop: >-
+        {{
+          __run_nginx_snippet_conf_files['files']
+          | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_snippet_filenames | map('regex_escape') | join('|')) ~ ')$')
+          | ansible.builtin.list
+        }}
+      loop_control:
+        label: "{{ item['path'] }}"
+      when:
+        - (__run_nginx_snippet_conf_files['files'] | length) > 0
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: reload nginx.service"
+
+
+## Sites
+
+- name: "Config | Default | Validate nginx site (config file) names"
+  ansible.builtin.fail:
+    msg: >-
+      Invalid site name "{{ item['name'] }}".
+      Allowed characters are: a-z, A-Z, 0-9, dot (.), underscore (_), and hyphen (-).
+  loop: "{{ run_nginx_sites_config | default([]) }}"
+  loop_control:
+    label: "{{ item['name'] }}"
+  when:
+    -  item['name'] is not match('^[a-zA-Z0-9._-]+$')
+
+
+- name: "Config | Default | Create or update site config files"
+  ansible.builtin.template:
+    src: "site.conf.j2"
+    dest: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}"
+    owner: "{{ __run_nginx_config_service_dropin_sites_available_dir_owner }}"
+    group: "{{ __run_nginx_config_service_dropin_sites_available_dir_group }}"
+    mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
+  vars:
+    __run_nginx_loop_file_name: "{{ item['name'] }}.conf"
+    # Pass (and/or adjust) variables needed for the template
+    tpl_content: "{{ item['content'] }}"
+  loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
+  loop_control:
+    label: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}"
+  when:
+    - ((run_nginx_sites_config | ansible.builtin.default([])) | ansible.builtin.length) > 0
+  notify:
+    - "run_nginx: validate configuration"
+    - "run_nginx: reload nginx.service"
+
+
+- name: "Config | Default | Enable/disable site symlinks"
+  ansible.builtin.file:
+    src: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}"
+    dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}"
+    state: "{{ (item.enabled | default(false)) | ternary('link', 'absent') }}"
+    force: true
+  vars:
+    __run_nginx_loop_file_name: "{{ item['name'] }}.conf"
+  loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
+  loop_control:
+    label: >-
+      {{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}
+      -> {{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}
+  when:
+    - (run_nginx_sites_config | ansible.builtin.default([])) | length > 0
+  notify:
+    - "run_nginx: validate configuration"
+    - "run_nginx: reload nginx.service"
+
+
+- name: "Config | Default | Delete stale / unmanaged site configs"
+  when:
+    - run_nginx_sites_delete_unmanaged
+  block:
+
+    - name: "Config | Default | Build list of expected site config filenames"
+      ansible.builtin.set_fact:
+        __run_nginx_expected_site_filenames: >-
+          {{
+            (run_nginx_sites_config | default([]))
+            | ansible.builtin.map(attribute='name')
+            | ansible.builtin.map('ansible.builtin.regex_replace', '$', '.conf')
+            | ansible.builtin.list
+          }}
+
+
+    - name: "Config | Default | List existing site config files"
+      ansible.builtin.find:
+        paths:
+          - "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}"
+          - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}"
+        patterns:
+          - "*.conf"
+        file_type: "file"
+        hidden: true
+      register: __run_nginx_site_conf_files
+
+
+    - name: "Config | Default | Remove stale, unmanaged site config files (not in run_nginx_sites_config)"
+      ansible.builtin.file:
+        path: "{{ item['path'] }}"
+        state: "absent"
+      loop: >-
+        {{
+          __run_nginx_site_conf_files['files']
+          | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_site_filenames | map('regex_escape') | join('|')) ~ ')$')
+          | ansible.builtin.list
+        }}
+      loop_control:
+        label: "{{ item['path'] }}"
+      when:
+        - (__run_nginx_site_conf_files['files'] | length) > 0
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: reload nginx.service"
+
+
+
+
+
+# - name: "Config | Default | Ensure 'Include' directive exists in main service config file"
+#   ansible.builtin.lineinfile:
+#     path: "{{ __run_logrotate_config_file_path }}"
+#     line: "include {{ __run_logrotate_config_dropin_dir_path }}"
+#     state: "present"
+#   when:
+#     # openSUSE Leap does NOT rely on an "include" directive inside the main
+#     # configuration file (/usr/etc/logrotate.conf). Instead, logrotate is
+#     # executed via /usr/sbin/logrotate-all (systemd service) which dynamically
+#     # loads:
+#     #   - /etc/logrotate.conf (if present) or /usr/etc/logrotate.conf
+#     #   - {/usr,}/etc/logrotate.d/*
+#     # Includes are handled by the wrapper script, not via an "include" directive
+#     # inside the main config file. Therefore we do NOT add an include directive
+#     # on this platform.
+#     #
+#     # More information:
+#     #   - cat /usr/sbin/logrotate-all (on openSUSE Leap)
+#     #   - systemctl cat logrotate.service (on openSUSE Leap)
+#     #   - systemctl cat logrotate.timer
+#     - (ansible_facts['distribution'] | ansible.builtin.regex_replace(' ', '_') | ansible.builtin.lower) != 'opensuse_leap'
+#   notify:
+#     - "run_logrotate: validate configuration"
+

@@ -1,0 +1,310 @@
+# Role argument validation.
+#
+# See defaults/main.yml for details on each variable. For more information on
+# the argument_specs.yml format, refer to the official Ansible documentation:
+# https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-argument-validation
+
+---
+
+argument_specs:
+
+  # foundata.nginx/roles/run/tasks/main.yml entry point
+  main:
+    short_description: "Main entry point for the foundata.nginx.run role"
+    options:
+
+      run_nginx_state:
+        description: |
+          Determines whether the managed resources should be `present` or `absent`.
+
+          `present` ensures that required components, such as software packages, are
+          installed and configured.
+
+          `absent` reverts changes as much as possible, such as removing packages,
+          deleting created users, stopping services, restoring modified settings, …
+        type: "str"
+        default: "present"
+        choices:
+          - "present"
+          - "absent"
+
+      run_nginx_autoupgrade:
+        description: |
+          If set to `true`, all managed packages will be upgraded during each Ansible
+          run (e.g., when the package provider detects a newer version than the
+          currently installed one).
+        type: "bool"
+        default: false
+
+      run_nginx_service_state:
+        description: |
+          Defines the status of the service(s).
+
+          `enabled`: Service is running and will start automatically at boot.
+
+          `disabled`: Service is stopped and will not start automatically at boot.
+
+          `running` Service is running but will not start automatically at boot.
+          This can be used to start a service on the first Ansible run without
+          enabling it for boot.
+
+          `unmanaged`: Service will not start at boot, and Ansible will not manage
+          its running state. This is primarily useful when services are monitored
+          and managed by systems other than Ansible.
+
+          The singular form (`service`) is used for simplicity. However, the defined
+          status applies to all services if multiple are being managed by this role.
+        type: "str"
+        default: "enabled"
+        choices:
+          - "enabled"
+          - "disabled"
+          - "running"
+          - "unmanaged"
+
+      run_nginx_main_config_block:
+        description: |
+          Additional NGINX configuration directives for the main (top-level) context
+          of `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.
+
+          The value is inserted verbatim into the rendered configuration file. Only
+          directives valid in the NGINX main context should be used here (e.g.,
+          `worker_processes`, `error_log`, `pid`).
+
+          For block-specific configuration, use the dedicated variables instead:
+
+          - `run_nginx_events_config_block` (for the `events {}` block)
+          - `run_nginx_http_config_block` (for the `http {}` block)
+          - `run_nginx_sites_config` (for `server {}` blocks)
+        type: "str"
+        default: ""
+
+      run_nginx_events_config_block:
+        description: |
+          Additional NGINX configuration directives for the `events {}` block in the
+          main configuration file (`nginx.conf`).
+
+          The value is inserted verbatim inside the `events {}` block. Do not include
+          the `events {` and `}` delimiters themselves - only the directives that belong
+          inside the block (e.g., `worker_connections`, `use`).
+
+          `events {}` is a top-level context block in NGINX. Only one instance is
+          allowed, so this variable provides a way to inject custom directives there.
+        type: "str"
+        default: ""
+
+      run_nginx_http_config_block:
+        description: |
+          Additional NGINX configuration directives for the `http {}` block in the
+          main configuration file (`nginx.conf`).
+
+          The value is inserted verbatim inside the `http {}` block. Do not include
+          the `http {` and `}` delimiters themselves - only the directives that belong
+          inside the block (e.g., `include`, `default_type`, `log_format`).
+
+          `http {}` is a top-level context block that initializes the entire HTTP
+          subsystem. Only one instance is allowed, so this variable provides a way
+          to inject custom directives there. For `server {}` block definitions, use
+          `run_nginx_sites_config` instead.
+        type: "str"
+        default: ""
+
+      run_nginx_main_config_baseline_manage:
+        description: |
+          Controls whether the role injects curated baseline directives into the main
+          (top-level) context of the main configuration file (`nginx.conf`).
+
+          When set to `true`, the role provides sane defaults for the main context
+          (e.g., `worker_processes`, `error_log`, `pid`). These baseline directives
+          are merged from internal defaults and platform-specific overrides.
+
+          Custom directives supplied via `run_nginx_main_config_block` are rendered
+          alongside the baseline. If set to `false`, no baseline directives are
+          injected and you will likely need to provide essential main-context
+          directives yourself via `run_nginx_main_config_block` to get a working
+          service.
+        type: "bool"
+        default: true
+
+      run_nginx_events_config_baseline_manage:
+        description: |
+          Controls whether the role injects curated baseline directives into the
+          `events {}` block of the main configuration file (`nginx.conf`).
+
+          When set to `true`, the role provides sane defaults for the events context
+          (e.g., `worker_connections`). These baseline directives are merged from
+          internal defaults and platform-specific overrides.
+
+          Custom directives supplied via `run_nginx_events_config_block` are rendered
+          alongside the baseline.
+        type: "bool"
+        default: true
+
+      run_nginx_http_config_baseline_manage:
+        description: |
+          Controls whether the role injects curated baseline directives into the
+          `http {}` block of the main configuration file (`nginx.conf`).
+
+          When set to `true`, the role provides sane defaults for the HTTP context
+          (e.g., `sendfile`, `tcp_nopush`, `types_hash_max_size`, MIME type includes).
+          These baseline directives are merged from internal defaults and
+          platform-specific overrides.
+
+          Custom directives supplied via `run_nginx_http_config_block` are rendered
+          alongside the baseline.
+        type: "bool"
+        default: true
+
+
+      run_nginx_modules_enabled:
+        description: |
+          FIXME description
+          Additional modules to enable (might trigger additional package installations)
+        type: "list"
+        default: [] # FIXME
+
+      run_nginx_modules_disabled:
+        description: |
+          FIXME description
+          Modules to disable (might trigger package removals FIME really? Do we want this removal?)
+        type: "list"
+        default: []
+
+      run_nginx_sites_config:
+        description: |
+          FIXME description
+
+          List of dictionaries to define sites (sometimes called vHost) and their
+          configuration blocks. Each entry will create a file below FIXME `/etc/nginx/sites-available/<name>.conf`.
+          `enabled: true` will ensure a symlink from in  /etc/nginx/sites-enabled (a
+          directory which's configuration gets included by NGINX)
+
+          Example:
+          ```yaml
+          run_nginx_sites_config:
+            - name: "example.com"
+              enabled: true
+              content: |
+                server {
+                    listen 443 ssl;
+                    server_name example.com;
+                    root /var/www/example.com;
+
+                    # Cert paths (TLS settings inherited from baseline!)
+                    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+                    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+                    # Include snippets as needed
+                    include snippets.d/tls-hsts.conf;
+                    include snippets.d/security-headers.conf;
+
+                    location / {
+                        try_files $uri $uri/ =404;
+                    }
+                }
+            - name: "foo_bar"
+              enabled: true
+              content: |
+                upstream {
+                    [...]
+                }
+                server {
+                    [...]
+                }
+          ```
+        type: "list"
+        default: []
+        options:
+          name:
+            description: |
+              FIXME description
+              Allowed characters are: a-z, A-Z, 0-9, dot (.), underscore (_), and hyphen (-).
+            type: "str"
+          enabled:
+            description: |
+              FIXME description
+              Ship `http {}`-level configuration baseline (good-practice, security)
+            type: "bool"
+            default: true # FIXME
+          content:
+            description: |
+              FIXME description
+              all NGINX configuration for your site (usually at least a `server {}` block).
+              You can put any valid configuration in here.
+            type: "str"
+
+      run_nginx_sites_delete_unmanaged:
+        description: |
+          FIXME improve description, the main template and task using this var is at TODO
+
+          Delete files below /etc/nginx/sites-available/ and /etc/nginx/sites-enabled/
+          if they are not managed by this role via `run_nginx_sites_config`
+        type: "bool"
+        default: true
+
+      run_nginx_sites_defaultserver_manage:
+        description: |
+          Controls whether the role includes a hardened catch-all `server {}` block
+          in the `http {}` section of the main configuration file (`nginx.conf`).
+
+          When set to `true`, a default server is rendered that listens on ports 80
+          and 443 with `default_server`.
+
+          This acts as a security fallback preventing unintended content exposure
+          when requests arrive for unknown hostnames or manipulated SNI values.
+          Set to `false` if you prefer to define your own catch-all server via
+          `run_nginx_sites_config`.
+        type: "bool"
+        default: true
+
+      run_nginx_snippet_settings:
+        description: |
+          FIXME improve description, the main template and task using this var is at TODO
+
+          They take highest priority, overriding internal
+          defaults (see `__run_nginx_snippet_settings_defaults` in `vars/main.yml`)
+          and platform-specific overrides.
+        type: "dict"
+        default: {}
+        options:
+          php-fpm:
+            description: |
+              FIXME description
+              Influce settings of the /etc/nginx/snippets/php-fpm.conf file (provided
+              by this role for easy includes into your server blocks).
+            type: "dict"
+            #default: {} FIXME
+            options:
+              type:
+                description: |
+                  FIXME description
+                type: "str"
+                #default: "socket"  FIXME
+                choices:
+                  - "socket"
+                  - "tcp"
+              socket:
+                description: |
+                  FIXME description
+                #default: "/run/php/php-fpm.sock" # FIXME
+                type: "str"
+              tcp_host:
+                description: |
+                  FIXME description
+                  Used when type: tcp
+                #default: "127.0.0.1" # FIXME
+                type: "str"
+              tcp_port:
+                description: |
+                  FIXME description
+                  Used when type: tcp
+                #default: 9000 # FIXME
+                type: "int"
+
+      run_nginx_snippets_delete_unmanaged:
+        description: |
+          FIXME description
+          Delete files below `/etc/nginx/snippets/`
+          if they re not managed by this role via `run_nginx_sites_config`
+        type: "bool"
+        default: false
