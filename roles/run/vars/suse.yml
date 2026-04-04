@@ -5,6 +5,9 @@
 
 ---
 
+__run_nginx_main_directives_overwrite:
+  user: "nginx nginx"
+
 # SUSE maintains "/etc/nginx/vhosts.d/" by default and uses the "vHost" terminology,
 # comparable to Apache HTTPD.
 __run_nginx_config_service_dropin_sites_available_dir_path: /etc/nginx/vhosts.d-available/"

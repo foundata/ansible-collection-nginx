@@ -5,5 +5,10 @@
 
 ---
 
+__run_nginx_main_directives_overwrite:
+  user: "www-data www-data"
+  include:
+    - "/etc/nginx/modules-enabled/*.conf"
+
 __run_nginx_config_defaultwwwroot_dir_path: "/var/www/html"
 __run_nginx_config_defaultindex_file_path: "{{ __run_nginx_config_default_wwwroot_dir_path }}/index.nginx-debian.html"

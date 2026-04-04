@@ -41,7 +41,26 @@ __run_nginx_used_facts:
 # - name: "Debian"
 #   versions:
 #     - "all"
-__run_nginx_supported_platforms: []
+__run_nginx_supported_platforms:
+  - name: "Debian"
+    versions:
+      - "12"
+      - "13"
+  - name: "Fedora"
+    versions:
+      - "43"
+      - "42"
+  - name: "openSUSE Leap"
+    versions:
+      - "16.0"
+  - name: "RedHat" # includes AlmaLinux, Rocky and CentOS Stream
+    versions:
+      - "9"
+      - "10"
+  - name: "Ubuntu"
+    versions:
+      - "24.04"
+      - "22.04" # ships the oldest NGINX version (v1.18.0) supported by this role; Update templates/nginx.conf.j2 if this gets removed
 
 
 # List of package names to be installed when run_nginx_state is
@@ -84,7 +103,6 @@ __run_nginx_config_service_file_distbackup_path: "/etc/nginx/nginx.conf.dist.bak
 __run_nginx_config_service_file_distbackup_owner: "root"
 __run_nginx_config_service_file_distbackup_group: "root"
 __run_nginx_config_service_file_distbackup_mode: "u=rw,g=r,o=r" # 0644
-
 
 __run_nginx_config_service_dropin_dir_owner: "{{ __run_nginx_config_service_file_owner }}"
 __run_nginx_config_service_dropin_dir_group: "{{ __run_nginx_config_service_file_group }}"
@@ -138,6 +156,18 @@ __run_nginx_config_service_dropin_snippets_server_dir_group: "{{ __run_nginx_con
 __run_nginx_config_service_dropin_snippets_server_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
 
 
+# The platforms's default fallback logfiles
+__run_nginx_access_log_default_file_path: "/var/log/nginx/access.log"
+__run_nginx_access_log_default_file_owner: "root"
+__run_nginx_access_log_default_file_group: "root"
+__run_nginx_access_log_default_file_mode: "u=rw,g=r,o=r" # 0644
+
+__run_nginx_error_log_default_file_path: "/var/log/nginx/error.log"
+__run_nginx_error_log_default_file_owner: "{{ __run_nginx_access_log_default_file_owner }}"
+__run_nginx_error_log_default_file_group: "{{ __run_nginx_access_log_default_file_group }}"
+__run_nginx_error_log_default_file_mode: "{{ __run_nginx_access_log_default_file_mode }}"
+
+
 # Path to the platforms's default / fallback website root and index file.
 # This is highly platform-specific specific, so the variable gets propably
 # overwritten by platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
@@ -147,10 +177,12 @@ __run_nginx_config_defaultindex_file_path: "{{ __run_nginx_config_default_wwwroo
 
 # Default configuration directives for NGINX main config.
 __run_nginx_main_directives_defaults:
-  user: "nginx"
+  user: "nginx nginx" # user username [groupname]; Verfify with "ps -C nginx -o user,group,pid,cmd"
   worker_processes: "auto"
-  error_log: "/var/log/nginx/error.log notice"
+  worker_cpu_affinity: "auto"
+  error_log: "{{ __run_nginx_error_log_default_file_path }} notice"
   pid: "/run/nginx.pid"
+
 
 # Platform-specific overrides for NGINX main config. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
@@ -162,6 +194,7 @@ __run_nginx_main_directives_overwrite: {}
 __run_nginx_events_directives_defaults:
   worker_connections: 1024
 
+
 # Platform-specific overrides for NGINX events{} config. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
@@ -172,10 +205,11 @@ __run_nginx_events_directives_overwrite: {}
 __run_nginx_http_directives_defaults:
   log_format: |
     main
-          '$remote_addr - $remote_user [$time_local] "$request" '
-          '$status $body_bytes_sent "$http_referer" '
-          '"$http_user_agent" "$http_x_forwarded_for"'
-  access_log: '/var/log/nginx/access.log  main'
+      '$remote_addr - $remote_user [$time_local] "$request" '
+      '$status $body_bytes_sent "$http_referer" '
+      '"$http_user_agent" "$http_x_forwarded_for"'
+  access_log: "{{ __run_nginx_access_log_default_file_path }} main"
+  error_log: "{{ __run_nginx_error_log_default_file_path }}"
   sendfile: true
   tcp_nopush: true
   keepalive_timeout: 65
@@ -183,17 +217,22 @@ __run_nginx_http_directives_defaults:
   include:
     - '/etc/nginx/mime.types'
     # FIXME process our run_nginx_modules_enabled run_nginx_modules_disabled
-    #       variables instead maybe by
+    #       variables instead maybe by iterating over
+    #       load_module /usr/lib64/nginx/modules/ngx_http_echo_module.so;
+    #       [...] and loading the corresponding config
     # Load modular configuration files from the /etc/nginx/conf.d directory.
     # See http://nginx.org/en/docs/ngx_core_module.html#include
     # for more information.
     - '/etc/nginx/conf.d/*.conf'
   default_type: 'application/octet-stream'
+  gzip: true
+
 
 # Platform-specific overrides for NGINX http{} config. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
 __run_nginx_http_directives_overwrite: {}
+
 
 # Additional default configuration for some NGINX configuration snippets.
 #
@@ -205,6 +244,7 @@ __run_nginx_snippet_settings_defaults:
     socket: "/run/php/php-fpm.sock"
     tcp_host: "127.0.0.1"
     tcp_port: 9000
+
 
 # Platform-specific overrides for service settings. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
