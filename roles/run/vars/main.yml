@@ -173,13 +173,6 @@ __run_nginx_error_log_default_file_group: "{{ __run_nginx_log_dir_group }}"
 __run_nginx_error_log_default_file_mode: "{{ __run_nginx_access_log_default_file_mode }}"
 
 
-# Path to the platforms's default / fallback website root and index file.
-# This is highly platform-specific specific, so the variable gets propably
-# overwritten by platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
-__run_nginx_config_defaultwwwroot_dir_path: "/var/www/html"
-__run_nginx_config_defaultindex_file_path: "{{ __run_nginx_config_default_wwwroot_dir_path }}/index.html"
-
-
 # Default configuration directives for NGINX main config.
 __run_nginx_main_directives_defaults:
   user: "nginx nginx" # user username [groupname]; Verfify with "ps -C nginx -o user,group,pid,cmd"

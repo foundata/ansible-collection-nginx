@@ -179,8 +179,6 @@
   vars:
     # Pass (and/or adjust) variables needed for the templates
     tpl_settings: "{{ __run_nginx_effective_snippet_settings }}"
-    tpl_defaultwwwroot_dir_path: "{{ __run_nginx_config_defaultwwwroot_dir_path }}" # FIXME maybe only needed for default fallback host? not here?
-    tpl_defaultindex_file_path: "{{ __run_nginx_config_defaultindex_file_path}}" # FIXME maybe only needed for default fallback host? not here?
   with_fileglob:
     - "templates/snippets/http/*.conf.j2"
     - "templates/snippets/location/*.conf.j2"

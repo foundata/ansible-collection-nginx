@@ -27,8 +27,8 @@ events {
 
 http {
 {{ render_directives(http_config_block, http_config_baseline_manage, http_config_baseline_directives,  indent=4) }}
-
 {%  if http_config_defaultserver_manage == true %}
+
     #### Fallback / catch-all server
     #
     # Send "444 No Response" without any content as invalid response for all requests
@@ -58,13 +58,13 @@ http {
             globally is not worth it (patches welcome though).
         -#}
         {%  if not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] == '22') %}
-        {{ "\n" }}
+        {{ '\n' }}
         listen 443 ssl default_server;
         listen [::]:443 ssl default_server;
 
         ssl_reject_handshake on;
         {%- endif -%}
-        {{ "\n" }}
+        {{ '\n' }}
         # Disable the use of the primary server name, specified by the
         # server_name directive, in absolute redirects issued by NGINX. When
         # the use of the primary server name is disabled, the name from the
@@ -74,10 +74,6 @@ http {
 
         # disable logging of errors about not found files into error_log
         log_not_found off;
-
-        # FIXME this is sane for Red Hat, what to use on Debian-like?
-        root /usr/share/testpage;
-        index index.html index.htm;
 
         # The non-standard code 444 of NGINX closes a connection without
         # sending a HTTP response header
