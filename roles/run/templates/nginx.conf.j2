@@ -36,31 +36,39 @@ http {
     #
     # A fallback for TLS is useful because of possible TLS SNI payload tampering, e.g.
     # when HTTP Host Header and the SNI server_name object are different on purpose.
-    # More information e.g. in following article:
+    # More information:
     #
-    #   Efficiently Bypassing SNI-based HTTPS Filtering (10.1109/INM.2015.7140423f)
+    # - Efficiently Bypassing SNI-based HTTPS Filtering (10.1109/INM.2015.7140423f)
     #   https://hal.inria.fr/hal-01202712/document
-
     server {
         server_name  _;
 
         listen 80 default_server;
         listen [::]:80 default_server;
 
+        {#-
+            ssl_reject_handshake requires nginx >= 1.19.4. For older version, we
+            could use ssl_ciphers and snakeoil-dummy-cert:
+                ssl_ciphers aNULL; # un-satisfiable cipher spec, cf. https://trac.nginx.org/nginx/ticket/195#comment:6
+                ssl_certificate /etc/pki/tls/certs/dummy-cert.pem;
+                ssl_certificate_key /etc/pki/tls/certs/dummy-cert.pem;
+            This is intentionally not implemented due to the limited remaining
+            support lifetime of Ubuntu 22.04 LTS, which is the only platform in
+            this role still shipping nginx 1.18.x, so managing a dummy cert
+            globally is not worth it (patches welcome though).
+        -#}
+        {%  if not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] == '22') %}
+        {{ "\n" }}
         listen 443 ssl default_server;
         listen [::]:443 ssl default_server;
 
-        ssl_reject_handshake on; # requires nginx >= 1.19.4
-
-        # for nginx < 1.19.4: use ssl_ciphers and snakeoil-cert on older ones):
-        #   ssl_ciphers aNULL; # un-satisfiable cipher spec, cf. https://trac.nginx.org/nginx/ticket/195#comment:6
-        #   ssl_certificate /etc/pki/tls/certs/dummy-cert.pem;
-        #   ssl_certificate_key /etc/pki/tls/certs/dummy-cert.pem;
-
+        ssl_reject_handshake on;
+        {%- endif -%}
+        {{ "\n" }}
         # Disable the use of the primary server name, specified by the
         # server_name directive, in absolute redirects issued by NGINX. When
         # the use of the primary server name is disabled, the name from the
-        # “Host” request header field is used. If this field is not present,
+        # "Host" request header field is used. If this field is not present,
         # the IP address of the server is used.
         server_name_in_redirect off;
 
