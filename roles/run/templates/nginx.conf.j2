@@ -8,7 +8,7 @@
 {# <context>_config #}
 {%- set main_config_block = tpl_main_config_block | ansible.builtin.default('') -%}
 {%- set main_config_baseline_manage = tpl_main_config_baseline_manage | ansible.builtin.default(true) -%}
-{%-  set main_config_baseline_directives = tpl_main_config_baseline_directives | ansible.builtin.default({}, true) -%}
+{%- set main_config_baseline_directives = tpl_main_config_baseline_directives | ansible.builtin.default({}, true) -%}
 
 {%- set events_config_block = tpl_events_config_block | ansible.builtin.default('') -%}
 {%- set events_config_baseline_manage = tpl_events_config_baseline_manage | ansible.builtin.default(true) -%}

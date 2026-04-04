@@ -10,18 +10,24 @@
 
 
 {%- macro render_directives(config_block, baseline_manage, baseline_directives, indent=4) -%}
-{%    if (config_block | ansible.builtin.length) > 0 %}
+{%-   if (config_block | ansible.builtin.length) > 0 %}
 {{ config_block | ansible.builtin.string | ansible.builtin.trim | ansible.builtin.indent(indent, true, false) }}
 {%-   endif -%}
-{%    if baseline_manage == true %}
-{%      for directive, value in (baseline_directives | default({})).items() %}
-{%        if value is ansible.builtin.sequence and value is not string %}
-{%          for item in value %}
-{{- render_directive(directive, item, indent) }}
-{%          endfor %}
-{%        else %}
-{{- render_directive(directive, value, indent) }}
-{%        endif -%}
+{%-   if baseline_manage == true -%}
+{%-     for directive, value in (baseline_directives | default({})).items() -%}
+{%-       if value is ansible.builtin.sequence and value is not string -%}
+{%-         for item in value -%}
+{{- render_directive(directive, item, indent) -}}
+{%            if not loop.last -%}
+{{ '\n' }}
+{%-           endif -%}
+{%-         endfor -%}
+{%-       else -%}
+{{- render_directive(directive, value, indent) -}}
+{%-       endif -%}
+{%        if not loop.last -%}
+{{ '\n' }}
+{%-       endif -%}
 {%-     endfor -%}
 {%-   endif -%}
 {%- endmacro -%}
