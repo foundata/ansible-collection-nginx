@@ -155,7 +155,6 @@ argument_specs:
         type: "bool"
         default: true
 
-
       run_nginx_modules_enabled:
         description: |
           FIXME description
@@ -172,12 +171,22 @@ argument_specs:
 
       run_nginx_sites_config:
         description: |
-          FIXME description
+          List of site definitions (sometimes called vHosts) to manage. Each entry
+          describes a site as a dictionary holding its name, enablement state, and
+          raw NGINX configuration content.
 
-          List of dictionaries to define sites (sometimes called vHost) and their
-          configuration blocks. Each entry will create a file below FIXME `/etc/nginx/sites-available/<name>.conf`.
-          `enabled: true` will ensure a symlink from in  /etc/nginx/sites-enabled (a
-          directory which's configuration gets included by NGINX)
+          For each entry, the role renders a config file at
+          `/etc/nginx/sites-available/<name>.conf`. If `enabled: true`, a symlink
+          is created in `/etc/nginx/sites-enabled/` pointing to the file in
+          `sites-available/`. The `sites-enabled/` directory is included by the
+          main `http {}` block via the role's managed `nginx.conf`, so only
+          symlinked sites become active. Setting `enabled: false` keeps the
+          `sites-available/` file in place but removes the symlink, making it easy
+          to temporarily disable a site without losing its configuration.
+
+          Stale `sites-available/` and `sites-enabled/` files no longer listed
+          here are removed when `run_nginx_sites_delete_unmanaged` is `true`
+          (the default).
 
           Example:
           ```yaml
@@ -217,20 +226,36 @@ argument_specs:
         options:
           name:
             description: |
-              FIXME description
-              Allowed characters are: a-z, A-Z, 0-9, dot (.), underscore (_), and hyphen (-).
+              Identifier used to build the config filename (`<name>.conf`) below
+              `sites-available/` and `sites-enabled/`. Must be unique within
+              `run_nginx_sites_config`.
+
+              Allowed characters: `a-z`, `A-Z`, `0-9`, dot (`.`), underscore
+              (`_`), and hyphen (`-`). Any other character causes the role to
+              fail with a validation error.
             type: "str"
           enabled:
             description: |
-              FIXME description
-              Ship `http {}`-level configuration baseline (good-practice, security)
+              Controls whether the site is active.
+
+              When `true`, a symlink is created in `sites-enabled/` pointing to
+              the corresponding file in `sites-available/`, so NGINX includes
+              it. When `false`, the symlink is removed while the file in
+              `sites-available/` is kept in place, allowing the site to be
+              disabled without losing its configuration.
             type: "bool"
-            default: true # FIXME
+            default: false
           content:
             description: |
-              FIXME description
-              all NGINX configuration for your site (usually at least a `server {}` block).
-              You can put any valid configuration in here.
+              Raw NGINX configuration for the site, inserted verbatim into the
+              rendered file. Any valid NGINX configuration at the `http {}`
+              child-context level is accepted, typically at least one `server {}`
+              block, and optionally `upstream {}` or other supporting blocks.
+
+              Do not wrap the content in an `http {}` block: it is already
+              placed inside the main `http {}` context via the include from
+              `sites-enabled/`. Snippets provided by this role can be pulled in
+              with `include snippets.d/<name>.conf;` as needed.
             type: "str"
 
       run_nginx_sites_delete_unmanaged:
