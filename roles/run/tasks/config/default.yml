@@ -13,7 +13,7 @@
     modification_time: "preserve"
   loop:
     - path: "{{ __run_nginx_config_service_file_path }}"
-      state: "file"
+      state: "touch"
       owner: "{{ __run_nginx_config_service_file_owner }}"
       group: "{{ __run_nginx_config_service_file_group }}"
       mode: "{{ __run_nginx_config_service_file_mode }}"
@@ -60,20 +60,26 @@
       group: "{{ __run_nginx_config_service_dropin_snippets_location_dir_group }}"
       mode: "{{ __run_nginx_config_service_dropin_snippets_location_dir_mode }}"
 
-    - path: "{{ __run_nginx_conf  ig_service_dropin_snippets_server_dir_path }}"
+    - path: "{{ __run_nginx_config_service_dropin_snippets_server_dir_path }}"
       state: "directory"
       owner: "{{ __run_nginx_config_service_dropin_snippets_server_dir_owner }}"
       group: "{{ __run_nginx_config_service_dropin_snippets_server_dir_group }}"
       mode: "{{ __run_nginx_config_service_dropin_snippets_server_dir_mode }}"
 
+    - path: "{{ __run_nginx_log_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_log_dir_owner }}"
+      group: "{{ __run_nginx_log_dir_group }}"
+      mode: "{{ __run_nginx_log_dir_mode }}"
+
     - path: "{{ __run_nginx_access_log_default_file_path }}"
-      state: "file"
+      state: "touch"
       owner: "{{ __run_nginx_access_log_default_file_owner }}"
       group: "{{ __run_nginx_access_log_default_file_group }}"
       mode: "{{ __run_nginx_access_log_default_file_mode }}"
 
     - path: "{{ __run_nginx_error_log_default_file_path }}"
-      state: "file"
+      state: "touch"
       owner: "{{ __run_nginx_error_log_default_file_owner }}"
       group: "{{ __run_nginx_error_log_default_file_group }}"
       mode: "{{ __run_nginx_error_log_default_file_mode }}"

@@ -157,14 +157,19 @@ __run_nginx_config_service_dropin_snippets_server_dir_mode: "{{ __run_nginx_conf
 
 
 # The platforms's default fallback logfiles
-__run_nginx_access_log_default_file_path: "/var/log/nginx/access.log"
-__run_nginx_access_log_default_file_owner: "root"
-__run_nginx_access_log_default_file_group: "root"
+__run_nginx_log_dir_path: "/var/log/nginx"
+__run_nginx_log_dir_owner: "root"
+__run_nginx_log_dir_group: "root"
+__run_nginx_log_dir_mode: "u=rwx,g=rx,o=rx" # 0755
+
+__run_nginx_access_log_default_file_path: "{{ __run_nginx_log_dir_path }}/access.log"
+__run_nginx_access_log_default_file_owner: "{{ __run_nginx_log_dir_owner }}"
+__run_nginx_access_log_default_file_group: "{{ __run_nginx_log_dir_group }}"
 __run_nginx_access_log_default_file_mode: "u=rw,g=r,o=r" # 0644
 
-__run_nginx_error_log_default_file_path: "/var/log/nginx/error.log"
-__run_nginx_error_log_default_file_owner: "{{ __run_nginx_access_log_default_file_owner }}"
-__run_nginx_error_log_default_file_group: "{{ __run_nginx_access_log_default_file_group }}"
+__run_nginx_error_log_default_file_path: "{{ __run_nginx_log_dir_path }}/error.log"
+__run_nginx_error_log_default_file_owner: "{{ __run_nginx_log_dir_owner }}"
+__run_nginx_error_log_default_file_group: "{{ __run_nginx_log_dir_group }}"
 __run_nginx_error_log_default_file_mode: "{{ __run_nginx_access_log_default_file_mode }}"
 
 
@@ -202,6 +207,7 @@ __run_nginx_events_directives_overwrite: {}
 
 
 # Default configuration directives for NGINX http{} config.
+# See https://nginx.org/en/docs/http/ for documentation
 __run_nginx_http_directives_defaults:
   log_format: |
     main
