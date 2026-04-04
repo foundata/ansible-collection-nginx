@@ -2,7 +2,7 @@
 
 ### Basic TLS config
 #
-# Use modern chipers, Forward Secrecy, Diffie Hellman Ephemeral Parameters.
+# Use modern ciphers, Forward Secrecy, Diffie Hellman Ephemeral Parameters.
 # Do not forget to define a certificate in your host after including this:
 #   ssl_certificate <path to cert>;
 #   ssl_certificate_key <path to key>:
@@ -44,7 +44,7 @@ ssl_session_tickets off; # requires nginx >= 1.5.9
 ### OCSP Stapling
 #
 # This provides privacy advantages as clients do create fewer or no request
-# against the CA. Using nginx's own DNS resolver is needed to react smoothly
+# against the CA. Using NGINX's own DNS resolver is needed to react smoothly
 # to changing CA OSCP IPs without restarting the service
 #
 # References:
