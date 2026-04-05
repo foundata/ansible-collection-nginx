@@ -182,6 +182,7 @@
         # Pass (and/or adjust) variables needed for the templates
         tpl_settings: "{{ __run_nginx_effective_snippet_settings }}"
       with_fileglob:
+        - "templates/snippets/*.conf.j2"
         - "templates/snippets/http/*.conf.j2"
         - "templates/snippets/location/*.conf.j2"
         - "templates/snippets/server/*.conf.j2"
@@ -200,7 +201,12 @@
       ansible.builtin.set_fact:
         __run_nginx_expected_snippet_filenames: >-
           {{
-            lookup('ansible.builtin.fileglob', 'templates/snippets/*.conf.j2', wantlist=True)
+            (
+                query('ansible.builtin.fileglob', 'templates/snippets/*.conf.j2')
+              + query('ansible.builtin.fileglob', 'templates/snippets/http/*.conf.j2')
+              + query('ansible.builtin.fileglob', 'templates/snippets/location/*.conf.j2')
+              + query('ansible.builtin.fileglob', 'templates/snippets/server/*.conf.j2')
+            )
             | ansible.builtin.map('ansible.builtin.basename')
             | ansible.builtin.map('ansible.builtin.regex_replace', '\.j2$', '')
             | ansible.builtin.list
