@@ -87,10 +87,7 @@
 - name: "Config | Default | Add backup notice comment to the nginx.conf backup"
   ansible.builtin.lineinfile:
     path: "{{ __run_nginx_config_service_file_distbackup_path }}"
-    line: >-
-      # This is a backup of the platform's original nginx.conf from
-      {{ ansible_date_time['iso8601'] }} before Ansible took over management
-      of the file
+    line: "{{ __run_nginx_config_service_file_distbackup_comment }}"
     insertbefore: "BOF"
   when:
     - not __run_nginx_distbackup_stat['stat']['exists']

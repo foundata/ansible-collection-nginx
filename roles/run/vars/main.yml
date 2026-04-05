@@ -104,6 +104,10 @@ __run_nginx_config_service_file_distbackup_owner: "root"
 __run_nginx_config_service_file_distbackup_group: "root"
 __run_nginx_config_service_file_distbackup_mode: "u=rw,g=r,o=r" # 0644
 
+__run_nginx_config_service_file_distbackup_comment: >-
+  # This is a backup of the platform's original nginx.conf before Ansible
+  took over management of the file
+
 __run_nginx_config_service_dropin_dir_owner: "{{ __run_nginx_config_service_file_owner }}"
 __run_nginx_config_service_dropin_dir_group: "{{ __run_nginx_config_service_file_group }}"
 __run_nginx_config_service_dropin_dir_mode: "u=rwx,g=rx,o=rx" # 0755
