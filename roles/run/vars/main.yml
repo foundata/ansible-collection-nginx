@@ -125,16 +125,6 @@ __run_nginx_config_service_dropin_sites_enabled_dir_owner: "{{ __run_nginx_confi
 __run_nginx_config_service_dropin_sites_enabled_dir_group: "{{ __run_nginx_config_service_file_group }}"
 __run_nginx_config_service_dropin_sites_enabled_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
 
-__run_nginx_config_service_dropin_modules_available_dir_path: "/etc/nginx/modules-available"
-__run_nginx_config_service_dropin_modules_available_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
-__run_nginx_config_service_dropin_modules_available_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
-__run_nginx_config_service_dropin_modules_available_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
-
-__run_nginx_config_service_dropin_modules_enabled_dir_path: "/etc/nginx/modules-enabled"
-__run_nginx_config_service_dropin_modules_enabled_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
-__run_nginx_config_service_dropin_modules_enabled_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
-__run_nginx_config_service_dropin_modules_enabled_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
-
 __run_nginx_config_service_dropin_snippets_dir_path: "/etc/nginx/snippets"
 __run_nginx_config_service_dropin_snippets_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
 __run_nginx_config_service_dropin_snippets_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
@@ -175,7 +165,7 @@ __run_nginx_error_log_default_file_mode: "{{ __run_nginx_access_log_default_file
 
 # Default configuration directives for NGINX main config.
 __run_nginx_main_directives_defaults:
-  user: "nginx nginx" # user username [groupname]; Verfify with "ps -C nginx -o user,group,pid,cmd"
+  user: "nginx nginx" # user username [groupname]; Verify with "ps -C nginx -o user,group,pid,cmd"
   worker_processes: "auto"
   worker_cpu_affinity: "auto"
   error_log: "{{ __run_nginx_error_log_default_file_path }} notice"
@@ -214,15 +204,13 @@ __run_nginx_http_directives_defaults:
   keepalive_timeout: 65
   types_hash_max_size: 4096
   include:
-    - '/etc/nginx/mime.types'
-    # FIXME process our run_nginx_modules_enabled run_nginx_modules_disabled
-    #       variables instead maybe by iterating over
-    #       load_module /usr/lib64/nginx/modules/ngx_http_echo_module.so;
-    #       [...] and loading the corresponding config
+    # Map file extensions to MIME types
+    - "/etc/nginx/mime.types"
     # Load modular configuration files from the /etc/nginx/conf.d directory.
     # See http://nginx.org/en/docs/ngx_core_module.html#include
     # for more information.
-    - '/etc/nginx/conf.d/*.conf'
+    - "/etc/nginx/conf.d/*.conf"
+    - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/*.conf"
   default_type: 'application/octet-stream'
   gzip: true
 

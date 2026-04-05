@@ -155,20 +155,6 @@ argument_specs:
         type: "bool"
         default: true
 
-      run_nginx_modules_enabled:
-        description: |
-          FIXME description
-          Additional modules to enable (might trigger additional package installations)
-        type: "list"
-        default: [] # FIXME
-
-      run_nginx_modules_disabled:
-        description: |
-          FIXME description
-          Modules to disable (might trigger package removals FIME really? Do we want this removal?)
-        type: "list"
-        default: []
-
       run_nginx_sites_config:
         description: |
           List of site definitions (sometimes called vHosts) to manage. Each entry
@@ -188,6 +174,10 @@ argument_specs:
           here are removed when `run_nginx_sites_delete_unmanaged` is `true`
           (the default).
 
+          On SUSE-like platforms the directories `hosts.d-available/` (instead of
+          `sites-available/`) and `/etc/nginx/vhosts.d` (instead of`sites-available/`)
+          are used as SUSE uses theses dirs and the "vHost" terminology by default.
+
           Example:
           ```yaml
           run_nginx_sites_config:
@@ -204,8 +194,8 @@ argument_specs:
                     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
 
                     # Include snippets as needed
-                    include snippets.d/tls-hsts.conf;
-                    include snippets.d/security-headers.conf;
+                    include snippets/tls-hsts.conf;
+                    include snippets/security-headers.conf;
 
                     location / {
                         try_files $uri $uri/ =404;
@@ -255,7 +245,7 @@ argument_specs:
               Do not wrap the content in an `http {}` block: it is already
               placed inside the main `http {}` context via the include from
               `sites-enabled/`. Snippets provided by this role can be pulled in
-              with `include snippets.d/<name>.conf;` as needed.
+              with `include snippets/<name>.conf;` as needed.
             type: "str"
 
       run_nginx_sites_delete_unmanaged:

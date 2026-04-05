@@ -30,18 +30,6 @@
       group: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_group }}"
       mode: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_mode }}"
 
-    - path: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}"
-      state: "directory"
-      owner: "{{ __run_nginx_config_service_dropin_modules_available_dir_owner }}"
-      group: "{{ __run_nginx_config_service_dropin_modules_available_dir_group }}"
-      mode: "{{ __run_nginx_config_service_dropin_modules_available_dir_mode }}"
-
-    - path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
-      state: "directory"
-      owner: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_owner }}"
-      group: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_group }}"
-      mode: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_mode }}"
-
     - path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}"
       state: "directory"
       owner: "{{ __run_nginx_config_service_dropin_snippets_dir_owner }}"
