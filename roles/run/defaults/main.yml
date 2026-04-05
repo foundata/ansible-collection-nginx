@@ -57,6 +57,8 @@ run_nginx_sites_config: []
 
 run_nginx_sites_delete_unmanaged: true
 
+run_nginx_snippets_manage: true
+
 run_nginx_snippets_delete_unmanaged: false
 
 run_nginx_snippet_settings: {}

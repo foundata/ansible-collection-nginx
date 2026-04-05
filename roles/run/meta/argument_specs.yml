@@ -280,6 +280,28 @@ argument_specs:
         type: "bool"
         default: true
 
+      run_nginx_snippets_manage:
+        description: |
+          Controls whether the role ships and manages its curated NGINX
+          config snippets (reusable, centrally maintained config blocks
+          meant to be pulled into `server {}` / `location {}` blocks via
+          `include snippets/<name>.conf;`).
+
+          When set to `true`, the role ensures the
+          `/etc/nginx/snippets/{http,location,server}/` directories exist
+          and renders all snippet templates shipped with the role into
+          them. Snippet content can be influenced via
+          `run_nginx_snippet_settings`.
+
+          When set to `false`, the role skips creating the snippet
+          directories and does not render any snippet templates. Use this
+          if you want to maintain your own snippet library entirely
+          outside of this role. Cleanup of stale files is also gated by
+          this variable: `run_nginx_snippets_delete_unmanaged` only takes
+          effect while snippets are managed.
+        type: "bool"
+        default: true
+
       run_nginx_snippet_settings:
         description: |
           FIXME improve description, the main template and task using this var is at TODO

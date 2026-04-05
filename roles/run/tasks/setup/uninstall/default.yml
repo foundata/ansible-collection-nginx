@@ -2,6 +2,16 @@
 
 ---
 
+# FIXME Stop service
+
+# FIXME remove __run_nginx_config_service_dropin_snippets_dir_path if not on debian (where it is existing by default)
+
+# FIXME remove __run_nginx_config_service_dropin_sites_available_dir_path if not on debian or suse (where there are existing by default)
+
+# FIXME remove __run_nginx_config_service_dropin_sites_enabled_dir_path if not on debian or suse (where there are existing by default)
+
+# FIXME Restore original nginx config from __run_nginx_config_service_file_distbackup_path and remote the comment / line in file
+
 - name: "Setup | Uninstall | Remove packages"
   ansible.builtin.package:
     name: "{{ __run_nginx_packages_uninstall }}"
@@ -9,3 +19,6 @@
   when:
     - __run_nginx_packages_uninstall is ansible.builtin.defined
     - (__run_nginx_packages_uninstall | ansible.builtin.length) > 0
+
+
+

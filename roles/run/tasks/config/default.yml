@@ -30,30 +30,6 @@
       group: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_group }}"
       mode: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_mode }}"
 
-    - path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}"
-      state: "directory"
-      owner: "{{ __run_nginx_config_service_dropin_snippets_dir_owner }}"
-      group: "{{ __run_nginx_config_service_dropin_snippets_dir_group }}"
-      mode: "{{ __run_nginx_config_service_dropin_snippets_dir_mode }}"
-
-    - path: "{{ __run_nginx_config_service_dropin_snippets_http_dir_path }}"
-      state: "directory"
-      owner: "{{ __run_nginx_config_service_dropin_snippets_http_dir_owner }}"
-      group: "{{ __run_nginx_config_service_dropin_snippets_http_dir_group }}"
-      mode: "{{ __run_nginx_config_service_dropin_snippets_http_dir_mode }}"
-
-    - path: "{{ __run_nginx_config_service_dropin_snippets_location_dir_path }}"
-      state: "directory"
-      owner: "{{ __run_nginx_config_service_dropin_snippets_location_dir_owner }}"
-      group: "{{ __run_nginx_config_service_dropin_snippets_location_dir_group }}"
-      mode: "{{ __run_nginx_config_service_dropin_snippets_location_dir_mode }}"
-
-    - path: "{{ __run_nginx_config_service_dropin_snippets_server_dir_path }}"
-      state: "directory"
-      owner: "{{ __run_nginx_config_service_dropin_snippets_server_dir_owner }}"
-      group: "{{ __run_nginx_config_service_dropin_snippets_server_dir_group }}"
-      mode: "{{ __run_nginx_config_service_dropin_snippets_server_dir_mode }}"
-
     - path: "{{ __run_nginx_log_dir_path }}"
       state: "directory"
       owner: "{{ __run_nginx_log_dir_owner }}"
@@ -146,38 +122,80 @@
 
 ## Config snippets
 
-- name: "Config | Default | Create or update config snippet files (to provide common, centrally maintained config blocks to include)"
-  ansible.builtin.template:
-    src: "{{ item }}"
-    dest: >-
-      {{ __run_nginx_config_service_dropin_snippets_dir_path }}/{{
-        item
-        | ansible.builtin.dirname
-        | ansible.builtin.basename
-      }}/
-      {{
-        item
-        | ansible.builtin.basename
-        | ansible.builtin.splitext
-        | ansible.builtin.first
-      }}"
-    owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
-    group: "{{ __run_nginx_config_service_dropin_file_group }}"
-    mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
-  vars:
-    # Pass (and/or adjust) variables needed for the templates
-    tpl_settings: "{{ __run_nginx_effective_snippet_settings }}"
-  with_fileglob:
-    - "templates/snippets/http/*.conf.j2"
-    - "templates/snippets/location/*.conf.j2"
-    - "templates/snippets/server/*.conf.j2"
-  notify:
-    - "run_nginx: validate configuration"
-    - "run_nginx: restart nginx.service"
+- name: "Config | Default | Manage config snippets"
+  when:
+    - run_nginx_snippets_manage
+  block:
+
+    - name: "Config | Default | Ensure existence and permissions of snippet directories"
+      ansible.builtin.file:
+        path: "{{ item['path'] }}"
+        state: "directory"
+        owner: "{{ item['owner'] }}"
+        group: "{{ item['group'] }}"
+        mode: "{{ item['mode'] }}"
+        access_time: "preserve"
+        modification_time: "preserve"
+      loop:
+        - path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}"
+          owner: "{{ __run_nginx_config_service_dropin_snippets_dir_owner }}"
+          group: "{{ __run_nginx_config_service_dropin_snippets_dir_group }}"
+          mode: "{{ __run_nginx_config_service_dropin_snippets_dir_mode }}"
+
+        - path: "{{ __run_nginx_config_service_dropin_snippets_http_dir_path }}"
+          owner: "{{ __run_nginx_config_service_dropin_snippets_http_dir_owner }}"
+          group: "{{ __run_nginx_config_service_dropin_snippets_http_dir_group }}"
+          mode: "{{ __run_nginx_config_service_dropin_snippets_http_dir_mode }}"
+
+        - path: "{{ __run_nginx_config_service_dropin_snippets_location_dir_path }}"
+          owner: "{{ __run_nginx_config_service_dropin_snippets_location_dir_owner }}"
+          group: "{{ __run_nginx_config_service_dropin_snippets_location_dir_group }}"
+          mode: "{{ __run_nginx_config_service_dropin_snippets_location_dir_mode }}"
+
+        - path: "{{ __run_nginx_config_service_dropin_snippets_server_dir_path }}"
+          owner: "{{ __run_nginx_config_service_dropin_snippets_server_dir_owner }}"
+          group: "{{ __run_nginx_config_service_dropin_snippets_server_dir_group }}"
+          mode: "{{ __run_nginx_config_service_dropin_snippets_server_dir_mode }}"
+      loop_control:
+        label: "{{ item['path'] }}"
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: restart nginx.service"
+
+
+    - name: "Config | Default | Create or update config snippet files (to provide common, centrally maintained config blocks to include)"
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: >-
+          {{ __run_nginx_config_service_dropin_snippets_dir_path }}/{{
+            item
+            | ansible.builtin.dirname
+            | ansible.builtin.basename
+          }}/
+          {{
+            item
+            | ansible.builtin.basename
+            | ansible.builtin.splitext
+            | ansible.builtin.first
+          }}"
+        owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
+        group: "{{ __run_nginx_config_service_dropin_file_group }}"
+        mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
+      vars:
+        # Pass (and/or adjust) variables needed for the templates
+        tpl_settings: "{{ __run_nginx_effective_snippet_settings }}"
+      with_fileglob:
+        - "templates/snippets/http/*.conf.j2"
+        - "templates/snippets/location/*.conf.j2"
+        - "templates/snippets/server/*.conf.j2"
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: restart nginx.service"
 
 
 - name: "Config | Default | Delete stale / unmanaged config snippets"
   when:
+    - run_nginx_snippets_manage
     - run_nginx_snippets_delete_unmanaged
   block:
 
