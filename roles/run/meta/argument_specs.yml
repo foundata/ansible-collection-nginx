@@ -260,10 +260,18 @@ argument_specs:
 
       run_nginx_sites_delete_unmanaged:
         description: |
-          FIXME improve description, the main template and task using this var is at TODO
+          Controls whether the role removes stale site files that are not
+          declared in `run_nginx_sites_config`.
 
-          Delete files below /etc/nginx/sites-available/ and /etc/nginx/sites-enabled/
-          if they are not managed by this role via `run_nginx_sites_config`
+          When set to `true`, any `*.conf` file or symlink found in
+          `/etc/nginx/sites-available/` or `/etc/nginx/sites-enabled/` whose
+          name does not match an entry in `run_nginx_sites_config` is deleted.
+          This keeps the managed directories in sync with the declared list,
+          treating `run_nginx_sites_config` as the single source of truth.
+
+          When set to `false`, unknown files are left untouched. Use this if
+          you manage additional sites outside of this role and want to prevent
+          accidental removal.
         type: "bool"
         default: true
 
