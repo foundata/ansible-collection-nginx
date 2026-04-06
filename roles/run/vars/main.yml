@@ -217,6 +217,10 @@ __run_nginx_http_directives_defaults:
     - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/*.conf"
   default_type: 'application/octet-stream'
   gzip: true
+  # do not include or print server version information in server generated
+  # documents or response headers
+  server_tokens: false
+
 
 
 # Platform-specific overrides for NGINX http{} config. Overridden by platform
