@@ -1,0 +1,111 @@
+# Tasks for the Molecule prepare stage: Add resources needed for later steps
+# (e.g. verify) on all driver-created instances.
+
+- name: "Molecule | Prepare | Store run_nginx_* role parameters in __testing_state"
+  ansible.builtin.include_tasks:
+    file: "../tasks/state_update.yml"
+  vars:
+    __testing_state_update:
+      # same path used on all platforms, good enough for testing. Remember that
+      #   - /srv/www/[...] is the native SUSE-style path and
+      #   - /etc/ssl/private is the native SUSE- and Debian-style paths
+      # in production.
+      #
+      # example.com
+      __testing_examplecom_wwwroot: "/var/www/example.com"
+      __testing_examplecom_cert: "/etc/pki/tls/private/example.com.pem" # same path used on all platforms for testing (/)
+
+
+- name: "Molecule | Prepare | Set __testing_* variables as facts from __testing_state"
+  ansible.builtin.set_fact:
+    "{{ item['key'] }}": "{{ item['value'] }}"
+  loop: >-
+    {{
+      (__testing_state | default({}, true))
+      | ansible.builtin.dict2items
+      | ansible.builtin.selectattr('key', 'match', '^__testing_')
+      | ansible.builtin.list
+    }}
+
+
+- name: "Molecule | Prepare | Ensure existence and permissions of directories and files"
+  ansible.builtin.file:
+    path: "{{ item['path'] }}"
+    state: "{{ item['state'] }}"
+    owner: "{{ item['owner'] }}"
+    group: "{{ item['group'] }}"
+    mode: "{{ item['mode'] }}"
+    access_time: "preserve"
+    modification_time: "preserve"
+  loop:
+    - path: "{{ __testing_examplecom_wwwroot }}"
+      state: "directory"
+      owner: "root"
+      group: "root"
+      mode: "0755"
+
+
+- name: "Molecule | Prepare | Create demo index file for example.com server/vHost"
+  ansible.builtin.copy:
+    dest: "{{ __testing_examplecom_wwwroot }}/index.html"
+    content: |
+      <html>
+        <h1>🚀 It works!</h1><!-- including UTF-8 char (rocket emoji) on purpose -->
+        <p>Your web server is running successfully.</p>
+      </html>
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+
+- name: "Molecule | Prepare | Install packages needed to create certificates and run all tests"
+  ansible.builtin.package:
+    name:
+      - "curl"
+      - "openssl"
+    state: "present"
+    # work-around for conflicts with curl-minimal on Red Hat platforms
+    allowerasing: "{{ true if ((ansible_facts['os_family'] | ansible.builtin.lower) == 'redhat') else omit }}"
+
+
+- name: "Molecule | Prepare | Generate inline self-signed dummy certificate bundle(s)"
+  ansible.builtin.shell: |
+    set -u              # no uninitialized vars
+    set -e -o pipefail  # exit on (pipeline) errors
+    umask 077
+
+    target={{ item | ansible.builtin.quote }}
+
+    pem1="$(mktemp /tmp/openssl-key.XXXXXX)"
+    pem2="$(mktemp /tmp/openssl-crt.XXXXXX)"
+    mkdir -p "$(dirname "${target}")"
+
+    cleanup() {
+      rm -f -- "${pem1}" "${pem2}"
+    }
+    trap cleanup EXIT INT TERM HUP
+
+    /usr/bin/openssl genpkey -algorithm Ed25519 -out "${pem1}"
+
+    /usr/bin/openssl req \
+      -x509 \
+      -new \
+      -key "${pem1}" \
+      -out "${pem2}" \
+      -days 90 \
+      -subj '/C=--/ST=SomeState/L=SomeCity/O=SomeOrg/OU=SomeOU/CN=localhost.localdomain/emailAddress=root@localhost.localdomain' \
+      -addext 'subjectAltName=DNS:localhost,DNS:localhost.localdomain,IP:127.0.0.1,IP:::1' \
+      -addext 'basicConstraints=critical,CA:FALSE' \
+      -addext 'keyUsage=critical,digitalSignature' \
+      -addext 'extendedKeyUsage=serverAuth'
+
+    {
+      cat "${pem1}"
+      printf '\n'
+      cat "${pem2}"
+    } > "${target}"
+  args:
+    executable: "/bin/bash"
+    creates: "{{ item }}"
+  loop:
+    - "{{ __testing_examplecom_cert }}"

@@ -1,0 +1,63 @@
+# Execute the collection role "run" against all driver-created instances.
+
+- name: "Molecule | Converge | Store run_nginx_* role parameters in __testing_state"
+  ansible.builtin.include_tasks:
+    file: "../tasks/state_update.yml"
+  vars:
+    __testing_state_update:
+      # set all role configuration variables
+      run_nginx_state: "present"
+      run_nginx_sites_config:
+        - name: "example.com"
+          enabled: true
+          content: |
+            server {
+                listen 80;
+                listen [::]:80;
+                listen 443 ssl;
+                listen [::]:443 ssl;
+                server_name example.com;
+
+                # Cert paths (TLS settings inherited from baseline!)
+                ssl_certificate /etc/pki/tls/private/example.com.pem;
+                ssl_certificate_key /etc/pki/tls/private/example.com.pem;
+
+                location / {
+                    try_files $uri $uri/ =404;
+                    root /var/www/example.com;
+                    index index.html;
+                }
+            }
+        - name: "foo_bar"
+          enabled: true
+          content: |
+            server {
+                listen 80;
+                listen [::]:80;
+                server_name foo_bar;
+            }
+
+      run_nginx_snippets_manage: true
+      run_nginx_snippets_delete_unmanaged: true
+      run_nginx_sites_delete_unmanaged: true
+
+
+- name: "Molecule | Converge | Set run_nginx_* parameters as facts from __testing_state"
+  ansible.builtin.set_fact:
+    "{{ item['key'] }}": "{{ item['value'] }}"
+  loop: >-
+    {{
+      (__testing_state | default({}, true))
+      | ansible.builtin.dict2items
+      | ansible.builtin.selectattr('key', 'match', '^run_nginx_')
+      | ansible.builtin.list
+    }}
+
+
+- name: "Molecule | Converge | Include the foundata.nginx.run role"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+  # vars: All run_nginx* variables are set as facts and passed this way to
+  #       the role. This enables persisting the values in __testing_state
+  #       and restoring them in later stages (e.g. verify) without manually
+  #       duplicating data across playbooks.

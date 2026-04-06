@@ -1,0 +1,337 @@
+# Check collection role "run" outcomes.
+
+- name: "Molecule | Verify | Initialize the foundata.nginx.run role (without actually running it; get and expose variables)"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "init"
+    public: true
+
+
+## Preparation
+
+- name: "Molecule | Verify | Set run_nginx_* parameters as facts from __testing_state"
+  ansible.builtin.set_fact:
+    "{{ item['key'] }}": "{{ item['value'] }}"
+  loop: >-
+    {{
+      (__testing_state | default({}, true))
+      | ansible.builtin.dict2items
+      | ansible.builtin.selectattr('key', 'match', '^run_nginx_')
+      | ansible.builtin.list
+    }}
+
+
+## Main configuration file existence
+
+- name: "Molecule | Verify | Check if NGINX main configuration file exists"
+  ansible.builtin.stat:
+    path: "{{ __run_nginx_config_service_file_path }}"
+  register: __testing_config_file
+
+
+- name: "Molecule | Verify | Assert NGINX main configuration file exists"
+  ansible.builtin.assert:
+    that:
+      - __testing_config_file['stat']['exists']
+    fail_msg: >-
+      The NGINX main configuration file '{{ __run_nginx_config_service_file_path }}'
+      does not exist.
+    success_msg: >-
+      The NGINX main configuration file '{{ __run_nginx_config_service_file_path }}'
+      exists.
+
+
+## Distribution backup file existence and content
+
+- name: "Molecule | Verify | Check if NGINX distribution backup configuration file exists"
+  ansible.builtin.stat:
+    path: "{{ __run_nginx_config_service_file_distbackup_path }}"
+  register: __testing_distbackup_file
+
+
+- name: "Molecule | Verify | Assert NGINX distribution backup configuration file exists"
+  ansible.builtin.assert:
+    that:
+      - __testing_distbackup_file['stat']['exists']
+    fail_msg: >-
+      The NGINX distribution backup configuration file
+      '{{ __run_nginx_config_service_file_distbackup_path }}' does not exist.
+    success_msg: >-
+      The NGINX distribution backup configuration file
+      '{{ __run_nginx_config_service_file_distbackup_path }}' exists.
+
+
+- name: "Molecule | Verify | Read NGINX distribution backup configuration file content"
+  ansible.builtin.slurp:
+    src: "{{ __run_nginx_config_service_file_distbackup_path }}"
+  register: __testing_distbackup_content
+
+
+- name: "Molecule | Verify | Assert NGINX distribution backup contains backup notice comment"
+  ansible.builtin.assert:
+    that:
+      - "__run_nginx_config_service_file_distbackup_comment in (__testing_distbackup_content['content'] | ansible.builtin.b64decode)"
+    fail_msg: >-
+      The NGINX distribution backup configuration file
+      '{{ __run_nginx_config_service_file_distbackup_path }}'
+      does not contain the expected backup notice comment.
+    success_msg: >-
+      The NGINX distribution backup configuration file
+      '{{ __run_nginx_config_service_file_distbackup_path }}'
+      contains the expected backup notice comment.
+
+
+## Service state
+
+- name: "Molecule | Verify | Gather service facts"
+  ansible.builtin.service_facts:
+
+
+- name: "Molecule | Verify | Show service facts"
+  ansible.builtin.debug:
+    var: ansible_facts['services']
+    verbosity: 3
+
+
+- name: "Molecule | Verify | Assert NGINX service is running"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['services'][__run_nginx_nginx_servicename] is ansible.builtin.defined
+      - ansible_facts['services'][__run_nginx_nginx_servicename]['state'] == 'running'
+    fail_msg: "NGINX service '{{ __run_nginx_nginx_servicename }}' is not running"
+    success_msg: "NGINX service '{{ __run_nginx_nginx_servicename }}' is running"
+
+
+## Unmanaged snippet cleanup (Debian)
+
+- name: "Molecule | Verify | Assert pre-existing unmanaged Debian snippets are removed"
+  when:
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
+  block:
+
+    - name: "Molecule | Verify | Check if unmanaged Debian snakeoil snippet still exists"
+      ansible.builtin.stat:
+        path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/snakeoil.conf"
+      register: __testing_snippet_snakeoil
+
+
+    - name: "Molecule | Verify | Assert unmanaged Debian snakeoil snippet has been removed"
+      ansible.builtin.assert:
+        that:
+          - not __testing_snippet_snakeoil['stat']['exists']
+        fail_msg: >-
+          The unmanaged Debian snippet 'snakeoil.conf' still exists at
+          '{{ __run_nginx_config_service_dropin_snippets_dir_path }}/snakeoil.conf'
+          but should have been removed by the role.
+        success_msg: >-
+          The unmanaged Debian snippet 'snakeoil.conf' has been removed as expected.
+
+
+    - name: "Molecule | Verify | Check if unmanaged Debian fastcgi-php snippet still exists"
+      ansible.builtin.stat:
+        path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/fastcgi-php.conf"
+      register: __testing_snippet_fastcgi
+
+
+    - name: "Molecule | Verify | Assert unmanaged Debian fastcgi-php snippet has been removed"
+      ansible.builtin.assert:
+        that:
+          - not __testing_snippet_fastcgi['stat']['exists']
+        fail_msg: >-
+          The unmanaged Debian snippet 'fastcgi-php.conf' still exists at
+          '{{ __run_nginx_config_service_dropin_snippets_dir_path }}/fastcgi-php.conf'
+          but should have been removed by the role.
+        success_msg: >-
+          The unmanaged Debian snippet 'fastcgi-php.conf' has been removed as expected.
+
+
+## HTTP connectivity: example.com
+
+- name: "Molecule | Verify | Connect to example.com on HTTP port 80"
+  ansible.builtin.uri:
+    url: "http://localhost/"
+    headers:
+      Host: "example.com"
+    return_content: true
+  register: __testing_http_example_result
+
+
+- name: "Molecule | Verify | Assert example.com HTTP response contains expected content and status"
+  ansible.builtin.assert:
+    that:
+      - __testing_http_example_result['status'] == 200
+      - "'🚀 It works!' in __testing_http_example_result['content']"
+    fail_msg: >-
+      The HTTP response from example.com on port 80 did not return HTTP 200
+      or does not contain the expected content.
+      Status: {{ __testing_http_example_result['status'] }}
+    success_msg: >-
+      The HTTP response from example.com on port 80 returned HTTP 200
+      and contains the expected content.
+
+
+## HTTPS connectivity: example.com
+
+- name: "Molecule | Verify | Connect to example.com on HTTPS port 443 (status)"
+  # The command module is used intentionally:
+  # ansible.builtin.uri sends the URL hostname as TLS SNI, which does not
+  # match the server_name and gets rejected by ssl_reject_handshake. Curl's
+  # --resolve flag allows setting the correct SNI for example.com while
+  # connecting to 127.0.0.1.
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--silent"
+      - "--output"
+      - "/dev/null"
+      - "--write-out"
+      - "%{http_code}"
+      - "--max-time"
+      - "5"
+      - "--insecure"
+      - "--resolve"
+      - "example.com:443:127.0.0.1"
+      - "https://example.com/"
+  changed_when:
+    - false
+  failed_when:
+    - __testing_https_example_status is ansible.builtin.failed
+  register: __testing_https_example_status
+
+
+- name: "Molecule | Verify | Connect to example.com on HTTPS port 443 (body)"
+  # The command module is used intentionally:
+  # see the status check task above for the reasoning.
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--silent"
+      - "--max-time"
+      - "5"
+      - "--insecure"
+      - "--resolve"
+      - "example.com:443:127.0.0.1"
+      - "https://example.com/"
+  changed_when:
+    - false
+  failed_when:
+    - __testing_https_example_body is ansible.builtin.failed
+  register: __testing_https_example_body
+
+
+- name: "Molecule | Verify | Assert example.com HTTPS response contains expected content and status"
+  ansible.builtin.assert:
+    that:
+      - __testing_https_example_status['stdout'] == '200'
+      - "'🚀 It works!' in __testing_https_example_body['stdout']"
+    fail_msg: >-
+      The HTTPS response from example.com on port 443 did not return HTTP 200
+      or does not contain the expected content.
+      Status: {{ __testing_https_example_status['stdout'] }}
+    success_msg: >-
+      The HTTPS response from example.com on port 443 returned HTTP 200
+      and contains the expected content.
+
+
+## Default catch-all server (HTTP 444)
+
+- name: "Molecule | Verify | Connect to non-existing host on HTTP port 80"
+  # The command module is used intentionally:
+  # NGINX's "return 444" closes the connection without sending an HTTP
+  # response, which ansible.builtin.uri cannot handle gracefully.
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--silent"
+      - "--output"
+      - "/dev/null"
+      - "--write-out"
+      - "%{http_code}"
+      - "--max-time"
+      - "5"
+      - "--header"
+      - "Host: does-not-exist.example.com"
+      - "http://127.0.0.1/"
+  changed_when:
+    - false
+  failed_when:
+    - __testing_catchall_http_result is ansible.builtin.failed
+    - __testing_catchall_http_result['rc'] != 52 # 52 = empty reply from server (expected for NGINX 444)
+  register: __testing_catchall_http_result
+
+
+- name: "Molecule | Verify | Assert HTTP catch-all returns empty response (NGINX 444)"
+  ansible.builtin.assert:
+    that:
+      - __testing_catchall_http_result['stdout'] == '000'
+    fail_msg: >-
+      The HTTP catch-all server did not return the expected empty response (NGINX 444).
+      Expected HTTP code '000' (connection closed),
+      got '{{ __testing_catchall_http_result['stdout'] }}'.
+    success_msg: >-
+      The HTTP catch-all server correctly returned an empty response (NGINX 444).
+
+
+- name: "Molecule | Verify | Connect to non-existing host on HTTPS port 443"
+  # The command module is used intentionally:
+  # NGINX's ssl_reject_handshake rejects the TLS handshake entirely, which
+  # ansible.builtin.uri cannot handle gracefully.
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--silent"
+      - "--output"
+      - "/dev/null"
+      - "--write-out"
+      - "%{http_code}"
+      - "--max-time"
+      - "5"
+      - "--insecure"
+      - "--header"
+      - "Host: does-not-exist.example.com"
+      - "https://127.0.0.1/"
+  when:
+    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] == '22')
+  changed_when:
+    - false
+  failed_when:
+    - __testing_catchall_https_result is ansible.builtin.failed
+    - __testing_catchall_https_result['rc'] != 35 # 35 = SSL connect error (expected for ssl_reject_handshake)
+  register: __testing_catchall_https_result
+
+
+- name: "Molecule | Verify | Assert HTTPS catch-all returns empty response (NGINX ssl_reject_handshake)"
+  ansible.builtin.assert:
+    that:
+      - __testing_catchall_https_result['stdout'] == '000'
+    fail_msg: >-
+      The HTTPS catch-all server did not return the expected empty response
+      (ssl_reject_handshake). Expected HTTP code '000' (TLS handshake rejected),
+      got '{{ __testing_catchall_https_result['stdout'] }}'.
+    success_msg: >-
+      The HTTPS catch-all server correctly rejected the TLS handshake
+      (ssl_reject_handshake).
+  when:
+    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] == '22') # NGINX is too old there for the catchall TLS/SSL, cf. j2 template file
+
+
+## Response headers: NGINX version information
+
+- name: "Molecule | Verify | Connect to example.com and inspect response headers"
+  ansible.builtin.uri:
+    url: "http://localhost/"
+    headers:
+      Host: "example.com"
+    return_content: false
+  register: __testing_headers_result
+
+
+- name: "Molecule | Verify | Assert response headers do not contain NGINX version information"
+  ansible.builtin.assert:
+    that:
+      - __testing_headers_result['server'] is not ansible.builtin.search('nginx/[0-9]')
+    fail_msg: >-
+      The response headers contain NGINX version information in the Server header.
+      Server header value: '{{ __testing_headers_result['server'] | default('') }}'
+    success_msg: >-
+      The response headers do not contain NGINX version information.

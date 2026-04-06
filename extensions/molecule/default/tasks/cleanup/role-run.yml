@@ -1,0 +1,8 @@
+
+# Execute the collection role "run" against all driver-created instances (cleanup / absent)
+
+- name: "Molecule | Cleanup | Include the foundata.nginx.run role"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+  vars:
+    run_nginx_state: "absent"
