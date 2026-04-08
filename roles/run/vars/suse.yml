@@ -10,8 +10,40 @@ __run_nginx_main_directives_overwrite:
 
 # SUSE maintains "/etc/nginx/vhosts.d/" by default and uses the "vHost" terminology,
 # comparable to Apache HTTPD.
-__run_nginx_config_service_dropin_sites_available_dir_path: /etc/nginx/vhosts.d-available"
+__run_nginx_config_service_dropin_sites_available_dir_path: "/etc/nginx/vhosts.d-available"
 __run_nginx_config_service_dropin_sites_enabled_dir_path: "/etc/nginx/vhosts.d"
+
+
+__run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
+
+
+__run_nginx_packages_install_map_modules:
+  # Hint for package names: zypper search -s nginx-module | grep 'nginx-module-'
+  # Modules not listed here (http_image_filter, http_perl, http_xslt_filter,
+  # mail, stream) are shipped by the base "nginx" package on SUSE.
+  http_brotli_filter:
+    - "nginx-module-brotli"
+  http_brotli_static:
+    - "nginx-module-brotli"
+  http_echo:
+    - "nginx-module-echo"
+  http_geoip2:
+    - "nginx-module-geoip2"
+  http_js:
+    - "nginx-module-njs"
+  http_lua:
+    - "nginx-module-lua"
+  http_vhost_traffic_status:
+    - "nginx-module-vts"
+  http_zstd_filter:
+    - "nginx-module-zstd"
+  http_zstd_static:
+    - "nginx-module-zstd"
+  stream_geoip2:
+    - "nginx-module-geoip2"
+  stream_js:
+    - "nginx-module-njs"
+
 
 __run_nginx_http_directives_overwrite:
   include:

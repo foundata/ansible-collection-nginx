@@ -20,6 +20,34 @@
     - (__run_nginx_packages_install | ansible.builtin.length) > 0
 
 
+- name: "Setup | Install | Default | Show enabled modules requiring additional packages"
+  ansible.builtin.debug:
+    msg: >-
+      {{
+        run_nginx_modules_enabled
+        | ansible.builtin.default([])
+        | ansible.builtin.select('in', __run_nginx_packages_install_map_modules.keys() | list)
+        | ansible.builtin.list
+      }}
+    verbosity: 4
+
+
+- name: "Setup | Install | Default | Install module-specific packages"
+  ansible.builtin.package:
+    name: "{{ __run_nginx_packages_install_map_modules[item] }}"
+    state: "{{ 'latest' if run_nginx_autoupgrade else 'present' }}"
+  when:
+    - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
+  loop: >-
+    {{
+      run_nginx_modules_enabled
+      | ansible.builtin.default([])
+      | ansible.builtin.select('in', __run_nginx_packages_install_map_modules.keys() | list)
+      | ansible.builtin.list
+    }}
+
+
+
 - name: "Setup | Install | Default | Remove unwanted files and directories (e.g., to prevent conflicts or resolve incompatibilities)"
   ansible.builtin.file:
     path: "{{ item }}"

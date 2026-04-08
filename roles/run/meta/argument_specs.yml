@@ -280,6 +280,70 @@ argument_specs:
         type: "bool"
         default: true
 
+      run_nginx_modules_enabled:
+        description: |
+          List of dynamic NGINX module names to enable at runtime.
+
+          Module names follow the canonical `.so` filename with the `ngx_` prefix
+          and `_module` suffix stripped. The general pattern is `<context>_<name>`
+          (e.g. `http_perl` from `ngx_http_perl_module.so`). See the naming
+          convention comment in `vars/main.yml` for the full specification.
+
+          Example:
+          ```yaml
+          run_nginx_modules_enabled:
+            - "http_echo"
+            - "http_headers_more_filter"
+            - "http_image_filter"
+            - "http_brotli_filter"
+            - "http_brotli_static"
+          ```
+
+          There are two types of modules in NGINX: built-in and dynamic. Only
+          dynamic modules can be toggled this way; modules compiled into the NGINX
+          binary are always active and cannot be managed via this list
+          (`nginx -V 2>&1 | xargs -n1 | grep module` shows the compiled-in set).
+
+          For each listed module, the role installs required distribution packages
+          automatically via the platform-specific mapping maintained in the
+          `__run_nginx_packages_install_map_modules` variable (see `vars/main.yml`
+          and the platform overrides in `vars/debian.yml`, `vars/redhat.yml`,
+          `vars/suse.yml`).
+
+          On Debian/Ubuntu, module packages handle `load_module` configuration
+          automatically (the package creates a config file and symlinks it into
+          `modules-enabled/`). The role therefore only installs the package and
+          skips its own config creation on these platforms.
+
+          On other platforms (RedHat, SUSE), the role additionally creates the
+          corresponding configuration file in `/etc/nginx/modules-available/`
+          and symlinks it into `/etc/nginx/modules-enabled/` so the
+          `load_module` directive is pulled into the main context of
+          `nginx.conf`.
+        type: "list"
+        default: []
+
+      run_nginx_modules_disable_unmanaged:
+        description: |
+          Controls whether the role removes dynamic module symlinks that are not
+          declared in `run_nginx_modules_enabled`.
+
+          When set to `true`, any `*.conf` file or symlink found in
+          `/etc/nginx/modules-enabled/` whose name does not match an entry in
+          `run_nginx_modules_enabled` is removed. This keeps the managed directory
+          in sync with the declared list, treating `run_nginx_modules_enabled` as
+          the single source of truth.
+
+          When set to `false`, unknown files are left untouched. Use this if you
+          manage additional modules outside of this role and want to prevent
+          accidental unavailability of dynamic modules loaded by default on your
+          platform.
+
+          This setting is ignored on Debian/Ubuntu where module configs are
+          managed by the distribution packages.
+        type: "bool"
+        default: true
+
       run_nginx_snippets_manage:
         description: |
           Controls whether the role ships and manages its curated NGINX

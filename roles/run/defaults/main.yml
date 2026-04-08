@@ -63,6 +63,6 @@ run_nginx_snippets_delete_unmanaged: false
 
 run_nginx_snippet_settings: {}
 
-run_nginx_modules_enabled: [] # FIXME not handled / implemented yet
+run_nginx_modules_enabled: []
 
-run_nginx_modules_disabled: [] # FIXME not handled / implemented yet
+run_nginx_modules_disable_unmanaged: true

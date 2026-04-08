@@ -335,3 +335,7 @@
       Server header value: '{{ __testing_headers_result['server'] | default('') }}'
     success_msg: >-
       The response headers do not contain NGINX version information.
+
+
+- name: pause
+  ansible.builtin.pause:

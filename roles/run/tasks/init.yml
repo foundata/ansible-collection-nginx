@@ -138,6 +138,7 @@
         | ansible.builtin.combine(__run_nginx_main_directives_overwrite, recursive=true)
       }}
 
+
 - name: "Init | Show effective NGINX main configuration directives"
   ansible.builtin.debug:
     var: __run_nginx_effective_main_directives
@@ -151,6 +152,7 @@
         __run_nginx_events_directives_defaults
         | ansible.builtin.combine(__run_nginx_events_directives_overwrite, recursive=true)
       }}
+
 
 - name: "Init | Show effective NGINX events{} configuration directives"
   ansible.builtin.debug:
@@ -166,6 +168,7 @@
         | ansible.builtin.combine(__run_nginx_http_directives_overwrite, recursive=true)
       }}
 
+
 - name: "Init | Show effective NGINX http{} configuration directives"
   ansible.builtin.debug:
     var: __run_nginx_effective_http_directives
@@ -180,6 +183,7 @@
         | ansible.builtin.combine(__run_nginx_snippet_settings_overwrite, recursive=true)
         | ansible.builtin.combine(run_nginx_snippet_settings, recursive=true)
       }}
+
 
 - name: "Init | Show effective snippet settings"
   ansible.builtin.debug:

@@ -1,0 +1,5 @@
+{%- from '_nginx_macros.j2' import module_so_path -%}
+
+# {{ ansible_managed }}
+
+load_module {{ module_so_path(tpl_module_key) }};

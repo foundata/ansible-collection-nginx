@@ -2,12 +2,18 @@
 
 ---
 
+- name: "Setup | Uninstall | Gather service facts"
+  ansible.builtin.service_facts:
+
+
 - name: "Setup | Uninstall | Stop and disable service: {{ __run_nginx_nginx_servicename }} (best-effort)"
   ansible.builtin.systemd_service:
     name: "{{ __run_nginx_nginx_servicename }}"
     state: "stopped"
     enabled: false
   ignore_errors: true
+  when:
+    - __run_nginx_nginx_servicename in ansible_facts['services']
 
 
 - name: "Setup | Uninstall | Remove drop-in config files (snippets, sites)"
@@ -98,6 +104,25 @@
       ansible.builtin.file:
         path: "{{ __run_nginx_config_service_file_distbackup_path }}"
         state: "absent"
+
+
+- name: "Setup | Uninstall | Remove module config directories (non-Debian platforms)"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: "absent"
+  when:
+    - ansible_facts['os_family'] != 'Debian'
+  loop:
+    - "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}"
+    - "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
+
+
+- name: "Setup | Uninstall | Remove modules symlink (non-Debian platforms)"
+  ansible.builtin.file:
+    path: "/etc/nginx/modules"
+    state: "absent"
+  when:
+    - ansible_facts['os_family'] != 'Debian'
 
 
 - name: "Setup | Uninstall | Remove packages"

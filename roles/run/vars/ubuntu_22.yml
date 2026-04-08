@@ -1,28 +1,21 @@
-# Internal role variables specific to: Debian (os_family or distribution)
+# Internal role variables specific to: Ubuntu 22.x (distribution_major_version)
 #
 # Only values specific to the platform and its functionality should be included
-# here. Variables in this file override those defined in vars/main.yml.
+# here. Variables in this file override those defined in vars/debian.yml.
 
 ---
 
-__run_nginx_main_directives_overwrite:
-  user: "www-data www-data"
-  include:
-    - "/etc/nginx/modules-enabled/*.conf"
-
-
 __run_nginx_packages_install_map_modules:
   # Hint for package names: apt list 'libnginx-mod-*'
+  # Ubuntu 22.04 does not ship the brotli modules (available from Debian 12 /
+  # Ubuntu 24.04 onwards). This map therefore mirrors vars/debian.yml minus the
+  # http_brotli_filter and http_brotli_static entries.
   ndk_http:
     - "libnginx-mod-http-ndk"
   http_auth_pam:
     - "libnginx-mod-http-auth-pam"
   http_auth_spnego:
     - "libnginx-mod-http-auth-spnego"
-  http_brotli_filter:
-    - "libnginx-mod-http-brotli-filter"
-  http_brotli_static:
-    - "libnginx-mod-http-brotli-static"
   http_cache_purge:
     - "libnginx-mod-http-cache-purge"
   http_dav_ext:
@@ -33,7 +26,9 @@ __run_nginx_packages_install_map_modules:
     - "libnginx-mod-http-fancyindex"
   http_geoip2:
     - "libnginx-mod-http-geoip2"
-  http_geoip: # deprecated, MaxMind stopped updating legacy GeoIP in 2019; use http_geoip2 instead
+  # deprecated, MaxMind stopped updating legacy GeoIP
+  # in 2019; use http_geoip2 instead
+  http_geoip:
     - "libnginx-mod-http-geoip"
   http_headers_more_filter:
     - "libnginx-mod-http-headers-more-filter"
@@ -77,5 +72,3 @@ __run_nginx_packages_install_map_modules:
     - "libnginx-mod-stream-js"
   stream:
     - "libnginx-mod-stream"
-
-

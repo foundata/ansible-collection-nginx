@@ -30,6 +30,18 @@
       group: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_group }}"
       mode: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_mode }}"
 
+    - path: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_modules_available_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_modules_available_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_modules_available_dir_mode }}"
+
+    - path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
+      state: "directory"
+      owner: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_owner }}"
+      group: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_group }}"
+      mode: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_mode }}"
+
     - path: "{{ __run_nginx_log_dir_path }}"
       state: "directory"
       owner: "{{ __run_nginx_log_dir_owner }}"
@@ -345,30 +357,105 @@
         - "run_nginx: reload nginx.service"
 
 
+### Modules
+#
+# On Debian, module packages handle load_module config automatically
+# (symlinks in modules-enabled/). The role only needs to install the
+# package. Module config creation, symlinking, and stale cleanup are
+# therefore skipped on Debian.
+
+- name: "Config | Default | Manage module load configs (non-Debian)"
+  when:
+    - ansible_facts['os_family'] != 'Debian'
+  block:
+
+    - name: "Config | Default | Ensure modules symlink exists (for relative load_module paths)"
+      ansible.builtin.file:
+        src: "{{ __run_nginx_module_so_lib_dir_path }}"
+        dest: "/etc/nginx/modules"
+        state: "link"
+        force: true
+      when:
+        - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
 
 
+    - name: "Config | Default | Create or update module load config files"
+      ansible.builtin.template:
+        src: "module-load.conf.j2"
+        dest: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+        owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
+        group: "{{ __run_nginx_config_service_dropin_file_group }}"
+        mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
+      vars:
+        tpl_module_key: "{{ item }}"
+      when:
+        - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
+      loop: "{{ run_nginx_modules_enabled | ansible.builtin.default([]) }}"
+      loop_control:
+        label: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: restart nginx.service"
 
-# - name: "Config | Default | Ensure 'Include' directive exists in main service config file"
-#   ansible.builtin.lineinfile:
-#     path: "{{ __run_logrotate_config_file_path }}"
-#     line: "include {{ __run_logrotate_config_dropin_dir_path }}"
-#     state: "present"
-#   when:
-#     # openSUSE Leap does NOT rely on an "include" directive inside the main
-#     # configuration file (/usr/etc/logrotate.conf). Instead, logrotate is
-#     # executed via /usr/sbin/logrotate-all (systemd service) which dynamically
-#     # loads:
-#     #   - /etc/logrotate.conf (if present) or /usr/etc/logrotate.conf
-#     #   - {/usr,}/etc/logrotate.d/*
-#     # Includes are handled by the wrapper script, not via an "include" directive
-#     # inside the main config file. Therefore we do NOT add an include directive
-#     # on this platform.
-#     #
-#     # More information:
-#     #   - cat /usr/sbin/logrotate-all (on openSUSE Leap)
-#     #   - systemctl cat logrotate.service (on openSUSE Leap)
-#     #   - systemctl cat logrotate.timer
-#     - (ansible_facts['distribution'] | ansible.builtin.regex_replace(' ', '_') | ansible.builtin.lower) != 'opensuse_leap'
-#   notify:
-#     - "run_logrotate: validate configuration"
 
+    - name: "Config | Default | Enable module symlinks"
+      ansible.builtin.file:
+        src: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}.conf"
+        state: "link"
+        force: true
+      when:
+        - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
+      loop: "{{ run_nginx_modules_enabled | ansible.builtin.default([]) }}"
+      loop_control:
+        label: >-
+          {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}.conf
+          -> {{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: restart nginx.service"
+
+
+    - name: "Config | Default | Delete stale / unmanaged module configs"
+      when:
+        - run_nginx_modules_disable_unmanaged
+      block:
+
+        - name: "Config | Default | Build list of expected module config filenames"
+          ansible.builtin.set_fact:
+            __run_nginx_expected_module_filenames: >-
+              {{
+                (run_nginx_modules_enabled | ansible.builtin.default([]))
+                | ansible.builtin.map('ansible.builtin.regex_replace', '$', '.conf')
+                | ansible.builtin.list
+              }}
+
+
+        - name: "Config | Default | List existing module config files in modules-enabled"
+          ansible.builtin.find:
+            paths:
+              - "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
+            patterns:
+              - "*.conf"
+            file_type: "any"
+            hidden: true
+          register: __run_nginx_module_conf_files
+
+
+        - name: "Config | Default | Remove stale, unmanaged module configs (not in run_nginx_modules_enabled)"
+          ansible.builtin.file:
+            path: "{{ item['path'] }}"
+            state: "absent"
+          when:
+            - (__run_nginx_module_conf_files['files'] | ansible.builtin.length) > 0
+          loop: >-
+            {{
+              __run_nginx_module_conf_files['files']
+              | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_module_filenames | map('regex_escape') | join('|')) ~ ')$')
+              | ansible.builtin.list
+            }}
+          loop_control:
+            label: "{{ item['path'] }}"
+          notify:
+            - "run_nginx: validate configuration"
+            - "run_nginx: restart nginx.service"

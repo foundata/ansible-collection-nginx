@@ -69,6 +69,36 @@ __run_nginx_packages_install:
   - "nginx"
 
 
+# Mapping of NGINX dynamic module names to additional packages that need to be
+# installed. Modules not listed here do not require extra packages. This is
+# highly platform-specific, so the variable gets probably overwritten by
+# platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
+#
+# Please note there are two types of modules used in NGINX: Built-in & Dynamic.
+# Only dynamic modules can be toggled and/or installed via additional packages;
+# modules compiled into the NGINX binary are always active and cannot be
+# disabled or uninstalled (nginx -V 2>&1 | xargs -n1 | grep module shows the
+# compiled-in set).
+#
+# Dictionary key naming convention:
+#
+# Keys are the NGINX module's canonical .so filename without the "ngx_" prefix
+# and the "_module.so" postfix, as used in load_module directives. The general
+# pattern is "<context>_<name>" (e.g. "http_perl" from
+# "ngx_http_perl_module.so"). Distribution package names differ across platforms
+# (Debian: libnginx-mod-http-perl, Red Hat: nginx-mod-http-perl, SUSE:
+# nginx-module-perl) but the a name based on the .so is universal.
+#
+# Modules producing two .so files (e.g. brotli ships both
+# "ngx_http_brotli_filter_module.so" and "ngx_http_brotli_static_module.so")
+# get two separate dictionary keys; on platforms that bundle both in one
+# package, both keys simply reference the same package name.
+#
+# Notable outliers in NGINX's own naming: ndk_http_module.so (no ngx_
+# prefix) and ngx_nchan_module.so (no context qualifier despite being HTTP).
+__run_nginx_packages_install_map_modules: {}
+
+
 # List of package names to be uninstalled when run_nginx_state is
 # set to "absent". This variable is useful when __run_nginx_packages_install
 # contains packages that are required for the managed software to function but
@@ -128,6 +158,21 @@ __run_nginx_config_service_dropin_sites_enabled_dir_path: "/etc/nginx/sites-enab
 __run_nginx_config_service_dropin_sites_enabled_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
 __run_nginx_config_service_dropin_sites_enabled_dir_group: "{{ __run_nginx_config_service_file_group }}"
 __run_nginx_config_service_dropin_sites_enabled_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_modules_available_dir_path: "/etc/nginx/modules-available"
+__run_nginx_config_service_dropin_modules_available_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_modules_available_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_modules_available_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+__run_nginx_config_service_dropin_modules_enabled_dir_path: "/etc/nginx/modules-enabled"
+__run_nginx_config_service_dropin_modules_enabled_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
+__run_nginx_config_service_dropin_modules_enabled_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
+__run_nginx_config_service_dropin_modules_enabled_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
+
+# Absolute path to the directory where distribution packages install the
+# dynamic module .so files. Used as the symlink target for
+# /etc/nginx/modules so that relative load_module paths work universally.
+__run_nginx_module_so_lib_dir_path: "/usr/lib/nginx/modules"
 
 __run_nginx_config_service_dropin_snippets_dir_path: "/etc/nginx/snippets"
 __run_nginx_config_service_dropin_snippets_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
@@ -222,7 +267,6 @@ __run_nginx_http_directives_defaults:
   server_tokens: false
 
 
-
 # Platform-specific overrides for NGINX http{} config. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
@@ -247,18 +291,11 @@ __run_nginx_snippet_settings_defaults:
 __run_nginx_snippet_settings_overwrite: {}
 
 
-# Mapping of module names to additional packages that need to be installed.
-# Modules not listed here do not require extra packages. This is highly
-# platform-specific specific, so the variable gets propably overwritten by
-# platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
-__run_nginx_packages_install_map_modules: {}
-
-
-# # FIXME? We should thing about when run_nginx_modules_enabled run_nginx_modules_disabled
+# # FIXME? We should think about when run_nginx_modules_enabled run_nginx_modules_disabled
 # #        is implemented
 # # Internal - always enabled for baseline to work
-# __run_ngnix_required_modules:
-#   - "ssl
+# __run_nginx_required_modules:
+#   - "ssl"
 #   - "headers"
 #   - "socache_shmcb"
 
