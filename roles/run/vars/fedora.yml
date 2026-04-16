@@ -8,36 +8,108 @@
 __run_nginx_server_exec_path: "/usr/sbin/nginx"
 
 
-__run_nginx_packages_install_map_modules:
-  # Hint for package names: dnf list nginx-mod-*
-  # Fedora ships additional modules not available on RHEL/AlmaLinux/CentOS.
-  # This map therefore includes both the base RedHat entries (from
-  # vars/redhat.yml) and Fedora-specific extras.
+# Hint: update this variable with hack/gen-modules-map-resources.sh
+#
+# Fedora ships additional modules not available on RHEL/AlmaLinux/CentOS.
+# This map therefore includes both the base RedHat entries (from
+# vars/redhat.yml) and Fedora-specific extras.
+__run_nginx_modules_map_resources:
   http_brotli_filter:
-    - "nginx-mod-brotli"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-brotli.conf"
+    packages:
+      - "nginx-mod-brotli"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_brotli_filter_module.so"
   http_brotli_static:
-    - "nginx-mod-brotli"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-brotli.conf"
+    packages:
+      - "nginx-mod-brotli"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_brotli_static_module.so"
   http_fancyindex:
-    - "nginx-mod-fancyindex"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-fancyindex.conf"
+    packages:
+      - "nginx-mod-fancyindex"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_fancyindex_module.so"
   http_geoip:
-    - "nginx-mod-http-geoip"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-http-geoip.conf"
+    packages:
+      - "nginx-mod-http-geoip"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_geoip_module.so"
   http_headers_more_filter:
-    - "nginx-mod-headers-more"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-headers-more.conf"
+    packages:
+      - "nginx-mod-headers-more"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_headers_more_filter_module.so"
   http_image_filter:
-    - "nginx-mod-http-image-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-http-image-filter.conf"
+    packages:
+      - "nginx-mod-http-image-filter"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_image_filter_module.so"
   http_modsecurity:
-    - "nginx-mod-modsecurity"
+    conf_paths:
+      - "/etc/nginx/modsecurity.conf"
+      - "/usr/share/nginx/modules/mod-modsecurity.conf"
+    packages:
+      - "nginx-mod-modsecurity"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_modsecurity_module.so"
   http_naxsi:
-    - "nginx-mod-naxsi"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-naxsi-web-app-firewall.conf"
+    packages:
+      - "nginx-mod-naxsi"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_naxsi_module.so"
   http_perl:
-    - "nginx-mod-http-perl"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-http-perl.conf"
+    packages:
+      - "nginx-mod-http-perl"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_perl_module.so"
   http_vhost_traffic_status:
-    - "nginx-mod-vts"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-vhost-traffic-status.conf"
+    packages:
+      - "nginx-mod-vts"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_vhost_traffic_status_module.so"
   http_xslt_filter:
-    - "nginx-mod-http-xslt-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
+    packages:
+      - "nginx-mod-http-xslt-filter"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_xslt_filter_module.so"
   mail:
-    - "nginx-mod-mail"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-mail.conf"
+    packages:
+      - "nginx-mod-mail"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_mail_module.so"
   stream:
-    - "nginx-mod-stream"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-stream.conf"
+    packages:
+      - "nginx-mod-stream"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_stream_module.so"
   stream_geoip:
-    - "nginx-mod-stream-geoip"
+    conf_paths:
+      - "/usr/share/nginx/modules/zz-mod-stream-geoip.conf"
+    packages:
+      - "nginx-mod-stream-geoip"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_stream_geoip_module.so"

@@ -306,7 +306,7 @@ argument_specs:
 
           For each listed module, the role installs required distribution packages
           automatically via the platform-specific mapping maintained in the
-          `__run_nginx_packages_install_map_modules` variable (see `vars/main.yml`
+          `__run_nginx_modules_map_resources` variable (see `vars/main.yml`
           and the platform overrides in `vars/debian.yml`, `vars/redhat.yml`,
           `vars/suse.yml`).
 

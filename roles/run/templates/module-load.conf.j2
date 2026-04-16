@@ -2,4 +2,4 @@
 
 # {{ ansible_managed }}
 
-load_module {{ module_so_path(tpl_module_key) }};
+load_module {{ module_so_path(tpl_module_key, tpl_module_so_paths | ansible.builtin.default([])) }};

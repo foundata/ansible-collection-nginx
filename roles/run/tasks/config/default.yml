@@ -369,7 +369,7 @@
     - ansible_facts['os_family'] != 'Debian'
   block:
 
-    - name: "Config | Default | Ensure modules symlink exists (for relative load_module paths)"
+    - name: "Config | Default | Ensure modules directory symlink exists (for relative load_module paths)"
       ansible.builtin.file:
         src: "{{ __run_nginx_module_so_lib_dir_path }}"
         dest: "/etc/nginx/modules"
@@ -379,17 +379,18 @@
         - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
 
 
-    - name: "Config | Default | Create or update module load config files"
-      ansible.builtin.template:
-        src: "module-load.conf.j2"
+    # Symlink package-provided .conf files under a stable, predictable name
+    # (the module key) so the rest of the role does not need to know the
+    # platform-specific filenames tracked in __run_nginx_modules_map_resources.
+    - name: "Config | Default | Symlink package-provided module load config files"
+      ansible.builtin.file:
+        src: "{{ __run_nginx_modules_map_resources[item]['conf_paths'] | ansible.builtin.first }}"
         dest: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
-        owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
-        group: "{{ __run_nginx_config_service_dropin_file_group }}"
-        mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
-      vars:
-        tpl_module_key: "{{ item }}"
+        state: "link"
+        force: true
       when:
-        - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
+        - item in __run_nginx_modules_map_resources
+        - (__run_nginx_modules_map_resources[item]['conf_paths'] | ansible.builtin.length) > 0
       loop: "{{ run_nginx_modules_enabled | ansible.builtin.default([]) }}"
       loop_control:
         label: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
@@ -398,7 +399,34 @@
         - "run_nginx: restart nginx.service"
 
 
-    - name: "Config | Default | Enable module symlinks"
+    - name: "Config | Default | Create or update module load config files (if there are no package-provided ones)"
+      ansible.builtin.template:
+        src: "module-load.conf.j2"
+        dest: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+        owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
+        group: "{{ __run_nginx_config_service_dropin_file_group }}"
+        mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
+      vars:
+        tpl_module_key: "{{ item }}"
+        tpl_module_so_paths: >-
+          {{
+            __run_nginx_modules_map_resources[item]['so_paths']
+            if (item in __run_nginx_modules_map_resources)
+            else []
+          }}
+      when:
+        - >-
+          item not in __run_nginx_modules_map_resources
+          or (__run_nginx_modules_map_resources[item]['conf_paths'] | ansible.builtin.length) == 0
+      loop: "{{ run_nginx_modules_enabled | ansible.builtin.default([]) }}"
+      loop_control:
+        label: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: restart nginx.service"
+
+
+    - name: "Config | Default | Create 'Enable module' symlinks"
       ansible.builtin.file:
         src: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
         dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}.conf"

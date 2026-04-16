@@ -69,36 +69,6 @@ __run_nginx_packages_install:
   - "nginx"
 
 
-# Mapping of NGINX dynamic module names to additional packages that need to be
-# installed. Modules not listed here do not require extra packages. This is
-# highly platform-specific, so the variable gets probably overwritten by
-# platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
-#
-# Please note there are two types of modules used in NGINX: Built-in & Dynamic.
-# Only dynamic modules can be toggled and/or installed via additional packages;
-# modules compiled into the NGINX binary are always active and cannot be
-# disabled or uninstalled (nginx -V 2>&1 | xargs -n1 | grep module shows the
-# compiled-in set).
-#
-# Dictionary key naming convention:
-#
-# Keys are the NGINX module's canonical .so filename without the "ngx_" prefix
-# and the "_module.so" postfix, as used in load_module directives. The general
-# pattern is "<context>_<name>" (e.g. "http_perl" from
-# "ngx_http_perl_module.so"). Distribution package names differ across platforms
-# (Debian: libnginx-mod-http-perl, Red Hat: nginx-mod-http-perl, SUSE:
-# nginx-module-perl) but the a name based on the .so is universal.
-#
-# Modules producing two .so files (e.g. brotli ships both
-# "ngx_http_brotli_filter_module.so" and "ngx_http_brotli_static_module.so")
-# get two separate dictionary keys; on platforms that bundle both in one
-# package, both keys simply reference the same package name.
-#
-# Notable outliers in NGINX's own naming: ndk_http_module.so (no ngx_
-# prefix) and ngx_nchan_module.so (no context qualifier despite being HTTP).
-__run_nginx_packages_install_map_modules: {}
-
-
 # List of package names to be uninstalled when run_nginx_state is
 # set to "absent". This variable is useful when __run_nginx_packages_install
 # contains packages that are required for the managed software to function but
@@ -119,6 +89,55 @@ __run_nginx_packages_removal: []
 # that would otherwise create confusion or conflict with custom configurations
 # managed by this role.
 __run_nginx_paths_removal: []
+
+
+# Mapping of NGINX dynamic module names to the packages that provide them
+# as well as additional data (like .so paths or pre-created, intermediate .conf
+# files containing the load_module directive).
+#
+# This is highly platform-specific, so the variable gets probably overwritten
+# by platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
+#
+# Please note there are two types of modules used in NGINX: Built-in & Dynamic.
+# Only dynamic modules can be toggled and/or installed via additional packages;
+# modules compiled into the NGINX binary are always active and cannot be
+# disabled or uninstalled (nginx -V 2>&1 | xargs -n1 | grep module shows the
+# compiled-in set).
+#
+# An empty list ([]) means the module's .so is shipped by the base nginx
+# package and no extra package install is needed. The module still requires a
+# load_module directive to be activated.
+#
+# Dictionary key naming conventions:
+#
+# - Keys are the NGINX module's canonical .so filename without the "ngx_"
+#   prefix and the "_module.so" postfix, as used in load_module directives.
+#   The general pattern is "<context>_<name>" (e.g. "http_perl" from
+#   "ngx_http_perl_module.so"). Distribution package names differ across
+#   platforms (Debian: libnginx-mod-http-perl, Red Hat: nginx-mod-http-perl,
+#   SUSE: nginx-module-perl) but the a name based on the .so is universal.
+# - Modules producing two .so files (e.g. brotli ships both
+#   "ngx_http_brotli_filter_module.so" and "ngx_http_brotli_static_module.so")
+#   get two separate dictionary keys; on platforms that bundle both in one
+#   package, both keys simply reference the same package name.
+# - Notable outliers in NGINX's own naming: ndk_http_module.so (no ngx_
+#   prefix) and ngx_nchan_module.so (no context qualifier despite being HTTP).
+#
+# Dictionary values: A sub dictionary containing the keys:
+#
+# - 'conf_paths':
+#   List of path(s) to .conf file(s) maintained by the platform or package to
+#   symlink from __run_nginx_config_service_dropin_modules_available_dir_path.
+#   This will be usually done instead of creating own .conf files with
+#   load_module directives if set.
+# - 'packages':
+#   List of packages to install (if any)/
+# - 'so_paths':
+#   List of path(s) to the .so file(s) to use with the load_module directive in
+#   a .conf file to create in
+#   __run_nginx_config_service_dropin_modules_available_dir_path. This is
+#   usually will be done if 'conf_paths' is not set.
+__run_nginx_modules_map_resources: {}
 
 
 # Configuration file paths, ownership, and permissions. These variables define
@@ -219,6 +238,8 @@ __run_nginx_main_directives_defaults:
   worker_cpu_affinity: "auto"
   error_log: "{{ __run_nginx_error_log_default_file_path }} notice"
   pid: "/run/nginx.pid"
+  include:
+    - "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/*.conf"
 
 
 # Platform-specific overrides for NGINX main config. Overridden by platform

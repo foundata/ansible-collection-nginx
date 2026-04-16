@@ -5,25 +5,46 @@
 
 ---
 
-__run_nginx_main_directives_overwrite:
-  include:
-    - "/usr/share/nginx/modules/*.conf"
-
-
 __run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
 
 
-__run_nginx_packages_install_map_modules:
-  # Hint for package names: dnf list nginx-mod-*
-  # Packages only available on Fedora (not RHEL/AlmaLinux/CentOS) are in
-  # vars/fedora.yml instead.
+# Hint: update this variable with hack/gen-modules-map-resources.sh
+#
+# Packages only available on Fedora (not RHEL/AlmaLinux/CentOS) are in
+# vars/fedora.yml instead.
+__run_nginx_modules_map_resources:
   http_image_filter:
-    - "nginx-mod-http-image-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-http-image-filter.conf"
+    packages:
+      - "nginx-mod-http-image-filter"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_image_filter_module.so"
   http_perl:
-    - "nginx-mod-http-perl"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-http-perl.conf"
+    packages:
+      - "nginx-mod-http-perl"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_perl_module.so"
   http_xslt_filter:
-    - "nginx-mod-http-xslt-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
+    packages:
+      - "nginx-mod-http-xslt-filter"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_xslt_filter_module.so"
   mail:
-    - "nginx-mod-mail"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-mail.conf"
+    packages:
+      - "nginx-mod-mail"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_mail_module.so"
   stream:
-    - "nginx-mod-stream"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-stream.conf"
+    packages:
+      - "nginx-mod-stream"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_stream_module.so"

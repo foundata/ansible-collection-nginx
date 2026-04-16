@@ -5,70 +5,161 @@
 
 ---
 
-__run_nginx_packages_install_map_modules:
-  # Hint for package names: apt list 'libnginx-mod-*'
-  # Ubuntu 22.04 does not ship the brotli modules (available from Debian 12 /
-  # Ubuntu 24.04 onwards). This map therefore mirrors vars/debian.yml minus the
-  # http_brotli_filter and http_brotli_static entries.
+# Hint: update this variable with hack/gen-modules-map-resources.sh
+#
+# Ubuntu 22.04 does not ship the brotli modules (available from Debian 12 /
+# Ubuntu 24.04 onwards). This map therefore mirrors vars/debian.yml minus the
+# http_brotli_filter and http_brotli_static entries.
+__run_nginx_modules_map_resources:
   ndk_http:
-    - "libnginx-mod-http-ndk"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-ndk"
+    so_paths: []
   http_auth_pam:
-    - "libnginx-mod-http-auth-pam"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-auth-pam"
+    so_paths: []
   http_auth_spnego:
-    - "libnginx-mod-http-auth-spnego"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-auth-spnego"
+    so_paths: []
   http_cache_purge:
-    - "libnginx-mod-http-cache-purge"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-cache-purge"
+    so_paths: []
   http_dav_ext:
-    - "libnginx-mod-http-dav-ext"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-dav-ext"
+    so_paths: []
   http_echo:
-    - "libnginx-mod-http-echo"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-echo"
+    so_paths: []
   http_fancyindex:
-    - "libnginx-mod-http-fancyindex"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-fancyindex"
+    so_paths: []
   http_geoip2:
-    - "libnginx-mod-http-geoip2"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-geoip2"
+    so_paths: []
   # deprecated, MaxMind stopped updating legacy GeoIP
   # in 2019; use http_geoip2 instead
   http_geoip:
-    - "libnginx-mod-http-geoip"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-geoip"
+    so_paths: []
   http_headers_more_filter:
-    - "libnginx-mod-http-headers-more-filter"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-headers-more-filter"
+    so_paths: []
   http_image_filter:
-    - "libnginx-mod-http-image-filter"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-image-filter"
+    so_paths: []
   http_js:
-    - "libnginx-mod-http-js"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-js"
+    so_paths: []
   http_lua:
-    - "libnginx-mod-http-lua"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-lua"
+    so_paths: []
   http_memc:
-    - "libnginx-mod-http-memc"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-memc"
+    so_paths: []
   http_modsecurity:
-    - "libnginx-mod-http-modsecurity"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-modsecurity"
+    so_paths: []
   http_perl:
-    - "libnginx-mod-http-perl"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-perl"
+    so_paths: []
   http_push_stream:
-    - "libnginx-mod-http-push-stream"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-push-stream"
+    so_paths: []
   http_set_misc:
-    - "libnginx-mod-http-set-misc"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-set-misc"
+    so_paths: []
   http_srcache_filter:
-    - "libnginx-mod-http-srcache-filter"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-srcache-filter"
+    so_paths: []
   http_subs_filter:
-    - "libnginx-mod-http-subs-filter"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-subs-filter"
+    so_paths: []
   http_uploadprogress:
-    - "libnginx-mod-http-uploadprogress"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-uploadprogress"
+    so_paths: []
   http_upstream_fair:
-    - "libnginx-mod-http-upstream-fair"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-upstream-fair"
+    so_paths: []
   http_xslt_filter:
-    - "libnginx-mod-http-xslt-filter"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-http-xslt-filter"
+    so_paths: []
   mail:
-    - "libnginx-mod-mail"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-mail"
+    so_paths: []
   nchan:
-    - "libnginx-mod-nchan"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-nchan"
+    so_paths: []
   rtmp:
-    - "libnginx-mod-rtmp"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-rtmp"
+    so_paths: []
   stream_geoip2:
-    - "libnginx-mod-stream-geoip2"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-stream-geoip2"
+    so_paths: []
   stream_geoip:
-    - "libnginx-mod-stream-geoip"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-stream-geoip"
+    so_paths: []
   stream_js:
-    - "libnginx-mod-stream-js"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-stream-js"
+    so_paths: []
   stream:
-    - "libnginx-mod-stream"
+    conf_paths: []
+    packages:
+      - "libnginx-mod-stream"
+    so_paths: []

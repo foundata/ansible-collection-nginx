@@ -7,75 +7,238 @@
 
 __run_nginx_main_directives_overwrite:
   user: "www-data www-data"
-  include:
-    - "/etc/nginx/modules-enabled/*.conf"
 
 
-__run_nginx_packages_install_map_modules:
-  # Hint for package names: apt list 'libnginx-mod-*'
-  ndk_http:
-    - "libnginx-mod-http-ndk"
+# Hint: update this variable with hack/gen-modules-map-resources.sh
+__run_nginx_modules_map_resources:
   http_auth_pam:
-    - "libnginx-mod-http-auth-pam"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-auth-pam.conf"
+    packages:
+      - "libnginx-mod-http-auth-pam"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_auth_pam_module.so"
   http_auth_spnego:
-    - "libnginx-mod-http-auth-spnego"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-auth-spnego.conf"
+    packages:
+      - "libnginx-mod-http-auth-spnego"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_auth_spnego_module.so"
   http_brotli_filter:
-    - "libnginx-mod-http-brotli-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-brotli-filter.conf"
+    packages:
+      - "libnginx-mod-http-brotli-filter"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_brotli_filter_module.so"
   http_brotli_static:
-    - "libnginx-mod-http-brotli-static"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-brotli-static.conf"
+    packages:
+      - "libnginx-mod-http-brotli-static"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_brotli_static_module.so"
   http_cache_purge:
-    - "libnginx-mod-http-cache-purge"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-cache-purge.conf"
+    packages:
+      - "libnginx-mod-http-cache-purge"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_cache_purge_module.so"
   http_dav_ext:
-    - "libnginx-mod-http-dav-ext"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-dav-ext.conf"
+    packages:
+      - "libnginx-mod-http-dav-ext"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_dav_ext_module.so"
   http_echo:
-    - "libnginx-mod-http-echo"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-echo.conf"
+    packages:
+      - "libnginx-mod-http-echo"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_echo_module.so"
   http_fancyindex:
-    - "libnginx-mod-http-fancyindex"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-fancyindex.conf"
+    packages:
+      - "libnginx-mod-http-fancyindex"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_fancyindex_module.so"
+  http_geoip:
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-geoip.conf"
+    packages:
+      - "libnginx-mod-http-geoip"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_geoip_module.so"
   http_geoip2:
-    - "libnginx-mod-http-geoip2"
-  http_geoip: # deprecated, MaxMind stopped updating legacy GeoIP in 2019; use http_geoip2 instead
-    - "libnginx-mod-http-geoip"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-geoip2.conf"
+    packages:
+      - "libnginx-mod-http-geoip2"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_geoip2_module.so"
   http_headers_more_filter:
-    - "libnginx-mod-http-headers-more-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-headers-more-filter.conf"
+    packages:
+      - "libnginx-mod-http-headers-more-filter"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_headers_more_filter_module.so"
   http_image_filter:
-    - "libnginx-mod-http-image-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-image-filter.conf"
+    packages:
+      - "libnginx-mod-http-image-filter"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_image_filter_module.so"
   http_js:
-    - "libnginx-mod-http-js"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-js.conf"
+    packages:
+      - "libnginx-mod-http-js"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_js_module.so"
   http_lua:
-    - "libnginx-mod-http-lua"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-lua.conf"
+    packages:
+      - "libnginx-mod-http-lua"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_lua_module.so"
   http_memc:
-    - "libnginx-mod-http-memc"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-memc.conf"
+    packages:
+      - "libnginx-mod-http-memc"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_memc_module.so"
   http_modsecurity:
-    - "libnginx-mod-http-modsecurity"
+    conf_paths:
+      - "/etc/nginx/modsecurity.conf"
+      - "/etc/nginx/modsecurity_includes.conf"
+      - "/etc/nginx/modules-enabled/50-mod-http-modsecurity.conf"
+      - "/etc/nginx/sites-available/default-modsecurity.conf"
+      - "/usr/share/nginx/docs/modsecurity/default-modsecurity.conf"
+      - "/usr/share/nginx/docs/modsecurity/modsecurity.conf"
+      - "/usr/share/nginx/docs/modsecurity/modsecurity_includes.conf"
+      - "/usr/share/nginx/modules-available/mod-http-modsecurity.conf"
+    packages:
+      - "libnginx-mod-http-modsecurity"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_modsecurity_module.so"
   http_perl:
-    - "libnginx-mod-http-perl"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-perl.conf"
+    packages:
+      - "libnginx-mod-http-perl"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_perl_module.so"
   http_push_stream:
-    - "libnginx-mod-http-push-stream"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-push-stream.conf"
+    packages:
+      - "libnginx-mod-http-push-stream"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_push_stream_module.so"
   http_set_misc:
-    - "libnginx-mod-http-set-misc"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-set-misc.conf"
+    packages:
+      - "libnginx-mod-http-set-misc"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_set_misc_module.so"
   http_srcache_filter:
-    - "libnginx-mod-http-srcache-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-srcache-filter.conf"
+    packages:
+      - "libnginx-mod-http-srcache-filter"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_srcache_filter_module.so"
   http_subs_filter:
-    - "libnginx-mod-http-subs-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-subs-filter.conf"
+    packages:
+      - "libnginx-mod-http-subs-filter"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_subs_filter_module.so"
   http_uploadprogress:
-    - "libnginx-mod-http-uploadprogress"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-uploadprogress.conf"
+    packages:
+      - "libnginx-mod-http-uploadprogress"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_uploadprogress_module.so"
   http_upstream_fair:
-    - "libnginx-mod-http-upstream-fair"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-upstream-fair.conf"
+    packages:
+      - "libnginx-mod-http-upstream-fair"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_upstream_fair_module.so"
   http_xslt_filter:
-    - "libnginx-mod-http-xslt-filter"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-xslt-filter.conf"
+    packages:
+      - "libnginx-mod-http-xslt-filter"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_http_xslt_filter_module.so"
   mail:
-    - "libnginx-mod-mail"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-mail.conf"
+    packages:
+      - "libnginx-mod-mail"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_mail_module.so"
   nchan:
-    - "libnginx-mod-nchan"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-nchan.conf"
+    packages:
+      - "libnginx-mod-nchan"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_nchan_module.so"
+  ndk_http:
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-http-ndk.conf"
+    packages:
+      - "libnginx-mod-http-ndk"
+    so_paths:
+      - "/usr/lib/nginx/modules/ndk_http_module.so"
   rtmp:
-    - "libnginx-mod-rtmp"
-  stream_geoip2:
-    - "libnginx-mod-stream-geoip2"
-  stream_geoip:
-    - "libnginx-mod-stream-geoip"
-  stream_js:
-    - "libnginx-mod-stream-js"
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-rtmp.conf"
+    packages:
+      - "libnginx-mod-rtmp"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_rtmp_module.so"
   stream:
-    - "libnginx-mod-stream"
-
-
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-stream.conf"
+    packages:
+      - "libnginx-mod-stream"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_stream_module.so"
+  stream_geoip:
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-stream-geoip.conf"
+    packages:
+      - "libnginx-mod-stream-geoip"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_stream_geoip_module.so"
+  stream_geoip2:
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-stream-geoip2.conf"
+    packages:
+      - "libnginx-mod-stream-geoip2"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_stream_geoip2_module.so"
+  stream_js:
+    conf_paths:
+      - "/usr/share/nginx/modules-available/mod-stream-js.conf"
+    packages:
+      - "libnginx-mod-stream-js"
+    so_paths:
+      - "/usr/lib/nginx/modules/ngx_stream_js_module.so"

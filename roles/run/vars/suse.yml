@@ -8,6 +8,7 @@
 __run_nginx_main_directives_overwrite:
   user: "nginx nginx"
 
+
 # SUSE maintains "/etc/nginx/vhosts.d/" by default and uses the "vHost" terminology,
 # comparable to Apache HTTPD.
 __run_nginx_config_service_dropin_sites_available_dir_path: "/etc/nginx/vhosts.d-available"
@@ -17,32 +18,79 @@ __run_nginx_config_service_dropin_sites_enabled_dir_path: "/etc/nginx/vhosts.d"
 __run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
 
 
-__run_nginx_packages_install_map_modules:
-  # Hint for package names: zypper search -s nginx-module | grep 'nginx-module-'
-  # Modules not listed here (http_image_filter, http_perl, http_xslt_filter,
-  # mail, stream) are shipped by the base "nginx" package on SUSE.
+# Hint: update this variable with hack/gen-modules-map-resources.sh
+#
+# Empty-list entries ([]) indicate modules shipped by the base "nginx" package
+# on SUSE - no separate package install needed, but a load_module directive is
+# still required.
+__run_nginx_modules_map_resources:
   http_brotli_filter:
-    - "nginx-module-brotli"
+    conf_paths: []
+    packages:
+      - "nginx-module-brotli"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_brotli_filter_module.so"
   http_brotli_static:
-    - "nginx-module-brotli"
+    conf_paths: []
+    packages:
+      - "nginx-module-brotli"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_brotli_static_module.so"
   http_echo:
-    - "nginx-module-echo"
+    conf_paths: []
+    packages:
+      - "nginx-module-echo"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_echo_module.so"
   http_geoip2:
-    - "nginx-module-geoip2"
+    conf_paths: []
+    packages:
+      - "nginx-module-geoip2"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_geoip2_module.so"
   http_js:
-    - "nginx-module-njs"
+    conf_paths: []
+    packages:
+      - "nginx-module-njs"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_js_module.so"
   http_lua:
-    - "nginx-module-lua"
+    conf_paths: []
+    packages:
+      - "nginx-module-lua"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_lua_module.so"
   http_vhost_traffic_status:
-    - "nginx-module-vts"
+    conf_paths:
+      - "/usr/share/nginx/modules/mod-vts.conf"
+    packages:
+      - "nginx-module-vts"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_vhost_traffic_status_module.so"
   http_zstd_filter:
-    - "nginx-module-zstd"
+    conf_paths: []
+    packages:
+      - "nginx-module-zstd"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_zstd_filter_module.so"
   http_zstd_static:
-    - "nginx-module-zstd"
+    conf_paths: []
+    packages:
+      - "nginx-module-zstd"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_http_zstd_static_module.so"
   stream_geoip2:
-    - "nginx-module-geoip2"
+    conf_paths: []
+    packages:
+      - "nginx-module-geoip2"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_stream_geoip2_module.so"
   stream_js:
-    - "nginx-module-njs"
+    conf_paths: []
+    packages:
+      - "nginx-module-njs"
+    so_paths:
+      - "/usr/lib64/nginx/modules/ngx_stream_js_module.so"
 
 
 __run_nginx_http_directives_overwrite:
