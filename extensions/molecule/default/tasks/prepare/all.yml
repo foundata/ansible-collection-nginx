@@ -58,7 +58,7 @@
     mode: "0644"
 
 
-- name: "Molecule | Prepare | Install packages needed to create certificates and run all tests"
+- name: "Molecule | Prepare | Install packages needed to create certificates and for later tests"
   ansible.builtin.package:
     name:
       - "curl"

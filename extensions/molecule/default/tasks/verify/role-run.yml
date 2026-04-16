@@ -145,6 +145,102 @@
           The unmanaged Debian snippet 'fastcgi-php.conf' has been removed as expected.
 
 
+## Dynamic module configuration
+
+- name: "Molecule | Verify | Verify load_module directives for enabled modules"
+  when:
+    - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
+  block:
+
+    - name: "Molecule | Verify | Get NGINX full configuration dump"
+      ansible.builtin.command:
+        cmd: "nginx -T"
+      changed_when:
+        - false
+      register: __testing_nginx_config_dump
+
+
+    - name: "Molecule | Verify | Assert load_module directive present for each enabled module"
+      ansible.builtin.assert:
+        that:
+          - >-
+            __testing_nginx_config_dump['stdout']
+            is ansible.builtin.search(
+              'load_module.*' ~ item ~ '_module\.so'
+            )
+        fail_msg: >-
+          No load_module directive found for module '{{ item }}'
+          (expected '{{ item }}_module.so' in nginx -T output).
+        success_msg: >-
+          Module '{{ item }}' is loaded
+          ('{{ item }}_module.so' found in configuration).
+      loop: >-
+        {{
+          run_nginx_modules_enabled
+          | ansible.builtin.default([])
+        }}
+
+
+- name: "Molecule | Verify | Verify module config files and symlinks (non-Debian)"
+  when:
+    - ansible_facts['os_family'] != 'Debian'
+    - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
+  block:
+
+    - name: "Molecule | Verify | Check module config files in modules-available"
+      ansible.builtin.stat:
+        path: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+      register: __testing_module_available_files
+      loop: >-
+        {{
+          run_nginx_modules_enabled
+          | ansible.builtin.default([])
+        }}
+
+
+    - name: "Molecule | Verify | Assert module config files exist in modules-available"
+      ansible.builtin.assert:
+        that:
+          - item['stat']['exists']
+        fail_msg: >-
+          Module config '{{ item['item'] }}.conf' does not exist in
+          '{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/'.
+        success_msg: >-
+          Module config '{{ item['item'] }}.conf' exists in
+          modules-available.
+      loop: "{{ __testing_module_available_files['results'] }}"
+      loop_control:
+        label: "{{ item['item'] }}"
+
+
+    - name: "Molecule | Verify | Check module symlinks in modules-enabled"
+      ansible.builtin.stat:
+        path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}.conf"
+      register: __testing_module_enabled_files
+      loop: >-
+        {{
+          run_nginx_modules_enabled
+          | ansible.builtin.default([])
+        }}
+
+
+    - name: "Molecule | Verify | Assert module symlinks exist and are links in modules-enabled"
+      ansible.builtin.assert:
+        that:
+          - item['stat']['exists']
+          - item['stat']['islnk']
+        fail_msg: >-
+          Module symlink '{{ item['item'] }}.conf' does not exist or
+          is not a symlink in
+          '{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/'.
+        success_msg: >-
+          Module symlink '{{ item['item'] }}.conf' exists in
+          modules-enabled.
+      loop: "{{ __testing_module_enabled_files['results'] }}"
+      loop_control:
+        label: "{{ item['item'] }}"
+
+
 ## HTTP connectivity: example.com
 
 - name: "Molecule | Verify | Connect to example.com on HTTP port 80"
@@ -335,7 +431,3 @@
       Server header value: '{{ __testing_headers_result['server'] | default('') }}'
     success_msg: >-
       The response headers do not contain NGINX version information.
-
-
-- name: pause
-  ansible.builtin.pause:

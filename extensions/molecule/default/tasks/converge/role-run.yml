@@ -1,16 +1,5 @@
 # Execute the collection role "run" against all driver-created instances.
 
-# This prevents testing whether the project to test itself verifies the
-# availability of these facts but it avoids fragile workarounds (like
-# parsing container names) if additional platform specific preparations are.
-- name: "Molecule | Converge | Gather playbook-specific facts"
-  ansible.builtin.setup:
-    gather_subset:
-      - "distribution"
-  when:
-    - ansible_facts['distribution'] is not ansible.builtin.defined or
-      ansible_facts['os_family'] is not ansible.builtin.defined
-
 - name: "Molecule | Converge | Store run_nginx_* role parameters in __testing_state"
   ansible.builtin.include_tasks:
     file: "../tasks/state_update.yml"
@@ -50,12 +39,9 @@
       run_nginx_snippets_manage: true
       run_nginx_snippets_delete_unmanaged: true
       run_nginx_sites_delete_unmanaged: true
-      run_nginx_modules_enabled: >-
-        {{
-          ['http_perl']
-          if (ansible_facts['os_family'] | ansible.builtin.lower) == 'suse'
-          else ['http_brotli_static']
-        }}
+      run_nginx_modules_enabled:
+        - mail
+        - http_perl
 
 
 - name: "Molecule | Converge | Set run_nginx_* parameters as facts from __testing_state"
