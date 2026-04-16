@@ -20,77 +20,87 @@ __run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
 
 # Hint: update this variable with hack/gen-modules-map-resources.sh
 #
-# Empty-list entries ([]) indicate modules shipped by the base "nginx" package
-# on SUSE - no separate package install needed, but a load_module directive is
-# still required.
+# Empty-list entries ([]) for packages indicate modules shipped by the base
+# "nginx" package on SUSE - no separate package install needed, but a
+# load_module directive is still required.
 __run_nginx_modules_map_resources:
   http_brotli_filter:
-    conf_paths: []
+    conf_files:
+      "mod-brotli-filter.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_brotli_filter_module.so"
     packages:
       - "nginx-module-brotli"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_brotli_filter_module.so"
   http_brotli_static:
-    conf_paths: []
+    conf_files:
+      "mod-brotli-static.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_brotli_static_module.so"
     packages:
       - "nginx-module-brotli"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_brotli_static_module.so"
   http_echo:
-    conf_paths: []
+    conf_files:
+      "mod-http-echo.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_echo_module.so"
     packages:
       - "nginx-module-echo"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_echo_module.so"
   http_geoip2:
-    conf_paths: []
+    conf_files:
+      "mod-http-geoip2.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_geoip2_module.so"
     packages:
       - "nginx-module-geoip2"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_geoip2_module.so"
   http_js:
-    conf_paths: []
+    conf_files:
+      "mod-http-js.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_js_module.so"
     packages:
       - "nginx-module-njs"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_js_module.so"
   http_lua:
-    conf_paths: []
+    conf_files:
+      "mod-http-lua.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_lua_module.so"
     packages:
       - "nginx-module-lua"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_lua_module.so"
   http_vhost_traffic_status:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-vts.conf"
+    conf_files:
+      "mod-vts.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-vts.conf"
     packages:
       - "nginx-module-vts"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_vhost_traffic_status_module.so"
   http_zstd_filter:
-    conf_paths: []
+    conf_files:
+      "mod-zstd-filter.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_zstd_filter_module.so"
     packages:
       - "nginx-module-zstd"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_zstd_filter_module.so"
   http_zstd_static:
-    conf_paths: []
+    conf_files:
+      "mod-zstd-static.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_zstd_static_module.so"
     packages:
       - "nginx-module-zstd"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_zstd_static_module.so"
   stream_geoip2:
-    conf_paths: []
+    conf_files:
+      "mod-stream-geoip2.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_stream_geoip2_module.so"
     packages:
       - "nginx-module-geoip2"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_stream_geoip2_module.so"
   stream_js:
-    conf_paths: []
+    conf_files:
+      "mod-stream-js.conf":
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_stream_js_module.so"
     packages:
       - "nginx-module-njs"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_stream_js_module.so"
 
 
 __run_nginx_http_directives_overwrite:

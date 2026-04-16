@@ -106,18 +106,15 @@
         state: "absent"
 
 
-- name: "Setup | Uninstall | Remove module config directories (non-Debian platforms)"
+- name: "Setup | Uninstall | Remove module config directory (modules-enabled)"
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
     state: "absent"
   when:
     - ansible_facts['os_family'] != 'Debian'
-  loop:
-    - "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}"
-    - "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
 
 
-- name: "Setup | Uninstall | Remove modules symlink (non-Debian platforms)"
+- name: "Setup | Uninstall | Remove /etc/nginx/modules symlink"
   ansible.builtin.file:
     path: "/etc/nginx/modules"
     state: "absent"

@@ -20,6 +20,25 @@
     - (__run_nginx_packages_install | ansible.builtin.length) > 0
 
 
+- name: "Setup | Install | Default | Warn about enabled modules not in platform mapping"
+  ansible.builtin.debug:
+    msg: >-
+      The following modules in 'run_nginx_modules_enabled' are not present in
+      this platform's module resource mapping and will be skipped by this role.
+      Manage them with your own tasks if needed:
+      {{ __run_nginx_unmanaged_modules | ansible.builtin.join(', ') }}
+  vars:
+    __run_nginx_unmanaged_modules: >-
+      {{
+        run_nginx_modules_enabled
+        | ansible.builtin.default([])
+        | ansible.builtin.reject('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+        | ansible.builtin.list
+      }}
+  when:
+    - (__run_nginx_unmanaged_modules | ansible.builtin.length) > 0
+
+
 - name: "Setup | Install | Default | Show enabled modules requiring additional packages"
   ansible.builtin.debug:
     msg: >-

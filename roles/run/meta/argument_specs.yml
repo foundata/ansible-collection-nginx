@@ -304,22 +304,21 @@ argument_specs:
           binary are always active and cannot be managed via this list
           (`nginx -V 2>&1 | xargs -n1 | grep module` shows the compiled-in set).
 
-          For each listed module, the role installs required distribution packages
-          automatically via the platform-specific mapping maintained in the
-          `__run_nginx_modules_map_resources` variable (see `vars/main.yml`
+          Only modules known to the platform-specific
+          `__run_nginx_modules_map_resources` mapping (see `vars/main.yml`
           and the platform overrides in `vars/debian.yml`, `vars/redhat.yml`,
-          `vars/suse.yml`).
+          `vars/suse.yml`) are managed by this role. Modules not present in
+          that mapping are silently skipped; if you need to enable such a
+          module, add the necessary `load_module` configuration via your own
+          tasks on top of this role.
 
-          On Debian/Ubuntu, module packages handle `load_module` configuration
-          automatically (the package creates a config file and symlinks it into
-          `modules-enabled/`). The role therefore only installs the package and
-          skips its own config creation on these platforms.
-
-          On other platforms (RedHat, SUSE), the role additionally creates the
-          corresponding configuration file in `/etc/nginx/modules-available/`
-          and symlinks it into `/etc/nginx/modules-enabled/` so the
-          `load_module` directive is pulled into the main context of
-          `nginx.conf`.
+          For each listed and known module, the role installs required
+          distribution packages automatically and places the appropriate
+          config file in `/etc/nginx/modules-enabled/`. On platforms where
+          packages ship their own `.conf` files (Debian, RedHat, Fedora),
+          the role creates a symlink to the package-provided file. On
+          platforms without package-provided configs (SUSE), the role
+          generates a `load_module` config file directly.
         type: "list"
         default: []
 
@@ -339,8 +338,10 @@ argument_specs:
           accidental unavailability of dynamic modules loaded by default on your
           platform.
 
-          This setting is ignored on Debian/Ubuntu where module configs are
-          managed by the distribution packages.
+          Stale cleanup is only performed when the platform-specific module
+          mapping provides `conf_files` data. On platforms where `conf_files`
+          is empty for all modules (package postinst handles everything),
+          stale cleanup is automatically skipped.
         type: "bool"
         default: true
 

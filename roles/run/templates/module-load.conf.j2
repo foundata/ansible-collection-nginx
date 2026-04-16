@@ -1,5 +1,5 @@
-{%- from '_nginx_macros.j2' import module_so_path -%}
-
 # {{ ansible_managed }}
 
-load_module {{ module_so_path(tpl_module_key, tpl_module_so_paths | ansible.builtin.default([])) }};
+{% for so_path in tpl_module_so_paths -%}
+load_module {{ so_path }};
+{% endfor %}

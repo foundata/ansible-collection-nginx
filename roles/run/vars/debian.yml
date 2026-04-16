@@ -12,233 +12,226 @@ __run_nginx_main_directives_overwrite:
 # Hint: update this variable with hack/gen-modules-map-resources.sh
 __run_nginx_modules_map_resources:
   http_auth_pam:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-auth-pam.conf"
+    conf_files:
+      "50-mod-http-auth-pam.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-auth-pam.conf"
     packages:
       - "libnginx-mod-http-auth-pam"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_auth_pam_module.so"
   http_auth_spnego:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-auth-spnego.conf"
+    conf_files:
+      "50-mod-http-auth-spnego.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-auth-spnego.conf"
     packages:
       - "libnginx-mod-http-auth-spnego"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_auth_spnego_module.so"
   http_brotli_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-brotli-filter.conf"
+    conf_files:
+      "50-mod-http-brotli-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-brotli-filter.conf"
     packages:
       - "libnginx-mod-http-brotli-filter"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_brotli_filter_module.so"
   http_brotli_static:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-brotli-static.conf"
+    conf_files:
+      "50-mod-http-brotli-static.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-brotli-static.conf"
     packages:
       - "libnginx-mod-http-brotli-static"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_brotli_static_module.so"
   http_cache_purge:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-cache-purge.conf"
+    conf_files:
+      "50-mod-http-cache-purge.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-cache-purge.conf"
     packages:
       - "libnginx-mod-http-cache-purge"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_cache_purge_module.so"
   http_dav_ext:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-dav-ext.conf"
+    conf_files:
+      "50-mod-http-dav-ext.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-dav-ext.conf"
     packages:
       - "libnginx-mod-http-dav-ext"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_dav_ext_module.so"
   http_echo:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-echo.conf"
+    conf_files:
+      "50-mod-http-echo.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-echo.conf"
     packages:
       - "libnginx-mod-http-echo"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_echo_module.so"
   http_fancyindex:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-fancyindex.conf"
+    conf_files:
+      "50-mod-http-fancyindex.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-fancyindex.conf"
     packages:
       - "libnginx-mod-http-fancyindex"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_fancyindex_module.so"
   http_geoip:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-geoip.conf"
+    conf_files:
+      "50-mod-http-geoip.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-geoip.conf"
     packages:
       - "libnginx-mod-http-geoip"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_geoip_module.so"
   http_geoip2:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-geoip2.conf"
+    conf_files:
+      "50-mod-http-geoip2.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-geoip2.conf"
     packages:
       - "libnginx-mod-http-geoip2"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_geoip2_module.so"
   http_headers_more_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-headers-more-filter.conf"
+    conf_files:
+      "50-mod-http-headers-more-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-headers-more-filter.conf"
     packages:
       - "libnginx-mod-http-headers-more-filter"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_headers_more_filter_module.so"
   http_image_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-image-filter.conf"
+    conf_files:
+      "50-mod-http-image-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-image-filter.conf"
     packages:
       - "libnginx-mod-http-image-filter"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_image_filter_module.so"
   http_js:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-js.conf"
+    conf_files:
+      "50-mod-http-js.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-js.conf"
     packages:
       - "libnginx-mod-http-js"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_js_module.so"
   http_lua:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-lua.conf"
+    conf_files:
+      "50-mod-http-lua.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-lua.conf"
     packages:
       - "libnginx-mod-http-lua"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_lua_module.so"
   http_memc:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-memc.conf"
+    conf_files:
+      "50-mod-http-memc.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-memc.conf"
     packages:
       - "libnginx-mod-http-memc"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_memc_module.so"
   http_modsecurity:
-    conf_paths:
-      - "/etc/nginx/modsecurity.conf"
-      - "/etc/nginx/modsecurity_includes.conf"
-      - "/etc/nginx/modules-enabled/50-mod-http-modsecurity.conf"
-      - "/etc/nginx/sites-available/default-modsecurity.conf"
-      - "/usr/share/nginx/docs/modsecurity/default-modsecurity.conf"
-      - "/usr/share/nginx/docs/modsecurity/modsecurity.conf"
-      - "/usr/share/nginx/docs/modsecurity/modsecurity_includes.conf"
-      - "/usr/share/nginx/modules-available/mod-http-modsecurity.conf"
+    conf_files:
+      "50-mod-http-modsecurity.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-modsecurity.conf"
     packages:
       - "libnginx-mod-http-modsecurity"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_modsecurity_module.so"
   http_perl:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-perl.conf"
+    conf_files:
+      "50-mod-http-perl.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-perl.conf"
     packages:
       - "libnginx-mod-http-perl"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_perl_module.so"
   http_push_stream:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-push-stream.conf"
+    conf_files:
+      "50-mod-http-push-stream.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-push-stream.conf"
     packages:
       - "libnginx-mod-http-push-stream"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_push_stream_module.so"
   http_set_misc:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-set-misc.conf"
+    conf_files:
+      "50-mod-http-set-misc.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-set-misc.conf"
     packages:
       - "libnginx-mod-http-set-misc"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_set_misc_module.so"
   http_srcache_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-srcache-filter.conf"
+    conf_files:
+      "50-mod-http-srcache-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-srcache-filter.conf"
     packages:
       - "libnginx-mod-http-srcache-filter"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_srcache_filter_module.so"
   http_subs_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-subs-filter.conf"
+    conf_files:
+      "50-mod-http-subs-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-subs-filter.conf"
     packages:
       - "libnginx-mod-http-subs-filter"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_subs_filter_module.so"
   http_uploadprogress:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-uploadprogress.conf"
+    conf_files:
+      "50-mod-http-uploadprogress.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-uploadprogress.conf"
     packages:
       - "libnginx-mod-http-uploadprogress"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_uploadprogress_module.so"
   http_upstream_fair:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-upstream-fair.conf"
+    conf_files:
+      "50-mod-http-upstream-fair.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-upstream-fair.conf"
     packages:
       - "libnginx-mod-http-upstream-fair"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_upstream_fair_module.so"
   http_xslt_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-xslt-filter.conf"
+    conf_files:
+      "50-mod-http-xslt-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-xslt-filter.conf"
     packages:
       - "libnginx-mod-http-xslt-filter"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_http_xslt_filter_module.so"
   mail:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-mail.conf"
+    conf_files:
+      "50-mod-mail.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-mail.conf"
     packages:
       - "libnginx-mod-mail"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_mail_module.so"
   nchan:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-nchan.conf"
+    conf_files:
+      "50-mod-nchan.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-nchan.conf"
     packages:
       - "libnginx-mod-nchan"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_nchan_module.so"
   ndk_http:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-http-ndk.conf"
+    conf_files:
+      "50-mod-http-ndk.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-ndk.conf"
     packages:
       - "libnginx-mod-http-ndk"
-    so_paths:
-      - "/usr/lib/nginx/modules/ndk_http_module.so"
   rtmp:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-rtmp.conf"
+    conf_files:
+      "50-mod-rtmp.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-rtmp.conf"
     packages:
       - "libnginx-mod-rtmp"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_rtmp_module.so"
   stream:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-stream.conf"
+    conf_files:
+      "50-mod-stream.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-stream.conf"
     packages:
       - "libnginx-mod-stream"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_stream_module.so"
   stream_geoip:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-stream-geoip.conf"
+    conf_files:
+      "50-mod-stream-geoip.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-stream-geoip.conf"
     packages:
       - "libnginx-mod-stream-geoip"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_stream_geoip_module.so"
   stream_geoip2:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-stream-geoip2.conf"
+    conf_files:
+      "50-mod-stream-geoip2.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-stream-geoip2.conf"
     packages:
       - "libnginx-mod-stream-geoip2"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_stream_geoip2_module.so"
   stream_js:
-    conf_paths:
-      - "/usr/share/nginx/modules-available/mod-stream-js.conf"
+    conf_files:
+      "50-mod-stream-js.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-stream-js.conf"
     packages:
       - "libnginx-mod-stream-js"
-    so_paths:
-      - "/usr/lib/nginx/modules/ngx_stream_js_module.so"

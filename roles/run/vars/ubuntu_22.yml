@@ -11,155 +11,125 @@
 # Ubuntu 24.04 onwards). This map therefore mirrors vars/debian.yml minus the
 # http_brotli_filter and http_brotli_static entries.
 __run_nginx_modules_map_resources:
-  ndk_http:
-    conf_paths: []
-    packages:
-      - "libnginx-mod-http-ndk"
-    so_paths: []
   http_auth_pam:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-auth-pam"
-    so_paths: []
   http_auth_spnego:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-auth-spnego"
-    so_paths: []
   http_cache_purge:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-cache-purge"
-    so_paths: []
   http_dav_ext:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-dav-ext"
-    so_paths: []
   http_echo:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-echo"
-    so_paths: []
   http_fancyindex:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-fancyindex"
-    so_paths: []
-  http_geoip2:
-    conf_paths: []
-    packages:
-      - "libnginx-mod-http-geoip2"
-    so_paths: []
   # deprecated, MaxMind stopped updating legacy GeoIP
   # in 2019; use http_geoip2 instead
   http_geoip:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-geoip"
-    so_paths: []
+  http_geoip2:
+    conf_files: {}
+    packages:
+      - "libnginx-mod-http-geoip2"
   http_headers_more_filter:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-headers-more-filter"
-    so_paths: []
   http_image_filter:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-image-filter"
-    so_paths: []
   http_js:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-js"
-    so_paths: []
   http_lua:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-lua"
-    so_paths: []
   http_memc:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-memc"
-    so_paths: []
   http_modsecurity:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-modsecurity"
-    so_paths: []
   http_perl:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-perl"
-    so_paths: []
   http_push_stream:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-push-stream"
-    so_paths: []
   http_set_misc:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-set-misc"
-    so_paths: []
   http_srcache_filter:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-srcache-filter"
-    so_paths: []
   http_subs_filter:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-subs-filter"
-    so_paths: []
   http_uploadprogress:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-uploadprogress"
-    so_paths: []
   http_upstream_fair:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-upstream-fair"
-    so_paths: []
   http_xslt_filter:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-http-xslt-filter"
-    so_paths: []
   mail:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-mail"
-    so_paths: []
   nchan:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-nchan"
-    so_paths: []
+  ndk_http:
+    conf_files: {}
+    packages:
+      - "libnginx-mod-http-ndk"
   rtmp:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-rtmp"
-    so_paths: []
-  stream_geoip2:
-    conf_paths: []
-    packages:
-      - "libnginx-mod-stream-geoip2"
-    so_paths: []
-  stream_geoip:
-    conf_paths: []
-    packages:
-      - "libnginx-mod-stream-geoip"
-    so_paths: []
-  stream_js:
-    conf_paths: []
-    packages:
-      - "libnginx-mod-stream-js"
-    so_paths: []
   stream:
-    conf_paths: []
+    conf_files: {}
     packages:
       - "libnginx-mod-stream"
-    so_paths: []
+  stream_geoip:
+    conf_files: {}
+    packages:
+      - "libnginx-mod-stream-geoip"
+  stream_geoip2:
+    conf_files: {}
+    packages:
+      - "libnginx-mod-stream-geoip2"
+  stream_js:
+    conf_files: {}
+    packages:
+      - "libnginx-mod-stream-js"

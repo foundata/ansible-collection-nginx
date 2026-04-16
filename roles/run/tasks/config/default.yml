@@ -30,12 +30,6 @@
       group: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_group }}"
       mode: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_mode }}"
 
-    - path: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}"
-      state: "directory"
-      owner: "{{ __run_nginx_config_service_dropin_modules_available_dir_owner }}"
-      group: "{{ __run_nginx_config_service_dropin_modules_available_dir_group }}"
-      mode: "{{ __run_nginx_config_service_dropin_modules_available_dir_mode }}"
-
     - path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
       state: "directory"
       owner: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_owner }}"
@@ -359,86 +353,78 @@
 
 ### Modules
 #
-# On Debian, module packages handle load_module config automatically
-# (symlinks in modules-enabled/). The role only needs to install the
-# package. Module config creation, symlinking, and stale cleanup are
-# therefore skipped on Debian.
+# Module config files are placed directly into modules-enabled/. Filenames
+# are platform-specific and explicitly declared in
+# __run_nginx_modules_map_resources (conf_files key). Entries of type
+# "symlink" re-use package-provided .conf files; entries of type
+# "load_module" generate .conf files from .so paths via template.
 
-- name: "Config | Default | Manage module load configs (non-Debian)"
+- name: "Config | Default | Manage module load configs"
   when:
-    - ansible_facts['os_family'] != 'Debian'
+    - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
   block:
 
-    - name: "Config | Default | Ensure modules directory symlink exists (for relative load_module paths)"
+    - name: "Config | Default | Ensure /etc/nginx/modules symlink exists (for relative load_module paths)"
       ansible.builtin.file:
         src: "{{ __run_nginx_module_so_lib_dir_path }}"
         dest: "/etc/nginx/modules"
         state: "link"
         force: true
-      when:
-        - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
 
 
-    # Symlink package-provided .conf files under a stable, predictable name
-    # (the module key) so the rest of the role does not need to know the
-    # platform-specific filenames tracked in __run_nginx_modules_map_resources.
-    - name: "Config | Default | Symlink package-provided module load config files"
+    - name: "Config | Default | Build flat list of module conf_files entries for all enabled modules"
+      ansible.builtin.set_fact:
+        __run_nginx_module_conf_entries: >-
+          {{
+            run_nginx_modules_enabled
+            | ansible.builtin.default([])
+            | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+            | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
+            | ansible.builtin.map(attribute='conf_files')
+            | ansible.builtin.map('ansible.builtin.dict2items')
+            | ansible.builtin.flatten
+            | ansible.builtin.unique(attribute='key')
+            | ansible.builtin.list
+          }}
+
+
+    - name: "Config | Default | Create symlinks for package-provided module config files"
       ansible.builtin.file:
-        src: "{{ __run_nginx_modules_map_resources[item]['conf_paths'] | ansible.builtin.first }}"
-        dest: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+        src: "{{ item['value']['target'] }}"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
         state: "link"
         force: true
       when:
-        - item in __run_nginx_modules_map_resources
-        - (__run_nginx_modules_map_resources[item]['conf_paths'] | ansible.builtin.length) > 0
-      loop: "{{ run_nginx_modules_enabled | ansible.builtin.default([]) }}"
+        - item['value']['type'] == 'symlink'
+      loop: "{{ __run_nginx_module_conf_entries }}"
       loop_control:
-        label: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+        label: >-
+          {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}
+          -> {{ item['value']['target'] }}
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
 
 
-    - name: "Config | Default | Create or update module load config files (if there are no package-provided ones)"
+    - name: "Config | Default | Create load_module config files for modules without package-provided ones"
       ansible.builtin.template:
         src: "module-load.conf.j2"
-        dest: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
         owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
         group: "{{ __run_nginx_config_service_dropin_file_group }}"
         mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
       vars:
-        tpl_module_key: "{{ item }}"
         tpl_module_so_paths: >-
           {{
-            __run_nginx_modules_map_resources[item]['so_paths']
-            if (item in __run_nginx_modules_map_resources)
-            else []
+            [item['value']['target']]
+            if (item['value']['target'] is ansible.builtin.string)
+            else item['value']['target']
           }}
       when:
-        - >-
-          item not in __run_nginx_modules_map_resources
-          or (__run_nginx_modules_map_resources[item]['conf_paths'] | ansible.builtin.length) == 0
-      loop: "{{ run_nginx_modules_enabled | ansible.builtin.default([]) }}"
+        - item['value']['type'] == 'load_module'
+      loop: "{{ __run_nginx_module_conf_entries }}"
       loop_control:
-        label: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
-      notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: restart nginx.service"
-
-
-    - name: "Config | Default | Create 'Enable module' symlinks"
-      ansible.builtin.file:
-        src: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
-        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}.conf"
-        state: "link"
-        force: true
-      when:
-        - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
-      loop: "{{ run_nginx_modules_enabled | ansible.builtin.default([]) }}"
-      loop_control:
-        label: >-
-          {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}.conf
-          -> {{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf
+        label: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -447,14 +433,15 @@
     - name: "Config | Default | Delete stale / unmanaged module configs"
       when:
         - run_nginx_modules_disable_unmanaged
+        - (__run_nginx_module_conf_entries | ansible.builtin.length) > 0
       block:
 
         - name: "Config | Default | Build list of expected module config filenames"
           ansible.builtin.set_fact:
             __run_nginx_expected_module_filenames: >-
               {{
-                (run_nginx_modules_enabled | ansible.builtin.default([]))
-                | ansible.builtin.map('ansible.builtin.regex_replace', '$', '.conf')
+                __run_nginx_module_conf_entries
+                | ansible.builtin.map(attribute='key')
                 | ansible.builtin.list
               }}
 
@@ -479,7 +466,7 @@
           loop: >-
             {{
               __run_nginx_module_conf_files['files']
-              | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_module_filenames | map('regex_escape') | join('|')) ~ ')$')
+              | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_module_filenames | ansible.builtin.map('ansible.builtin.regex_escape') | ansible.builtin.join('|')) ~ ')$')
               | ansible.builtin.list
             }}
           loop_control:

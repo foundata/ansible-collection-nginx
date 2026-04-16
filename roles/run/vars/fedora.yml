@@ -15,101 +15,100 @@ __run_nginx_server_exec_path: "/usr/sbin/nginx"
 # vars/redhat.yml) and Fedora-specific extras.
 __run_nginx_modules_map_resources:
   http_brotli_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-brotli.conf"
+    conf_files:
+      "mod-brotli.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-brotli.conf"
     packages:
       - "nginx-mod-brotli"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_brotli_filter_module.so"
   http_brotli_static:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-brotli.conf"
+    conf_files:
+      "mod-brotli.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-brotli.conf"
     packages:
       - "nginx-mod-brotli"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_brotli_static_module.so"
   http_fancyindex:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-fancyindex.conf"
+    conf_files:
+      "mod-fancyindex.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-fancyindex.conf"
     packages:
       - "nginx-mod-fancyindex"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_fancyindex_module.so"
   http_geoip:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-http-geoip.conf"
+    conf_files:
+      "mod-http-geoip.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-http-geoip.conf"
     packages:
       - "nginx-mod-http-geoip"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_geoip_module.so"
   http_headers_more_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-headers-more.conf"
+    conf_files:
+      "mod-headers-more.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-headers-more.conf"
     packages:
       - "nginx-mod-headers-more"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_headers_more_filter_module.so"
   http_image_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-http-image-filter.conf"
+    conf_files:
+      "mod-http-image-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-http-image-filter.conf"
     packages:
       - "nginx-mod-http-image-filter"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_image_filter_module.so"
   http_modsecurity:
-    conf_paths:
-      - "/etc/nginx/modsecurity.conf"
-      - "/usr/share/nginx/modules/mod-modsecurity.conf"
+    conf_files:
+      "mod-modsecurity.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-modsecurity.conf"
     packages:
       - "nginx-mod-modsecurity"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_modsecurity_module.so"
   http_naxsi:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-naxsi-web-app-firewall.conf"
+    conf_files:
+      "mod-naxsi-web-app-firewall.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-naxsi-web-app-firewall.conf"
     packages:
       - "nginx-mod-naxsi"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_naxsi_module.so"
   http_perl:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-http-perl.conf"
+    conf_files:
+      "mod-http-perl.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-http-perl.conf"
     packages:
       - "nginx-mod-http-perl"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_perl_module.so"
   http_vhost_traffic_status:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-vhost-traffic-status.conf"
+    conf_files:
+      "mod-vhost-traffic-status.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-vhost-traffic-status.conf"
     packages:
       - "nginx-mod-vts"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_vhost_traffic_status_module.so"
   http_xslt_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
+    conf_files:
+      "mod-http-xslt-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
     packages:
       - "nginx-mod-http-xslt-filter"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_xslt_filter_module.so"
   mail:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-mail.conf"
+    conf_files:
+      "mod-mail.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-mail.conf"
     packages:
       - "nginx-mod-mail"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_mail_module.so"
   stream:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-stream.conf"
+    conf_files:
+      "mod-stream.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-stream.conf"
     packages:
       - "nginx-mod-stream"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_stream_module.so"
   stream_geoip:
-    conf_paths:
-      - "/usr/share/nginx/modules/zz-mod-stream-geoip.conf"
+    conf_files:
+      "zz-mod-stream-geoip.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/zz-mod-stream-geoip.conf"
     packages:
       - "nginx-mod-stream-geoip"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_stream_geoip_module.so"

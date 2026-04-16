@@ -181,64 +181,60 @@
         }}
 
 
-- name: "Molecule | Verify | Verify module config files and symlinks (non-Debian)"
+- name: "Molecule | Verify | Verify module config files in modules-enabled"
   when:
-    - ansible_facts['os_family'] != 'Debian'
     - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
   block:
 
-    - name: "Molecule | Verify | Check module config files in modules-available"
+    - name: "Molecule | Verify | Build flat list of expected module conf_files entries"
+      ansible.builtin.set_fact:
+        __testing_module_conf_entries: >-
+          {{
+            run_nginx_modules_enabled
+            | ansible.builtin.default([])
+            | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+            | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
+            | ansible.builtin.map(attribute='conf_files')
+            | ansible.builtin.map('ansible.builtin.dict2items')
+            | ansible.builtin.flatten
+            | ansible.builtin.unique(attribute='key')
+            | ansible.builtin.list
+          }}
+
+
+    - name: "Molecule | Verify | Check module config files in modules-enabled"
       ansible.builtin.stat:
-        path: "{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/{{ item }}.conf"
-      register: __testing_module_available_files
-      loop: >-
-        {{
-          run_nginx_modules_enabled
-          | ansible.builtin.default([])
-        }}
-
-
-    - name: "Molecule | Verify | Assert module config files exist in modules-available"
-      ansible.builtin.assert:
-        that:
-          - item['stat']['exists']
-        fail_msg: >-
-          Module config '{{ item['item'] }}.conf' does not exist in
-          '{{ __run_nginx_config_service_dropin_modules_available_dir_path }}/'.
-        success_msg: >-
-          Module config '{{ item['item'] }}.conf' exists in
-          modules-available.
-      loop: "{{ __testing_module_available_files['results'] }}"
-      loop_control:
-        label: "{{ item['item'] }}"
-
-
-    - name: "Molecule | Verify | Check module symlinks in modules-enabled"
-      ansible.builtin.stat:
-        path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}.conf"
+        path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
       register: __testing_module_enabled_files
-      loop: >-
-        {{
-          run_nginx_modules_enabled
-          | ansible.builtin.default([])
-        }}
+      when:
+        - (__testing_module_conf_entries | ansible.builtin.length) > 0
+      loop: "{{ __testing_module_conf_entries }}"
+      loop_control:
+        label: "{{ item['key'] }}"
 
 
-    - name: "Molecule | Verify | Assert module symlinks exist and are links in modules-enabled"
+    - name: "Molecule | Verify | Assert module config files exist in modules-enabled with correct type"
       ansible.builtin.assert:
         that:
           - item['stat']['exists']
-          - item['stat']['islnk']
+          - >-
+            item['item']['value']['type'] != 'symlink'
+            or item['stat']['islnk']
+          - >-
+            item['item']['value']['type'] != 'load_module'
+            or item['stat']['isreg']
         fail_msg: >-
-          Module symlink '{{ item['item'] }}.conf' does not exist or
-          is not a symlink in
+          Module config '{{ item['item']['key'] }}' does not exist or has
+          wrong type in
           '{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/'.
         success_msg: >-
-          Module symlink '{{ item['item'] }}.conf' exists in
-          modules-enabled.
-      loop: "{{ __testing_module_enabled_files['results'] }}"
+          Module config '{{ item['item']['key'] }}' exists in
+          modules-enabled with correct type.
+      when:
+        - (__testing_module_conf_entries | ansible.builtin.length) > 0
+      loop: "{{ __testing_module_enabled_files['results'] | ansible.builtin.default([]) }}"
       loop_control:
-        label: "{{ item['item'] }}"
+        label: "{{ item['item']['key'] | ansible.builtin.default('n/a') }}"
 
 
 ## HTTP connectivity: example.com
@@ -431,3 +427,7 @@
       Server header value: '{{ __testing_headers_result['server'] | default('') }}'
     success_msg: >-
       The response headers do not contain NGINX version information.
+
+
+- name: pause
+  ansible.builtin.pause:

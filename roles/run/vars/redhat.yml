@@ -14,37 +14,37 @@ __run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
 # vars/fedora.yml instead.
 __run_nginx_modules_map_resources:
   http_image_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-http-image-filter.conf"
+    conf_files:
+      "mod-http-image-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-http-image-filter.conf"
     packages:
       - "nginx-mod-http-image-filter"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_image_filter_module.so"
   http_perl:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-http-perl.conf"
+    conf_files:
+      "mod-http-perl.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-http-perl.conf"
     packages:
       - "nginx-mod-http-perl"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_perl_module.so"
   http_xslt_filter:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
+    conf_files:
+      "mod-http-xslt-filter.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
     packages:
       - "nginx-mod-http-xslt-filter"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_http_xslt_filter_module.so"
   mail:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-mail.conf"
+    conf_files:
+      "mod-mail.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-mail.conf"
     packages:
       - "nginx-mod-mail"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_mail_module.so"
   stream:
-    conf_paths:
-      - "/usr/share/nginx/modules/mod-stream.conf"
+    conf_files:
+      "mod-stream.conf":
+        type: "symlink"
+        target: "/usr/share/nginx/modules/mod-stream.conf"
     packages:
       - "nginx-mod-stream"
-    so_paths:
-      - "/usr/lib64/nginx/modules/ngx_stream_module.so"

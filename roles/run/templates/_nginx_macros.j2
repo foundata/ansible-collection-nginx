@@ -31,27 +31,3 @@
 {%-     endfor -%}
 {%-   endif -%}
 {%- endmacro -%}
-
-{#-
-  Helper macro to derive the canonical .so path from a module key.
-
-  If so_paths is provided and non-empty, the first entry is used directly
-  (absolute path from __run_nginx_modules_map_resources). Otherwise, the
-  path is derived from convention: the module key is prefixed with "ngx_"
-  and suffixed with "_module.so", relative to the "modules/" directory.
-
-  Module keys follow the convention "<context>_<name>" (e.g. "http_perl"),
-  which is the NGINX module's .so filename with the "ngx_" prefix and
-  "_module.so" suffix stripped. Reconstructing the path reverses this:
-  "ngx_" + key + "_module.so".
-
-  Known outlier: NDK modules (keys starting with "ndk_") use
-  "ndk_<name>_module.so" without the "ngx_" prefix.
--#}
-{%- macro module_so_path(module_key, so_paths=[]) -%}
-{%-   if (so_paths | ansible.builtin.length) > 0 -%}
-{{ so_paths | ansible.builtin.first }}
-{%-   else -%}
-modules/{{ '' if module_key is ansible.builtin.match('ndk_') else 'ngx_' }}{{ module_key }}_module.so
-{%-   endif -%}
-{%- endmacro -%}
