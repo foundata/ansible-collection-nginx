@@ -15,35 +15,35 @@ __run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
 __run_nginx_modules_map_resources:
   http_image_filter:
     conf_files:
-      "mod-http-image-filter.conf":
+      - name: "mod-http-image-filter.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-http-image-filter.conf"
     packages:
       - "nginx-mod-http-image-filter"
   http_perl:
     conf_files:
-      "mod-http-perl.conf":
+      - name: "mod-http-perl.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-http-perl.conf"
     packages:
       - "nginx-mod-http-perl"
   http_xslt_filter:
     conf_files:
-      "mod-http-xslt-filter.conf":
+      - name: "mod-http-xslt-filter.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
     packages:
       - "nginx-mod-http-xslt-filter"
   mail:
     conf_files:
-      "mod-mail.conf":
+      - name: "mod-mail.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-mail.conf"
     packages:
       - "nginx-mod-mail"
   stream:
     conf_files:
-      "mod-stream.conf":
+      - name: "mod-stream.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-stream.conf"
     packages:

@@ -7,129 +7,153 @@
 
 # Hint: update this variable with hack/gen-modules-map-resources.sh
 #
-# Ubuntu 22.04 does not ship the brotli modules (available from Debian 12 /
-# Ubuntu 24.04 onwards). This map therefore mirrors vars/debian.yml minus the
-# http_brotli_filter and http_brotli_static entries.
+# Ubuntu 22.04 ships fewer modules than Debian 13 / Ubuntu 24.04 (no brotli,
+# no auth_spnego, no lua, no js, no modsecurity, no push_stream, etc.).
 __run_nginx_modules_map_resources:
   http_auth_pam:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-auth-pam.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-auth-pam.conf"
     packages:
       - "libnginx-mod-http-auth-pam"
-  http_auth_spnego:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-auth-spnego"
   http_cache_purge:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-cache-purge.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-cache-purge.conf"
     packages:
       - "libnginx-mod-http-cache-purge"
   http_dav_ext:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-dav-ext.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-dav-ext.conf"
     packages:
       - "libnginx-mod-http-dav-ext"
   http_echo:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-echo.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-echo.conf"
     packages:
       - "libnginx-mod-http-echo"
   http_fancyindex:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-fancyindex.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-fancyindex.conf"
     packages:
       - "libnginx-mod-http-fancyindex"
-  # deprecated, MaxMind stopped updating legacy GeoIP
-  # in 2019; use http_geoip2 instead
   http_geoip:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-geoip.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-geoip.conf"
     packages:
       - "libnginx-mod-http-geoip"
   http_geoip2:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-geoip2.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-geoip2.conf"
     packages:
       - "libnginx-mod-http-geoip2"
   http_headers_more_filter:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-headers-more-filter.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-headers-more-filter.conf"
     packages:
       - "libnginx-mod-http-headers-more-filter"
   http_image_filter:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-image-filter.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-image-filter.conf"
     packages:
       - "libnginx-mod-http-image-filter"
-  http_js:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-js"
-  http_lua:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-lua"
-  http_memc:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-memc"
-  http_modsecurity:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-modsecurity"
   http_perl:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-perl.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-perl.conf"
     packages:
       - "libnginx-mod-http-perl"
-  http_push_stream:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-push-stream"
-  http_set_misc:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-set-misc"
-  http_srcache_filter:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-http-srcache-filter"
   http_subs_filter:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-subs-filter.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-subs-filter.conf"
     packages:
       - "libnginx-mod-http-subs-filter"
   http_uploadprogress:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-uploadprogress.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-uploadprogress.conf"
     packages:
       - "libnginx-mod-http-uploadprogress"
   http_upstream_fair:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-upstream-fair.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-upstream-fair.conf"
     packages:
       - "libnginx-mod-http-upstream-fair"
   http_xslt_filter:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-xslt-filter.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-xslt-filter.conf"
     packages:
       - "libnginx-mod-http-xslt-filter"
   mail:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-mail.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-mail.conf"
     packages:
       - "libnginx-mod-mail"
   nchan:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-nchan.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-nchan.conf"
     packages:
       - "libnginx-mod-nchan"
   ndk_http:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-http-ndk.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-http-ndk.conf"
     packages:
       - "libnginx-mod-http-ndk"
   rtmp:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-rtmp.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-rtmp.conf"
     packages:
       - "libnginx-mod-rtmp"
   stream:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-stream.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-stream.conf"
     packages:
       - "libnginx-mod-stream"
   stream_geoip:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-stream-geoip.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-stream-geoip.conf"
     packages:
       - "libnginx-mod-stream-geoip"
   stream_geoip2:
-    conf_files: {}
+    conf_files:
+      - name: "50-mod-stream-geoip2.conf"
+        type: "symlink"
+        target: "/usr/share/nginx/modules-available/mod-stream-geoip2.conf"
     packages:
       - "libnginx-mod-stream-geoip2"
-  stream_js:
-    conf_files: {}
-    packages:
-      - "libnginx-mod-stream-js"

@@ -26,77 +26,107 @@ __run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
 __run_nginx_modules_map_resources:
   http_brotli_filter:
     conf_files:
-      "mod-brotli-filter.conf":
+      - name: "mod-http-brotli-filter.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_brotli_filter_module.so"
     packages:
       - "nginx-module-brotli"
   http_brotli_static:
     conf_files:
-      "mod-brotli-static.conf":
+      - name: "mod-http-brotli-static.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_brotli_static_module.so"
     packages:
       - "nginx-module-brotli"
   http_echo:
     conf_files:
-      "mod-http-echo.conf":
+      - name: "mod-http-echo.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_echo_module.so"
     packages:
       - "nginx-module-echo"
   http_geoip2:
     conf_files:
-      "mod-http-geoip2.conf":
+      - name: "mod-http-geoip2.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_geoip2_module.so"
     packages:
       - "nginx-module-geoip2"
+  http_image_filter:
+    conf_files:
+      - name: "mod-http-image-filter.conf"
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_image_filter_module.so"
+    packages: []
   http_js:
     conf_files:
-      "mod-http-js.conf":
+      - name: "mod-http-js.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_js_module.so"
     packages:
       - "nginx-module-njs"
   http_lua:
     conf_files:
-      "mod-http-lua.conf":
+      - name: "mod-http-lua.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_lua_module.so"
     packages:
       - "nginx-module-lua"
+  http_perl:
+    conf_files:
+      - name: "mod-http-perl.conf"
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_perl_module.so"
+    packages: []
   http_vhost_traffic_status:
     conf_files:
-      "mod-vts.conf":
+      - name: "mod-vts.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-vts.conf"
     packages:
       - "nginx-module-vts"
+  http_xslt_filter:
+    conf_files:
+      - name: "mod-http-xslt-filter.conf"
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_http_xslt_filter_module.so"
+    packages: []
   http_zstd_filter:
     conf_files:
-      "mod-zstd-filter.conf":
+      - name: "mod-http-zstd-filter.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_zstd_filter_module.so"
     packages:
       - "nginx-module-zstd"
   http_zstd_static:
     conf_files:
-      "mod-zstd-static.conf":
+      - name: "mod-http-zstd-static.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_http_zstd_static_module.so"
     packages:
       - "nginx-module-zstd"
+  mail:
+    conf_files:
+      - name: "mod-mail.conf"
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_mail_module.so"
+    packages: []
+  stream:
+    conf_files:
+      - name: "mod-stream.conf"
+        type: "load_module"
+        target: "/usr/lib64/nginx/modules/ngx_stream_module.so"
+    packages: []
   stream_geoip2:
     conf_files:
-      "mod-stream-geoip2.conf":
+      - name: "mod-stream-geoip2.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_stream_geoip2_module.so"
     packages:
       - "nginx-module-geoip2"
   stream_js:
     conf_files:
-      "mod-stream-js.conf":
+      - name: "mod-stream-js.conf"
         type: "load_module"
         target: "/usr/lib64/nginx/modules/ngx_stream_js_module.so"
     packages:

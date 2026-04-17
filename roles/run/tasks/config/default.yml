@@ -381,26 +381,25 @@
             | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
             | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
             | ansible.builtin.map(attribute='conf_files')
-            | ansible.builtin.map('ansible.builtin.dict2items')
             | ansible.builtin.flatten
-            | ansible.builtin.unique(attribute='key')
+            | ansible.builtin.unique(attribute='name')
             | ansible.builtin.list
           }}
 
 
     - name: "Config | Default | Create symlinks for package-provided module config files"
       ansible.builtin.file:
-        src: "{{ item['value']['target'] }}"
-        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
+        src: "{{ item['target'] }}"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
         state: "link"
         force: true
       when:
-        - item['value']['type'] == 'symlink'
+        - item['type'] == 'symlink'
       loop: "{{ __run_nginx_module_conf_entries }}"
       loop_control:
         label: >-
-          {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}
-          -> {{ item['value']['target'] }}
+          {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}
+          -> {{ item['target'] }}
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -409,22 +408,22 @@
     - name: "Config | Default | Create load_module config files for modules without package-provided ones"
       ansible.builtin.template:
         src: "module-load.conf.j2"
-        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
         owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
         group: "{{ __run_nginx_config_service_dropin_file_group }}"
         mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
       vars:
         tpl_module_so_paths: >-
           {{
-            [item['value']['target']]
-            if (item['value']['target'] is ansible.builtin.string)
-            else item['value']['target']
+            [item['target']]
+            if (item['target'] is ansible.builtin.string)
+            else item['target']
           }}
       when:
-        - item['value']['type'] == 'load_module'
+        - item['type'] == 'load_module'
       loop: "{{ __run_nginx_module_conf_entries }}"
       loop_control:
-        label: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
+        label: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -441,7 +440,7 @@
             __run_nginx_expected_module_filenames: >-
               {{
                 __run_nginx_module_conf_entries
-                | ansible.builtin.map(attribute='key')
+                | ansible.builtin.map(attribute='name')
                 | ansible.builtin.list
               }}
 

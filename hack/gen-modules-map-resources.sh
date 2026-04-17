@@ -14,6 +14,12 @@
 #   PKG_PATTERN_DNF    (default: 'nginx-mod-*')
 #   PKG_PATTERN_ZYPPER (default: 'nginx-module-*')
 #
+# Quick run with copy & paste on test systems:
+#   rm -f /tmp/gen-modules-map-resources.sh && \
+#     nano /tmp/gen-modules-map-resources.sh && \
+#     chmod +x /tmp/gen-modules-map-resources.sh && \
+#     /tmp/gen-modules-map-resources.sh
+#
 # SPDX-FileCopyrightText: 2026, foundata GmbH (https://foundata.com)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -231,37 +237,26 @@ so_to_key() {
 }
 
 ###
-# Print a YAML list: inline "[]" when empty, "- item" lines otherwise.
-# Arguments:
-#   $@ - Items to list (zero or more).
-# Outputs:
-#   YAML fragment to STDOUT.
-yaml_list() {
-  if [ "$#" -eq 0 ]; then
-    printf '%s\n' '[]'
-    return 0
-  fi
-  printf '\n'
-  local item
-  for item in "$@"; do
-    printf '      - "%s"\n' "${item}"
-  done
-}
-
-###
 # Write a single module YAML block into the temporary output directory.
+#
+# Determines whether to emit a "symlink" or "load_module" conf_files entry
+# based on whether the package provides a module load .conf file in the
+# platform's standard directory.
+#
 # Globals:
 #   tmpdir_gen - Path to the temporary directory for per-key YAML fragments.
 # Arguments:
 #   $1     - Canonical module key.
 #   $2     - Package name.
-#   $3...  - File paths (.conf and .so) provided by the package.
+#   $3     - Package manager identifier (apt, dnf, zypper).
+#   $4...  - File paths (.conf and .so) provided by the package.
 # Outputs:
 #   Writes a file "${tmpdir_gen}/${key}.yml".
 emit_module_block() {
   local key="${1}"
   local pkg="${2}"
-  shift 2
+  local mgr="${3}"
+  shift 3
 
   local confs=()
   local sos=()
@@ -274,17 +269,54 @@ emit_module_block() {
     esac
   done
 
-  local conf_yaml so_yaml
-  conf_yaml="$(yaml_list "${confs[@]+"${confs[@]}"}")" || true
-  so_yaml="$(yaml_list "${sos[@]+"${sos[@]}"}")" || true
+  # Filter confs to module load configs in the platform-specific directory.
+  # Auxiliary .conf files (e.g. /etc/nginx/modsecurity.conf) are ignored.
+  local module_confs=()
+  for f in "${confs[@]+"${confs[@]}"}"; do
+    case "${mgr}" in
+      'apt')
+        case "${f}" in
+          /usr/share/nginx/modules-available/*.conf) module_confs+=("${f}") ;;
+          *) ;;
+        esac
+        ;;
+      'dnf' | 'zypper')
+        case "${f}" in
+          /usr/share/nginx/modules/*.conf) module_confs+=("${f}") ;;
+          *) ;;
+        esac
+        ;;
+    esac
+  done
+
+  # Determine conf_files entry: type, target, and filename.
+  local cf_filename cf_type cf_target
+  if [ "${#module_confs[@]}" -gt 0 ]; then
+    cf_type='symlink'
+    cf_target="${module_confs[0]}"
+    local cf_basename="${cf_target##*/}"
+    case "${mgr}" in
+      'apt') cf_filename="50-${cf_basename}" ;;
+      *) cf_filename="${cf_basename}" ;;
+    esac
+  else
+    cf_type='load_module'
+    cf_target="${sos[0]}"
+    cf_filename="mod-$(printf '%s' "${key}" | tr '_' '-').conf"
+  fi
 
   {
     printf '  %s:\n' "${key}"
-    # Trailing \n needed: $() strips the final newline from yaml_list output.
-    printf '    conf_paths: %s\n' "${conf_yaml}"
-    printf '    packages:\n'
-    printf '      - "%s"\n' "${pkg}"
-    printf '    so_paths: %s\n' "${so_yaml}"
+    printf '    conf_files:\n'
+    printf '      - name: "%s"\n' "${cf_filename}"
+    printf '        type: "%s"\n' "${cf_type}"
+    printf '        target: "%s"\n' "${cf_target}"
+    if [ -n "${pkg}" ]; then
+      printf '    packages:\n'
+      printf '      - "%s"\n' "${pkg}"
+    else
+      printf '    packages: []\n'
+    fi
   } >"${tmpdir_gen}/${key}.yml"
 }
 
@@ -295,10 +327,12 @@ emit_module_block() {
 #   tmpdir_gen - Path to the temporary directory for per-key YAML fragments.
 # Arguments:
 #   $1     - Package name.
-#   $2...  - File paths (.conf and .so) from the package.
+#   $2     - Package manager identifier (apt, dnf, zypper).
+#   $3...  - File paths (.conf and .so) from the package.
 process_package() {
   local pkg="${1}"
-  shift
+  local mgr="${2}"
+  shift 2
   local files=("$@")
 
   local confs=()
@@ -323,10 +357,10 @@ process_package() {
   local key
   for f in "${sos[@]}"; do
     key="$(so_to_key "${f}")"
-    # Each module key gets its own YAML block; conf_paths from the package
+    # Each module key gets its own YAML block; conf files from the package
     # are included in every block (they belong to the package, not a
     # specific .so).
-    emit_module_block "${key}" "${pkg}" "${confs[@]+"${confs[@]}"}" "${f}"
+    emit_module_block "${key}" "${pkg}" "${mgr}" "${confs[@]+"${confs[@]}"}" "${f}"
   done
 }
 
@@ -340,12 +374,13 @@ process_package() {
 #   0 on success, 1 if prerequisites are missing.
 apt_prepare() {
   check_cmd 'apt-cache' || return 1
-  if ! check_cmd 'apt-file'; then
-    msg -e "'apt-file' is required for APT mode (apt install apt-file)"
-    return 1
-  fi
-  msg -i 'Refreshing APT metadata and apt-file cache ...'
+  msg -i 'Refreshing APT metadata ...'
   ensure apt-get update -qq
+  if ! check_cmd 'apt-file'; then
+    msg -i "Installing 'apt-file' (required for APT file listing) ..."
+    ensure apt-get install -y -qq apt-file
+  fi
+  msg -i 'Updating apt-file cache ...'
   ensure apt-file update
 }
 
@@ -556,8 +591,31 @@ main() {
       continue
     fi
 
-    process_package "${pkg}" "${files[@]}"
+    process_package "${pkg}" "${mgr}" "${files[@]}"
   done <<<"${pkg_list}"
+
+  # Also scan the base nginx package for dynamic .so files that are not
+  # covered by separate module packages. On SUSE, modules like mail, stream,
+  # http_perl, etc. are compiled as dynamic modules but shipped in the base
+  # nginx package — they need load_module directives but no extra package
+  # install.
+  local base_sos_raw base_so base_key
+  base_sos_raw="$("${mgr}_pkg_files" 'nginx')" || true
+  if [ -n "${base_sos_raw}" ]; then
+    while IFS= read -r base_so; do
+      [ -n "${base_so}" ] || continue
+      # Only consider .so files in the modules directory
+      case "${base_so}" in
+        */nginx/modules/*.so) ;;
+        *) continue ;;
+      esac
+      base_key="$(so_to_key "${base_so}")"
+      # Skip if already handled by a module package
+      [ ! -f "${tmpdir_gen}/${base_key}.yml" ] || continue
+      msg -d "Base nginx package provides: ${base_so} (key: ${base_key})"
+      emit_module_block "${base_key}" '' "${mgr}" "${base_so}"
+    done <<<"${base_sos_raw}"
+  fi
 
   # Assemble the final sorted YAML output
   printf '%s\n' '__run_nginx_modules_map_resources:'

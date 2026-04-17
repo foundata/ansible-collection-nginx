@@ -16,98 +16,98 @@ __run_nginx_server_exec_path: "/usr/sbin/nginx"
 __run_nginx_modules_map_resources:
   http_brotli_filter:
     conf_files:
-      "mod-brotli.conf":
+      - name: "mod-brotli.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-brotli.conf"
     packages:
       - "nginx-mod-brotli"
   http_brotli_static:
     conf_files:
-      "mod-brotli.conf":
+      - name: "mod-brotli.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-brotli.conf"
     packages:
       - "nginx-mod-brotli"
   http_fancyindex:
     conf_files:
-      "mod-fancyindex.conf":
+      - name: "mod-fancyindex.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-fancyindex.conf"
     packages:
       - "nginx-mod-fancyindex"
   http_geoip:
     conf_files:
-      "mod-http-geoip.conf":
+      - name: "mod-http-geoip.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-http-geoip.conf"
     packages:
       - "nginx-mod-http-geoip"
   http_headers_more_filter:
     conf_files:
-      "mod-headers-more.conf":
+      - name: "mod-headers-more.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-headers-more.conf"
     packages:
       - "nginx-mod-headers-more"
   http_image_filter:
     conf_files:
-      "mod-http-image-filter.conf":
+      - name: "mod-http-image-filter.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-http-image-filter.conf"
     packages:
       - "nginx-mod-http-image-filter"
   http_modsecurity:
     conf_files:
-      "mod-modsecurity.conf":
+      - name: "mod-modsecurity.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-modsecurity.conf"
     packages:
       - "nginx-mod-modsecurity"
   http_naxsi:
     conf_files:
-      "mod-naxsi-web-app-firewall.conf":
+      - name: "mod-naxsi-web-app-firewall.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-naxsi-web-app-firewall.conf"
     packages:
       - "nginx-mod-naxsi"
   http_perl:
     conf_files:
-      "mod-http-perl.conf":
+      - name: "mod-http-perl.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-http-perl.conf"
     packages:
       - "nginx-mod-http-perl"
   http_vhost_traffic_status:
     conf_files:
-      "mod-vhost-traffic-status.conf":
+      - name: "mod-vhost-traffic-status.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-vhost-traffic-status.conf"
     packages:
       - "nginx-mod-vts"
   http_xslt_filter:
     conf_files:
-      "mod-http-xslt-filter.conf":
+      - name: "mod-http-xslt-filter.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-http-xslt-filter.conf"
     packages:
       - "nginx-mod-http-xslt-filter"
   mail:
     conf_files:
-      "mod-mail.conf":
+      - name: "mod-mail.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-mail.conf"
     packages:
       - "nginx-mod-mail"
   stream:
     conf_files:
-      "mod-stream.conf":
+      - name: "mod-stream.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/mod-stream.conf"
     packages:
       - "nginx-mod-stream"
   stream_geoip:
     conf_files:
-      "zz-mod-stream-geoip.conf":
+      - name: "zz-mod-stream-geoip.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules/zz-mod-stream-geoip.conf"
     packages:

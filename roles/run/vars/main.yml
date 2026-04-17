@@ -117,9 +117,10 @@ __run_nginx_paths_removal: []
 # Dictionary values: A sub dictionary containing the keys:
 #
 # - 'conf_files':
-#   Dict of files to create in
+#   List of files to create in
 #   __run_nginx_config_service_dropin_modules_enabled_dir_path.
-#   Each key is a filename, each value is a sub dict with:
+#   Each entry is a dict with:
+#     - 'name': filename to create in modules-enabled/
 #     - 'type': "symlink" or "load_module"
 #       "symlink"     → create a symlink pointing to 'target'
 #       "load_module" → create a .conf with load_module directive(s)

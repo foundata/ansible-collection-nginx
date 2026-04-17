@@ -178,6 +178,8 @@
         {{
           run_nginx_modules_enabled
           | ansible.builtin.default([])
+          | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+          | ansible.builtin.list
         }}
 
 
@@ -195,22 +197,21 @@
             | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
             | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
             | ansible.builtin.map(attribute='conf_files')
-            | ansible.builtin.map('ansible.builtin.dict2items')
             | ansible.builtin.flatten
-            | ansible.builtin.unique(attribute='key')
+            | ansible.builtin.unique(attribute='name')
             | ansible.builtin.list
           }}
 
 
     - name: "Molecule | Verify | Check module config files in modules-enabled"
       ansible.builtin.stat:
-        path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['key'] }}"
+        path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
       register: __testing_module_enabled_files
       when:
         - (__testing_module_conf_entries | ansible.builtin.length) > 0
       loop: "{{ __testing_module_conf_entries }}"
       loop_control:
-        label: "{{ item['key'] }}"
+        label: "{{ item['name'] }}"
 
 
     - name: "Molecule | Verify | Assert module config files exist in modules-enabled with correct type"
@@ -218,23 +219,23 @@
         that:
           - item['stat']['exists']
           - >-
-            item['item']['value']['type'] != 'symlink'
+            item['item']['type'] != 'symlink'
             or item['stat']['islnk']
           - >-
-            item['item']['value']['type'] != 'load_module'
+            item['item']['type'] != 'load_module'
             or item['stat']['isreg']
         fail_msg: >-
-          Module config '{{ item['item']['key'] }}' does not exist or has
+          Module config '{{ item['item']['name'] }}' does not exist or has
           wrong type in
           '{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/'.
         success_msg: >-
-          Module config '{{ item['item']['key'] }}' exists in
+          Module config '{{ item['item']['name'] }}' exists in
           modules-enabled with correct type.
       when:
         - (__testing_module_conf_entries | ansible.builtin.length) > 0
       loop: "{{ __testing_module_enabled_files['results'] | ansible.builtin.default([]) }}"
       loop_control:
-        label: "{{ item['item']['key'] | ansible.builtin.default('n/a') }}"
+        label: "{{ item['item']['name'] | ansible.builtin.default('n/a') }}"
 
 
 ## HTTP connectivity: example.com
@@ -427,7 +428,3 @@
       Server header value: '{{ __testing_headers_result['server'] | default('') }}'
     success_msg: >-
       The response headers do not contain NGINX version information.
-
-
-- name: pause
-  ansible.builtin.pause:
