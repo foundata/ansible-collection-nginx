@@ -86,7 +86,7 @@ run_nginx_sites_defaultserver_manage: true
 #
 # - Type: str
 # - Required: No
-# - Default: 
+# - Default:
 run_nginx_main_config_block: ""
 
 # Additional NGINX configuration directives for the `events {}` block in the
@@ -101,7 +101,7 @@ run_nginx_main_config_block: ""
 #
 # - Type: str
 # - Required: No
-# - Default: 
+# - Default:
 run_nginx_events_config_block: ""
 
 # Additional NGINX configuration directives for the `http {}` block in the main
@@ -118,7 +118,7 @@ run_nginx_events_config_block: ""
 #
 # - Type: str
 # - Required: No
-# - Default: 
+# - Default:
 run_nginx_http_config_block: ""
 
 # Controls whether the role injects curated baseline directives into the main

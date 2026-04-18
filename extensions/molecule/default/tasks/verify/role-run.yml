@@ -405,7 +405,8 @@
       The HTTPS catch-all server correctly rejected the TLS handshake
       (ssl_reject_handshake).
   when:
-    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] == '22') # NGINX is too old there for the catchall TLS/SSL, cf. j2 template file
+    # NGINX is too old there for the catchall TLS/SSL, cf. j2 template file
+    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] == '22')
 
 
 ## Response headers: NGINX version information

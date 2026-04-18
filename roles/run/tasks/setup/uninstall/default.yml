@@ -6,12 +6,12 @@
   ansible.builtin.service_facts:
 
 
-- name: "Setup | Uninstall | Stop and disable service: {{ __run_nginx_nginx_servicename }} (best-effort)"
+- name: "Setup | Uninstall | Stop and disable service (best-effort): {{ __run_nginx_nginx_servicename }}"
   ansible.builtin.systemd_service:
     name: "{{ __run_nginx_nginx_servicename }}"
     state: "stopped"
     enabled: false
-  ignore_errors: true
+  failed_when: false # best-effort service stop
   when:
     - __run_nginx_nginx_servicename in ansible_facts['services']
 

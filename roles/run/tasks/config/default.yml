@@ -271,7 +271,7 @@
   loop_control:
     label: "{{ item['name'] }}"
   when:
-    -  item['name'] is not match('^[a-zA-Z0-9._-]+$')
+    - item['name'] is not match('^[a-zA-Z0-9._-]+$')
 
 
 - name: "Config | Default | Create or update site config files"
@@ -300,6 +300,9 @@
     src: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}"
     dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}"
     state: "{{ (item.enabled | default(false)) | ternary('link', 'absent') }}"
+    owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
+    group: "{{ __run_nginx_config_service_dropin_file_group }}"
+    mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
     force: true
   vars:
     __run_nginx_loop_file_name: "{{ item['name'] }}.conf"
@@ -476,7 +479,9 @@
           loop: >-
             {{
               __run_nginx_module_conf_files['files']
-              | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_module_filenames | ansible.builtin.map('ansible.builtin.regex_escape') | ansible.builtin.join('|')) ~ ')$')
+              | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_module_filenames
+                                                                     | ansible.builtin.map('ansible.builtin.regex_escape')
+                                                                     | ansible.builtin.join('|')) ~ ')$')
               | ansible.builtin.list
             }}
           loop_control:
