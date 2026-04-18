@@ -58,6 +58,15 @@
     mode: "0644"
 
 
+- name: "Molecule | Prepare | Create static test file for cache-static snippet testing"
+  ansible.builtin.copy:
+    dest: "{{ __testing_examplecom_wwwroot }}/test.css"
+    content: "/* test */"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+
 - name: "Molecule | Prepare | Install packages needed to create certificates and for later tests"
   ansible.builtin.package:
     name:

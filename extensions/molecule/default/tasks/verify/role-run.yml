@@ -428,3 +428,164 @@
       Server header value: '{{ __testing_headers_result['server'] | default('') }}'
     success_msg: >-
       The response headers do not contain NGINX version information.
+
+
+## Config snippet files deployed
+
+- name: "Molecule | Verify | Check managed snippet files exist"
+  ansible.builtin.stat:
+    path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/{{ item }}"
+  register: __testing_snippet_files
+  loop:
+    - "http/tls-baseline.conf"
+    - "server/headers-security.conf"
+    - "server/headers-hsts.conf"
+    - "location/cache-static.conf"
+    - "location/php-fpm.conf"
+
+
+- name: "Molecule | Verify | Assert all managed snippet files exist"
+  ansible.builtin.assert:
+    that:
+      - item['stat']['exists']
+    fail_msg: >-
+      Snippet file '{{ item['item'] }}' does not exist at
+      '{{ __run_nginx_config_service_dropin_snippets_dir_path }}/{{ item['item'] }}'.
+    success_msg: >-
+      Snippet file '{{ item['item'] }}' exists.
+  loop: "{{ __testing_snippet_files['results'] }}"
+  loop_control:
+    label: "{{ item['item'] }}"
+
+
+## DH parameters file deployed (RFC 7919 ffdhe3072)
+
+- name: "Molecule | Verify | Check DH parameters file exists at configured path"
+  ansible.builtin.stat:
+    path: "{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] }}"
+  register: __testing_dhparam_file
+
+
+- name: "Molecule | Verify | Assert DH parameters file exists and has correct permissions"
+  ansible.builtin.assert:
+    that:
+      - __testing_dhparam_file['stat']['exists']
+      - __testing_dhparam_file['stat']['mode'] == '0644'
+    fail_msg: >-
+      DH parameters file does not exist or has wrong permissions at
+      '{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] }}'.
+      Exists: {{ __testing_dhparam_file['stat']['exists'] | default(false) }},
+      Mode: {{ __testing_dhparam_file['stat']['mode'] | default('N/A') }}
+    success_msg: >-
+      DH parameters file exists with correct permissions (0644) at
+      '{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] }}'.
+
+
+## NGINX configuration validation
+
+- name: "Molecule | Verify | Run nginx -T to validate full configuration"
+  ansible.builtin.command:
+    cmd: "nginx -T"
+  changed_when:
+    - false
+  register: __testing_nginx_full_config
+
+
+- name: "Molecule | Verify | Assert nginx -T succeeded (configuration is valid)"
+  ansible.builtin.assert:
+    that:
+      - __testing_nginx_full_config['rc'] == 0
+    fail_msg: >-
+      nginx -T failed with return code {{ __testing_nginx_full_config['rc'] }}.
+      stderr: {{ __testing_nginx_full_config['stderr'] | default('') }}
+    success_msg: >-
+      nginx -T succeeded, configuration is valid.
+
+
+## Gzip configuration
+
+- name: "Molecule | Verify | Assert gzip directives are present in NGINX configuration"
+  ansible.builtin.assert:
+    that:
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('gzip on;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('gzip_comp_level 5;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('gzip_min_length 256;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('gzip_proxied any;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('gzip_types.*text/css.*application/json')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('gzip_vary on;')
+    fail_msg: >-
+      One or more expected gzip directives are missing from the NGINX configuration.
+    success_msg: >-
+      All expected gzip directives are present in the NGINX configuration.
+
+
+## Security response headers
+
+- name: "Molecule | Verify | Fetch HTTPS response headers from example.com"
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--head"
+      - "--silent"
+      - "--insecure"
+      - "--resolve"
+      - "example.com:443:127.0.0.1"
+      - "https://example.com/"
+  changed_when:
+    - false
+  register: __testing_https_headers
+
+
+- name: "Molecule | Verify | Assert security response headers are present"
+  ansible.builtin.assert:
+    that:
+      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)X-Content-Type-Options:\s*nosniff')
+      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)X-Frame-Options:\s*sameorigin')
+      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)Referrer-Policy:\s*strict-origin-when-cross-origin')
+    fail_msg: >-
+      One or more expected security headers are missing from the HTTPS response.
+      Response headers: {{ __testing_https_headers['stdout'] }}
+    success_msg: >-
+      All expected security headers (X-Content-Type-Options, X-Frame-Options,
+      Referrer-Policy) are present in the HTTPS response.
+
+
+## HSTS response header
+
+- name: "Molecule | Verify | Assert HSTS header is present in HTTPS response"
+  ansible.builtin.assert:
+    that:
+      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)Strict-Transport-Security:.*max-age=31536000.*includeSubDomains')
+    fail_msg: >-
+      The HSTS header is missing or has unexpected values in the HTTPS response.
+      Response headers: {{ __testing_https_headers['stdout'] }}
+    success_msg: >-
+      The HSTS header is present with expected values (max-age=31536000; includeSubDomains).
+
+
+## Cache-Control for static assets
+
+- name: "Molecule | Verify | Fetch HTTPS response headers for static asset"
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--head"
+      - "--silent"
+      - "--insecure"
+      - "--resolve"
+      - "example.com:443:127.0.0.1"
+      - "https://example.com/test.css"
+  changed_when:
+    - false
+  register: __testing_static_headers
+
+
+- name: "Molecule | Verify | Assert Cache-Control header is present for static assets"
+  ansible.builtin.assert:
+    that:
+      - __testing_static_headers['stdout'] is ansible.builtin.search('(?i)Cache-Control:.*public.*immutable')
+    fail_msg: >-
+      The Cache-Control header for static assets is missing or has unexpected values.
+      Response headers: {{ __testing_static_headers['stdout'] }}
+    success_msg: >-
+      The Cache-Control header for static assets contains 'public' and 'immutable'.

@@ -22,10 +22,20 @@
                 ssl_certificate /etc/pki/tls/private/example.com.pem;
                 ssl_certificate_key /etc/pki/tls/private/example.com.pem;
 
+                # Include snippets for testing
+                include /etc/nginx/snippets/http/tls-baseline.conf;
+                include /etc/nginx/snippets/server/headers-security.conf;
+                include /etc/nginx/snippets/server/headers-hsts.conf;
+
                 location / {
                     try_files $uri $uri/ =404;
                     root /var/www/example.com;
                     index index.html;
+                }
+
+                location ~* \.(css|js|svg|png|jpg|gif|ico|woff2?)$ {
+                    root /var/www/example.com;
+                    include /etc/nginx/snippets/location/cache-static.conf;
                 }
             }
         - name: "foo_bar"
