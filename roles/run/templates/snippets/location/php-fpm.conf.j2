@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+{%  set settings = tpl_settings['php-fpm'] | ansible.builtin.default({}) %}
+
+location ~ \.php$ {
+{%  if settings['type'] | ansible.builtin.default('socket') == 'socket' %}
+    fastcgi_pass unix:{{ settings['socket'] | ansible.builtin.default('/run/php/php-fpm.sock') }};
+{% else %}
+    fastcgi_pass {{ settings['tcp_host'] | ansible.builtin.default('127.0.0.1') }}:{{ settings['tcp_port'] | ansible.builtin.default(9000) }};
+{%  endif %}
+
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    include fastcgi_params;
+}

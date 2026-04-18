@@ -2,31 +2,48 @@
 
 ### Misc security HTTP headers
 
+
 # When serving user-supplied content, include a "X-Content-Type-Options: nosniff"
 # header along with the Content-Type: header, to disable content-type sniffing
-# on some browsers.
+# on some browsers. This prevents the browser from interpreting files as a
+# different MIME type than what is specified in the Content-Type header
+# (e.g. treating a .txt as HTML), which can lead to XSS vulnerabilities.
 #
 # References:
 #
-# - https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+# - https://owasp.org/www-project-secure-headers/#x-content-type-options
 add_header X-Content-Type-Options nosniff;
 
-# Enable Cross-site scripting (XSS) filter built into recent web browsers.
-# It is usually enabled by default anyway. However, this header should
-# re-enable the filter for  this particular website if it was disabled by
-# the user.
-#
-# References:
-#
-# - https://www.owasp.org/index.php/List_of_useful_HTTP_headers
-add_header X-XSS-Protection "1; mode=block";
 
 # Control embedding into (i)frames (which might bypass HTTPS with
 # clickjacking). Restricting at least to "sameorigin" should make sense
-# for nearly all sites. "deny" or "allow-from <uri>" are also possible
+# for nearly all sites. "deny" or "allow-from <uri>" are also possible.
+#
+# Note: The Content-Security-Policy "frame-ancestors" directive supersedes
+# X-Frame-Options for modern browsers. However, X-Frame-Options is still
+# useful as a fallback for older clients that do not support CSP Level 2.
 #
 # References:
 #
-# - https://www.owasp.org/index.php/List_of_useful_HTTP_headers
-# - https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors
+# - https://owasp.org/www-project-secure-headers/#x-frame-options
 add_header X-Frame-Options sameorigin;
+
+
+# Controls how much referrer information is sent when navigating from one
+# page to another. The default browser behavior typically sends the full
+# URL as a referrer, leaking path and query parameters to third parties.
+#
+# "strict-origin-when-cross-origin" balances privacy and functionality:
+# - Same-origin requests: full URL is sent
+# - Cross-origin requests (HTTPS->HTTPS): only the origin (scheme+host)
+# - Downgrade (HTTPS->HTTP): no referrer at all
+#
+# References:
+#
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+# - https://owasp.org/www-project-secure-headers/#referrer-policy
+# - https://w3c.github.io/webappsec-referrer-policy/
+add_header Referrer-Policy "strict-origin-when-cross-origin";

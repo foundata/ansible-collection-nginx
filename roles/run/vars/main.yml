@@ -269,7 +269,35 @@ __run_nginx_http_directives_defaults:
     - "/etc/nginx/conf.d/*.conf"
     - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/*.conf"
   default_type: 'application/octet-stream'
+  # gzip compression (cf. https://nginx.org/en/docs/http/ngx_http_gzip_module.html)
   gzip: true
+  # Compression level 5 is a good trade-off between compression ratio and CPU
+  # usage. Levels above 6 provide diminishing returns for significantly more
+  # CPU cost.
+  gzip_comp_level: 5
+  # Do not compress responses smaller than 256 bytes - the gzip overhead would
+  # often make the result larger than the original.
+  gzip_min_length: 256
+  # Enable compression for responses to proxied requests so that users behind
+  # reverse proxies or CDNs still receive compressed content.
+  gzip_proxied: "any"
+  # NGINX only compresses text/html by default. Add all common text-based
+  # content types that benefit from compression. Binary formats like images
+  # or videos are already compressed and should not be listed here.
+  gzip_types: >-
+    text/plain
+    text/css
+    text/xml
+    text/javascript
+    application/json
+    application/javascript
+    application/xml
+    application/xml+rss application/x-javascript
+    image/svg+xml"
+  # Signal to caching proxies that the response varies depending on the
+  # Accept-Encoding header. This prevents a proxy from serving a cached
+  # gzipped response to a client that does not support gzip.
+  gzip_vary: true
   # do not include or print server version information in server generated
   # documents or response headers
   server_tokens: false
@@ -286,11 +314,21 @@ __run_nginx_http_directives_overwrite: {}
 # See run_nginx_snippet_settings in defaults/main.yml for a detailled
 # description of the structure (as this variable is using the same).
 __run_nginx_snippet_settings_defaults:
+  hsts:
+    max_age: 31536000 # 1 year in seconds
+    include_subdomains: true
+    preload: false
   php-fpm:
     type: "socket"
     socket: "/run/php/php-fpm.sock"
     tcp_host: "127.0.0.1"
     tcp_port: 9000
+  tls-baseline:
+    dhparam_path: "/etc/ssl/private/dhparam_ffdhe3072.pem"
+    resolvers:
+      - "8.8.8.8"
+      - "1.1.1.1"
+    resolver_timeout: "5s"
 
 
 # Platform-specific overrides for service settings. Overridden by platform

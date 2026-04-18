@@ -1,0 +1,25 @@
+# {{ ansible_managed }}
+
+### Static asset caching
+#
+# Instructs clients and intermediary caches (CDNs, proxies) to cache static
+# assets for a long duration. The "public" directive allows shared caches
+# (e.g. CDNs) to store the response. The "immutable" hint tells modern
+# browsers that the resource will never change during its freshness lifetime,
+# suppressing conditional revalidation requests (If-Modified-Since /
+# If-None-Match) on user-initiated reloads.
+#
+# When using this snippet, make sure your asset pipeline uses cache-busting
+# filenames (e.g. "app.a1b2c3.css") or query strings (e.g. "?v=1.2.3") so
+# that clients fetch updated versions after deployments.
+#
+# References:
+#
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+# - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#immutable
+# - https://nginx.org/en/docs/http/ngx_http_headers_module.html#expires
+expires 1y;
+add_header Cache-Control "public, immutable";
+
+# Do not log access to static assets (reduces log noise substantially).
+access_log off;
