@@ -350,15 +350,6 @@ __run_nginx_snippet_settings_defaults:
 __run_nginx_snippet_settings_overwrite: {}
 
 
-# # FIXME? We should think about when run_nginx_modules_enabled run_nginx_modules_disabled
-# #        is implemented
-# # Internal - always enabled for baseline to work
-# __run_nginx_required_modules:
-#   - "ssl"
-#   - "headers"
-#   - "socache_shmcb"
-
-
 # Daemon service name and paths of executables for management and validation.
 __run_nginx_nginx_servicename: "nginx.service"
 __run_nginx_server_exec_path: "/usr/sbin/nginx"

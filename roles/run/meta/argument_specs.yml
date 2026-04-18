@@ -189,13 +189,12 @@ argument_specs:
                     server_name example.com;
                     root /var/www/example.com;
 
-                    # Cert paths (TLS settings inherited from baseline!)
                     ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
                     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
 
-                    # Include snippets as needed
-                    include snippets/tls-hsts.conf;
-                    include snippets/security-headers.conf;
+                    include /etc/nginx/snippets/http/tls-baseline.conf;
+                    include /etc/nginx/snippets/server/headers-security.conf;
+                    include /etc/nginx/snippets/server/headers-hsts.conf;
 
                     location / {
                         try_files $uri $uri/ =404;
@@ -369,52 +368,146 @@ argument_specs:
 
       run_nginx_snippet_settings:
         description: |
-          FIXME improve description, the main template and task using this var is at TODO
+          User-level overrides for the configuration snippets shipped by this role.
 
-          They take highest priority, overriding internal
+          Each top-level key corresponds to a snippet name (e.g. `hsts`, `php-fpm`,
+          `tls-baseline`). Values are dictionaries whose keys map to template
+          variables used when rendering the snippet.
+
+          Settings provided here take highest priority, overriding both the internal
           defaults (see `__run_nginx_snippet_settings_defaults` in `vars/main.yml`)
-          and platform-specific overrides.
+          and any platform-specific overrides. Only the keys you specify are
+          overridden; all other settings keep their default values.
+
+          Example:
+          ```yaml
+          run_nginx_snippet_settings:
+            hsts:
+              max_age: 63072000
+              preload: true
+            tls-baseline:
+              resolvers:
+                - "127.0.0.1"
+          ```
         type: "dict"
         default: {}
         options:
+          hsts:
+            description: |
+              Settings for the `server/headers-hsts.conf` snippet that renders
+              the `Strict-Transport-Security` HTTP response header.
+            type: "dict"
+            options:
+              max_age:
+                description: |
+                  Duration in seconds that the browser should remember to only
+                  access the site via HTTPS. The default of 31536000 corresponds
+                  to one year, which is the minimum recommended by
+                  https://hstspreload.org/.
+                type: "int"
+                default: 31536000
+              include_subdomains:
+                description: |
+                  Whether to extend the HSTS policy to all subdomains of the
+                  current domain. Required for HSTS preload list submission.
+                type: "bool"
+                default: true
+              preload:
+                description: |
+                  Whether to add the `preload` directive, signalling to browser
+                  vendors that the domain should be included in the HSTS Preload
+                  List (hardcoded into browsers). This is practically irreversible;
+                  removal takes months.
+                type: "bool"
+                default: false
           php-fpm:
             description: |
-              FIXME description
-              Influce settings of the /etc/nginx/snippets/php-fpm.conf file (provided
-              by this role for easy includes into your server blocks).
+              Settings for the `location/php-fpm.conf` snippet that configures
+              FastCGI proxying to a PHP-FPM backend. The snippet renders a
+              `location ~ \.php$` block with the appropriate `fastcgi_pass`
+              directive.
             type: "dict"
-            #default: {} FIXME
             options:
               type:
                 description: |
-                  FIXME description
+                  Connection method to the PHP-FPM backend. `socket` connects
+                  via a Unix domain socket (lower overhead, same-host only).
+                  `tcp` connects via TCP (allows remote backends).
                 type: "str"
-                #default: "socket"  FIXME
+                default: "socket"
                 choices:
                   - "socket"
                   - "tcp"
               socket:
                 description: |
-                  FIXME description
-                #default: "/run/php/php-fpm.sock" # FIXME
+                  Absolute path to the PHP-FPM Unix socket. Only used when
+                  `type` is set to `socket`.
+                default: "/run/php/php-fpm.sock"
                 type: "str"
               tcp_host:
                 description: |
-                  FIXME description
-                  Used when type: tcp
-                #default: "127.0.0.1" # FIXME
+                  Hostname or IP address of the PHP-FPM backend. Only used
+                  when `type` is set to `tcp`.
+                default: "127.0.0.1"
                 type: "str"
               tcp_port:
                 description: |
-                  FIXME description
-                  Used when type: tcp
-                #default: 9000 # FIXME
+                  TCP port of the PHP-FPM backend. Only used when `type` is
+                  set to `tcp`.
+                default: 9000
                 type: "int"
+          tls-baseline:
+            description: |
+              Settings for the `http/tls-baseline.conf` snippet that provides
+              TLS hardening following the Mozilla "Intermediate" profile
+              (Guideline v6.0).
+            type: "dict"
+            options:
+              dhparam_path:
+                description: |
+                  Absolute path where the DH parameters file is deployed. The
+                  role ships RFC 7919 ffdhe3072 parameters and deploys them to
+                  this path automatically. Platform-specific vars files override
+                  this to match each distribution's conventional TLS directory
+                  (e.g. `/etc/pki/tls/certs/` on Red Hat).
+                type: "str"
+                default: "/etc/ssl/certs/dhparam_ffdhe3072.pem"
+              ecdh_curves:
+                description: |
+                  Colon-separated list of elliptic curves for ECDHE key exchange,
+                  passed to the `ssl_ecdh_curve` directive. The default includes
+                  the post-quantum hybrid `X25519MLKEM768` (requires OpenSSL >= 3.5);
+                  platforms with older OpenSSL automatically fall back to a
+                  classical-only list via version-specific vars files.
+                type: "str"
+                default: "X25519MLKEM768:X25519:prime256v1:secp384r1"
+              resolvers:
+                description: |
+                  List of DNS resolver IP addresses used by NGINX for OCSP
+                  stapling lookups. Using a local resolver (e.g. unbound,
+                  systemd-resolved at `127.0.0.1`) is recommended for privacy
+                  and latency.
+                type: "list"
+                elements: "str"
+              resolver_timeout:
+                description: |
+                  Timeout for DNS resolver queries used by OCSP stapling.
+                type: "str"
+                default: "3s"
 
       run_nginx_snippets_delete_unmanaged:
         description: |
-          FIXME description
-          Delete files below `/etc/nginx/snippets/`
-          if they re not managed by this role via `run_nginx_sites_config`
+          Controls whether the role removes snippet files below
+          `/etc/nginx/snippets/` that are not managed by this role.
+
+          When set to `true`, any files in the snippet subdirectories
+          (`http/`, `server/`, `location/`) that were not rendered by the
+          role's snippet templates are deleted. This keeps the snippet
+          directories clean and prevents stale or conflicting snippets.
+
+          When set to `false`, unknown files are left untouched. Use this
+          if you maintain additional custom snippets outside of this role.
+
+          Only takes effect when `run_nginx_snippets_manage` is `true`.
         type: "bool"
         default: false
