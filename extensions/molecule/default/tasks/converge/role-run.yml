@@ -18,14 +18,14 @@
                 listen [::]:443 ssl;
                 server_name example.com;
 
-                # Cert paths (TLS settings inherited from baseline!)
-                ssl_certificate /etc/pki/tls/private/example.com.pem;
-                ssl_certificate_key /etc/pki/tls/private/example.com.pem;
-
                 # Include snippets for testing
                 include /etc/nginx/snippets/http/tls-baseline.conf;
                 include /etc/nginx/snippets/server/headers-security.conf;
                 include /etc/nginx/snippets/server/headers-hsts.conf;
+
+                # Cert paths (TLS settings inherited from tls-baseline.conf)
+                ssl_certificate /etc/pki/tls/private/example.com.pem;
+                ssl_certificate_key /etc/pki/tls/private/example.com.pem;
 
                 location / {
                     try_files $uri $uri/ =404;

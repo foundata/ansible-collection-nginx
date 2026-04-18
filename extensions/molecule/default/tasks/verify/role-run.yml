@@ -519,6 +519,68 @@
       All expected gzip directives are present in the NGINX configuration.
 
 
+## TLS baseline configuration (Mozilla Guideline v6.0)
+
+- name: "Molecule | Verify | Get OpenSSL version for ECDH curve expectation"
+  ansible.builtin.command:
+    cmd: "openssl version"
+  changed_when:
+    - false
+  register: __testing_openssl_version
+
+
+- name: "Molecule | Verify | Parse OpenSSL version number"
+  ansible.builtin.set_fact:
+    __testing_openssl_version_number: >-
+      {{
+        (__testing_openssl_version['stdout']
+        | ansible.builtin.regex_search('OpenSSL\s+(\d+\.\d+\.\d+)', '\1'))[0]
+      }}
+
+
+- name: "Molecule | Verify | Determine expected ECDH curves based on OpenSSL version"
+  ansible.builtin.set_fact:
+    __testing_expected_ecdh_curves: >-
+      {{
+        'X25519MLKEM768:X25519:prime256v1:secp384r1'
+        if (__testing_openssl_version_number is ansible.builtin.version('3.5', '>='))
+        else 'X25519:prime256v1:secp384r1'
+      }}
+
+
+- name: "Molecule | Verify | Assert TLS baseline directives are present in NGINX configuration"
+  ansible.builtin.assert:
+    that:
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('ssl_protocols TLSv1\.2 TLSv1\.3;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('ssl_prefer_server_ciphers off;')
+      - >-
+        __testing_nginx_full_config['stdout']
+        is ansible.builtin.search('ssl_dhparam '
+        ~ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path']
+        ~ ';')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:')
+      - >-
+        __testing_nginx_full_config['stdout']
+        is ansible.builtin.search('ssl_ecdh_curve '
+        ~ __testing_expected_ecdh_curves
+        ~ ';')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('ssl_session_timeout 1d;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('ssl_session_cache shared:MozSSL:10m;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('ssl_stapling on;')
+      - __testing_nginx_full_config['stdout'] is ansible.builtin.search('ssl_stapling_verify on;')
+    fail_msg: >-
+      One or more TLS baseline directives are missing or have unexpected values
+      in the NGINX configuration.
+      OpenSSL version: {{ __testing_openssl_version_number }},
+      expected ECDH curves: {{ __testing_expected_ecdh_curves }}
+    success_msg: >-
+      All TLS baseline directives (ssl_protocols, ssl_prefer_server_ciphers,
+      ssl_dhparam, ssl_ciphers, ssl_ecdh_curve, ssl_session_timeout,
+      ssl_session_cache, ssl_stapling) are present with expected values.
+      OpenSSL version: {{ __testing_openssl_version_number }},
+      ECDH curves: {{ __testing_expected_ecdh_curves }}
+
+
 ## Security response headers
 
 - name: "Molecule | Verify | Fetch HTTPS response headers from example.com"
