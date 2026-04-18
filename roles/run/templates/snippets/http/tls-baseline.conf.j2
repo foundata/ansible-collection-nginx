@@ -24,15 +24,17 @@ ssl_protocols TLSv1.2 TLSv1.3; # TLSv1.3 requires nginx >= 1.13.0
 # this directive only has effect on TLS 1.2 connections.
 ssl_prefer_server_ciphers on;
 
-# DH parameters for Diffie-Hellman key exchange (TLS 1.2 DHE suites). Using a
-# pre-defined FFDHE group from RFC 7919 avoids the security and compatibility
-# issues of custom-generated parameters.
+# DH parameters for Diffie-Hellman key exchange (TLS 1.2 DHE suites). This role
+# ships the pre-defined ffdhe3072 group from RFC 7919 and deploys it
+# automatically. Using standardized, audited parameters is more secure than
+# randomly generating custom ones (which may have weak properties) and avoids
+# the slow `openssl dhparam` generation step.
 #
 # References:
 #
-# - https://wiki.mozilla.org/Security/Server_Side_TLS?oldid=1212843#Pre-defined_DHE_groups
 # - https://www.rfc-editor.org/rfc/rfc7919
-ssl_dhparam {{ settings['dhparam_path'] | ansible.builtin.default('/etc/ssl/private/dhparam_ffdhe3072.pem') }};
+# - https://wiki.mozilla.org/Security/Server_Side_TLS?oldid=1212843#Pre-defined_DHE_groups
+ssl_dhparam {{ settings['dhparam_path'] | ansible.builtin.default('/etc/ssl/certs/dhparam_ffdhe3072.pem') }};
 
 # Cipher suite selection, following Mozilla "Intermediate" profile. Includes
 # both AES-GCM and ChaCha20-Poly1305 ciphers: ChaCha20 is significantly faster

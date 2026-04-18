@@ -166,6 +166,18 @@
         - "run_nginx: restart nginx.service"
 
 
+    - name: "Config | Default | Deploy DH parameters file for TLS baseline snippet"
+      ansible.builtin.copy:
+        src: "dhparam_ffdhe3072.pem"
+        dest: "{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] | ansible.builtin.default('/etc/ssl/certs/dhparam_ffdhe3072.pem') }}"
+        owner: "root"
+        group: "root"
+        mode: "u=rw,g=r,o=r" # 0644 (DH parameters are public, not secret)
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: restart nginx.service"
+
+
     - name: "Config | Default | Create or update config snippet files (to provide common, centrally maintained config blocks to include)"
       ansible.builtin.template:
         src: "{{ item }}"

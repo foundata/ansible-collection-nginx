@@ -324,7 +324,7 @@ __run_nginx_snippet_settings_defaults:
     tcp_host: "127.0.0.1"
     tcp_port: 9000
   tls-baseline:
-    dhparam_path: "/etc/ssl/private/dhparam_ffdhe3072.pem"
+    dhparam_path: "/etc/ssl/certs/dhparam_ffdhe3072.pem"
     resolvers:
       - "8.8.8.8"
       - "1.1.1.1"
