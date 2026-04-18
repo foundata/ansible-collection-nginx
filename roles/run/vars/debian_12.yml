@@ -1,0 +1,13 @@
+# Internal role variables specific to: Debian 12 (distribution_major_version)
+#
+# Only values specific to the platform and its functionality should be included
+# here. Variables in this file override those defined in vars/debian.yml.
+
+---
+
+# Debian 12 (Bookworm) ships OpenSSL 3.0.x which does not support the
+# X25519MLKEM768 post-quantum hybrid key exchange (requires OpenSSL >= 3.5).
+# Fall back to the classical-only curve list.
+__run_nginx_snippet_settings_overwrite:
+  tls-baseline:
+    ecdh_curves: "X25519:prime256v1:secp384r1"

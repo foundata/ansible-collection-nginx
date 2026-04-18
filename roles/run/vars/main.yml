@@ -293,7 +293,7 @@ __run_nginx_http_directives_defaults:
     application/javascript
     application/xml
     application/xml+rss application/x-javascript
-    image/svg+xml"
+    image/svg+xml
   # Signal to caching proxies that the response varies depending on the
   # Accept-Encoding header. This prevents a proxy from serving a cached
   # gzipped response to a client that does not support gzip.
@@ -325,10 +325,23 @@ __run_nginx_snippet_settings_defaults:
     tcp_port: 9000
   tls-baseline:
     dhparam_path: "/etc/ssl/certs/dhparam_ffdhe3072.pem"
+    # ECDHE curves for key exchange, following Mozilla Guideline v6.0.
+    # X25519MLKEM768 is a post-quantum hybrid (ML-KEM/Kyber + X25519) key
+    # exchange that requires OpenSSL >= 3.5 and nginx >= 1.27. Platforms
+    # with older OpenSSL override this to the classical-only curve list
+    # via version-specific vars files (e.g. vars/debian_12.yml).
+    ecdh_curves: "X25519MLKEM768:X25519:prime256v1:secp384r1"
     resolvers:
-      - "8.8.8.8"
-      - "1.1.1.1"
-    resolver_timeout: "5s"
+      # Quad9, https://quad9.net/
+      - "9.9.9.9"
+      - "149.112.112.112"
+      # Google DNS, https://developers.google.com/speed/public-dns
+      # - "8.8.8.8"
+      # - "8.8.4.4"
+      # Cloudflare DNS,  https://one.one.one.one/
+      # - "1.1.1.1"
+      # - "1.0.0.1"
+    resolver_timeout: "3s"
 
 
 # Platform-specific overrides for service settings. Overridden by platform

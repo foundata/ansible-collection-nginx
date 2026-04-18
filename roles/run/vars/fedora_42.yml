@@ -1,0 +1,18 @@
+# Internal role variables specific to: Fedora 42 (distribution_major_version)
+#
+# Only values specific to the platform and its functionality should be included
+# here. Variables in this file override those defined in vars/fedora.yml.
+
+---
+
+# Fedora 42 ships OpenSSL 3.2.x which does not support the X25519MLKEM768
+# post-quantum hybrid key exchange (requires OpenSSL >= 3.5). Fall back to
+# the classical-only curve list.
+#
+# The Red Hat dhparam_path must be repeated here because include_vars replaces
+# the entire __run_nginx_snippet_settings_overwrite variable rather than
+# merging it with the value set by redhat.yml.
+__run_nginx_snippet_settings_overwrite:
+  tls-baseline:
+    dhparam_path: "/etc/pki/tls/certs/dhparam_ffdhe3072.pem"
+    ecdh_curves: "X25519:prime256v1:secp384r1"

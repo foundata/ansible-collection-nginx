@@ -5,6 +5,14 @@
 
 ---
 
+# Ubuntu 22.04 (Jammy Jellyfish) ships OpenSSL 3.0.x which does not support the
+# X25519MLKEM768 post-quantum hybrid key exchange (requires OpenSSL >= 3.5).
+# Fall back to the classical-only curve list.
+__run_nginx_snippet_settings_overwrite:
+  tls-baseline:
+    ecdh_curves: "X25519:prime256v1:secp384r1"
+
+
 # Hint: update this variable with hack/gen-modules-map-resources.sh
 #
 # Ubuntu 22.04 ships fewer modules than Debian 13 / Ubuntu 24.04 (no brotli,
