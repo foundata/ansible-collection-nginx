@@ -25,7 +25,7 @@
 
                 # Cert paths (all other TLS settings inherited from tls-baseline.conf)
                 ssl_certificate /etc/pki/tls/private/example.com.pem;
-                ssl_certificate_key /etc/pki/tls/private/example.com.pem;
+                ssl_certificate_key /etc/pki/tls/private/example.com.key;
 
                 location / {
                     try_files $uri $uri/ =404;

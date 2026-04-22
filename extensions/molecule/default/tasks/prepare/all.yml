@@ -8,12 +8,13 @@
     __testing_state_update:
       # same path used on all platforms, good enough for testing. Remember that
       #   - /srv/www/[...] is the native SUSE-style path and
-      #   - /etc/ssl/private is the native SUSE- and Debian-style paths
+      #   - /etc/ssl/private is the native SUSE- and Debian-style path
       # in production.
       #
       # example.com
       __testing_examplecom_wwwroot: "/var/www/example.com"
-      __testing_examplecom_cert: "/etc/pki/tls/private/example.com.pem" # same path used on all platforms for testing (/)
+      __testing_examplecom_cert: "/etc/pki/tls/private/example.com.pem"
+      __testing_examplecom_key: "/etc/pki/tls/private/example.com.key"
 
 
 - name: "Molecule | Prepare | Set __testing_* variables as facts from __testing_state"
@@ -77,44 +78,36 @@
     allowerasing: "{{ true if ((ansible_facts['os_family'] | ansible.builtin.lower) == 'redhat') else omit }}"
 
 
-- name: "Molecule | Prepare | Generate inline self-signed dummy certificate bundle(s)"
+- name: "Molecule | Prepare | Generate self-signed dummy certificate and key"
   ansible.builtin.shell: |
     set -u              # no uninitialized vars
     set -e -o pipefail  # exit on (pipeline) errors
     umask 077
 
-    target={{ item | ansible.builtin.quote }}
+    cert={{ item['cert'] | ansible.builtin.quote }}
+    key={{ item['key'] | ansible.builtin.quote }}
 
-    pem1="$(mktemp /tmp/openssl-key.XXXXXX)"
-    pem2="$(mktemp /tmp/openssl-crt.XXXXXX)"
-    mkdir -p "$(dirname "${target}")"
+    mkdir -p "$(dirname "${cert}")"
+    mkdir -p "$(dirname "${key}")"
 
-    cleanup() {
-      rm -f -- "${pem1}" "${pem2}"
-    }
-    trap cleanup EXIT INT TERM HUP
-
-    /usr/bin/openssl genpkey -algorithm Ed25519 -out "${pem1}"
+    /usr/bin/openssl genpkey -algorithm Ed25519 -out "${key}"
 
     /usr/bin/openssl req \
       -x509 \
       -new \
-      -key "${pem1}" \
-      -out "${pem2}" \
+      -key "${key}" \
+      -out "${cert}" \
       -days 90 \
       -subj '/C=--/ST=SomeState/L=SomeCity/O=SomeOrg/OU=SomeOU/CN=localhost.localdomain/emailAddress=root@localhost.localdomain' \
-      -addext 'subjectAltName=DNS:localhost,DNS:localhost.localdomain,IP:127.0.0.1,IP:::1' \
+      -addext 'subjectAltName=DNS:localhost,DNS:localhost.localdomain,DNS:example.com,IP:127.0.0.1,IP:::1' \
       -addext 'basicConstraints=critical,CA:FALSE' \
       -addext 'keyUsage=critical,digitalSignature' \
       -addext 'extendedKeyUsage=serverAuth'
-
-    {
-      cat "${pem1}"
-      printf '\n'
-      cat "${pem2}"
-    } > "${target}"
   args:
     executable: "/bin/bash"
-    creates: "{{ item }}"
+    creates:
+      - "{{ item['cert'] }}"
+      - "{{ item['key'] }}"
   loop:
-    - "{{ __testing_examplecom_cert }}"
+    - cert: "{{ __testing_examplecom_cert }}"
+      key: "{{ __testing_examplecom_key }}"
