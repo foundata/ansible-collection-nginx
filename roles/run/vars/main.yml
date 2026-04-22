@@ -140,7 +140,8 @@ __run_nginx_config_service_file_owner: "root"
 __run_nginx_config_service_file_group: "root"
 __run_nginx_config_service_file_mode: "u=rw,g=r,o=r" # 0644
 
-__run_nginx_config_service_file_distbackup_path: "/etc/nginx/nginx.conf.dist.bak" # backup file of the platform's original config
+# Backup of the original distribution config (before role takes over).
+__run_nginx_config_service_file_distbackup_path: "/etc/nginx/nginx.conf.dist.bak"
 __run_nginx_config_service_file_distbackup_owner: "root"
 __run_nginx_config_service_file_distbackup_group: "root"
 __run_nginx_config_service_file_distbackup_mode: "u=rw,g=r,o=r" # 0644
@@ -157,7 +158,7 @@ __run_nginx_config_service_dropin_file_owner: "{{ __run_nginx_config_service_fil
 __run_nginx_config_service_dropin_file_group: "{{ __run_nginx_config_service_file_group }}"
 __run_nginx_config_service_dropin_file_mode: "{{ __run_nginx_config_service_file_mode }}"
 
-# Most of the folling directories are "Debian" style (and should be already
+# Most of the folling directories are Debian-style (and should be already
 # existing there) but they also make sense for this role's logic on most other
 # platforms.
 __run_nginx_config_service_dropin_sites_available_dir_path: "/etc/nginx/sites-available"

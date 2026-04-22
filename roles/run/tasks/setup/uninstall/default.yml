@@ -114,7 +114,7 @@
     - ansible_facts['os_family'] != 'Debian'
 
 
-- name: "Setup | Uninstall | Remove /etc/nginx/modules symlink"
+- name: "Setup | Uninstall | Remove /etc/nginx/modules symlink (non-Debian platforms)"
   ansible.builtin.file:
     path: "/etc/nginx/modules"
     state: "absent"
