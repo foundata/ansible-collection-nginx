@@ -169,10 +169,10 @@
     - name: "Config | Default | Deploy DH parameters file for TLS baseline snippet"
       ansible.builtin.copy:
         src: "dhparam_ffdhe3072.pem"
-        dest: "{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] }}"
-        owner: "root"
-        group: "root"
-        mode: "u=rw,g=r,o=r" # 0644 (DH parameters are public, not secret)
+        dest: "{{ __run_nginx_dhparam_ffdhe3072_path }}"
+        owner: "{{ __run_nginx_dhparam_ffdhe3072_owner }}"
+        group: "{{ __run_nginx_dhparam_ffdhe3072_group }}"
+        mode: "{{ __run_nginx_dhparam_ffdhe3072_mode }}"
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -427,6 +427,7 @@
         group: "{{ __run_nginx_config_service_dropin_file_group }}"
         mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
       vars:
+        # Pass (and/or adjust) variables needed for the templates
         tpl_module_so_paths: >-
           {{
             [item['target']]

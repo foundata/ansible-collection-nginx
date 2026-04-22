@@ -141,14 +141,13 @@ __run_nginx_config_service_file_group: "root"
 __run_nginx_config_service_file_mode: "u=rw,g=r,o=r" # 0644
 
 # Backup of the original distribution config (before role takes over).
-__run_nginx_config_service_file_distbackup_path: "/etc/nginx/nginx.conf.dist.bak"
-__run_nginx_config_service_file_distbackup_owner: "root"
-__run_nginx_config_service_file_distbackup_group: "root"
-__run_nginx_config_service_file_distbackup_mode: "u=rw,g=r,o=r" # 0644
+__run_nginx_config_service_file_distbackup_path: "{{ __run_nginx_config_service_file_path }}.dist.bak"
+__run_nginx_config_service_file_distbackup_owner: "{{ __run_nginx_config_service_file_owner }}"
+__run_nginx_config_service_file_distbackup_group: "{{ __run_nginx_config_service_file_group }}"
+__run_nginx_config_service_file_distbackup_mode: "{{ __run_nginx_config_service_file_mode }}"
 
 __run_nginx_config_service_file_distbackup_comment: >-
-  # This is a backup of the platform's original nginx.conf before Ansible
-  took over management of the file
+  # This is a backup of the platform's original nginx.conf before Ansible took over management of the file
 
 __run_nginx_config_service_dropin_dir_owner: "{{ __run_nginx_config_service_file_owner }}"
 __run_nginx_config_service_dropin_dir_group: "{{ __run_nginx_config_service_file_group }}"
@@ -218,6 +217,10 @@ __run_nginx_error_log_default_file_owner: "{{ __run_nginx_log_dir_owner }}"
 __run_nginx_error_log_default_file_group: "{{ __run_nginx_log_dir_group }}"
 __run_nginx_error_log_default_file_mode: "{{ __run_nginx_access_log_default_file_mode }}"
 
+__run_nginx_dhparam_ffdhe3072_path: "/etc/ssl/certs/dhparam_ffdhe3072.pem"
+__run_nginx_dhparam_ffdhe3072_owner: "root"
+__run_nginx_dhparam_ffdhe3072_group: "root"
+__run_nginx_dhparam_ffdhe3072_mode: "u=rw,g=r,o=r" # 0644 (DH parameters are public, not secret)
 
 # Default configuration directives for NGINX main config.
 __run_nginx_main_directives_defaults:
@@ -325,7 +328,7 @@ __run_nginx_snippet_settings_defaults:
     tcp_host: "127.0.0.1"
     tcp_port: 9000
   tls-baseline:
-    dhparam_path: "/etc/ssl/certs/dhparam_ffdhe3072.pem"
+    dhparam_path: "{{ __run_nginx_dhparam_ffdhe3072_path }}"
     # ECDHE curves for key exchange, following Mozilla Guideline v6.0.
     # X25519MLKEM768 is a post-quantum hybrid (ML-KEM/Kyber + X25519) key
     # exchange that requires OpenSSL >= 3.5 and nginx >= 1.27. Platforms
