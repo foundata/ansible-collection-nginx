@@ -8,11 +8,15 @@
 __run_nginx_module_so_lib_dir_path: "/usr/lib64/nginx/modules"
 
 
+# Diffie-Hellman(DH) parameters file
+__run_nginx_dhparam_ffdhe3072_path: "/etc/pki/tls/certs/dhparam_ffdhe3072.pem"
+
+
 # Red Hat uses /etc/pki/tls/ instead of /etc/ssl/ for TLS material.
 # DH parameters are public, so they go into certs/ (not private/).
 __run_nginx_snippet_settings_overwrite:
   tls-baseline:
-    dhparam_path: "/etc/pki/tls/certs/dhparam_ffdhe3072.pem"
+    dhparam_path: "{{ __run_nginx_dhparam_ffdhe3072_path }}"
 
 
 # Hint: update this variable with hack/gen-modules-map-resources.sh
