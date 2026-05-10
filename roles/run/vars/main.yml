@@ -77,7 +77,15 @@ __run_nginx_packages_install:
 # software. This is usually the case if there are common dependencies like
 # "curl" or "openssl" which typically should remain installed even after
 # uninstalling the software managed by this role.
-__run_nginx_packages_uninstall: "{{ __run_nginx_packages_install }}"
+__run_nginx_packages_uninstall: >-
+  {{
+    __run_nginx_packages_install
+    + (__run_nginx_modules_map_resources.values()
+       | map(attribute='packages')
+       | ansible.builtin.flatten
+       | ansible.builtin.unique
+       | ansible.builtin.list)
+  }}
 
 
 # List of package names to be removed unconditionally before installation
