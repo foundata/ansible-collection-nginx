@@ -166,7 +166,7 @@
         - "run_nginx: restart nginx.service"
 
 
-    - name: "Config | Default | Deploy DH parameters file for TLS baseline snippet"
+    - name: "Config | Default | Deploy Diffie-Hellman (DH) parameters file for TLS baseline snippet"
       ansible.builtin.copy:
         src: "dhparam_ffdhe3072.pem"
         dest: "{{ __run_nginx_dhparam_ffdhe3072_path }}"
