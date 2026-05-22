@@ -100,6 +100,15 @@ __run_nginx_packages_removal: []
 __run_nginx_paths_removal: []
 
 
+# Dictionary of files to be overwritten with a managed comment instead of being
+# deleted. Keys are file paths; values are the single-line comment characters to
+# use. This is needed on platforms where the package manager reinstalls deleted
+# files on package update. Restored files would conflict with the managed
+# configuration, while modified files are preserved. For example, RPM with
+# %config(noreplace) restores missing files but preserves modified ones.
+__run_nginx_paths_neutralize: {}
+
+
 # Mapping of NGINX dynamic module names to the packages and configuration
 # resources needed to enable them. Highly platform-specific; overwritten by
 # platform vars files (e.g., vars/debian.yml, vars/redhat.yml).
