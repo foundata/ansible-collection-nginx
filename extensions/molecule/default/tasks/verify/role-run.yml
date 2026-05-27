@@ -9,19 +9,19 @@
 
 ## Preparation
 
-- name: "Molecule | Verify | Set run_nginx_* parameters as facts from __testing_state"
+- name: "Molecule | Verify | Set run_nginx_* and __testing_* variables as facts from __testing_state"
   ansible.builtin.set_fact:
     "{{ item['key'] }}": "{{ item['value'] }}"
   loop: >-
     {{
       (__testing_state | default({}, true))
       | ansible.builtin.dict2items
-      | ansible.builtin.selectattr('key', 'match', '^run_nginx_')
+      | ansible.builtin.selectattr('key', 'match', '^(run_nginx_|__testing_)')
       | ansible.builtin.list
     }}
 
 
-## Main configuration file existence
+## Main configuration
 
 - name: "Molecule | Verify | Check if NGINX main configuration file exists"
   ansible.builtin.stat:
@@ -41,7 +41,7 @@
       exists.
 
 
-## Distribution backup file existence and content
+## Distribution backup file
 
 - name: "Molecule | Verify | Check if NGINX distribution backup configuration file exists"
   ansible.builtin.stat:
