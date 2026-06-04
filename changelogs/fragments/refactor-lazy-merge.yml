@@ -1,0 +1,11 @@
+---
+trivial:
+  - >
+    ``run`` role - Internal refactor: the effective merged variables
+    ``__run_nginx_effective_main_directives``,
+    ``__run_nginx_effective_events_directives``,
+    ``__run_nginx_effective_http_directives`` and
+    ``__run_nginx_effective_snippet_settings`` are now computed lazily in
+    ``vars/main.yml`` instead of via ``set_fact`` tasks in ``tasks/init.yml``.
+    No user-facing behaviour change. Added Molecule init-only regression tests
+    asserting the merges.

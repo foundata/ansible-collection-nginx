@@ -257,6 +257,18 @@ __run_nginx_main_directives_defaults:
 __run_nginx_main_directives_overwrite: {}
 
 
+# Effective NGINX main config directives: the defaults deep-merged with the
+# platform-specific overrides.
+#
+# Lazy / late-bound evaluation: Jinja renders this variable on access,
+# after tasks/init.yml loads the platform vars file that sets the inputs.
+__run_nginx_effective_main_directives: >-
+  {{
+    __run_nginx_main_directives_defaults
+    | ansible.builtin.combine(__run_nginx_main_directives_overwrite, recursive=true)
+  }}
+
+
 # Default configuration directives for NGINX events{} config.
 __run_nginx_events_directives_defaults:
   worker_connections: 1024
@@ -266,6 +278,18 @@ __run_nginx_events_directives_defaults:
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
 __run_nginx_events_directives_overwrite: {}
+
+
+# Effective NGINX events{} directives: the defaults deep-merged with the
+# platform-specific overrides.
+#
+# Lazy / late-bound evaluation: Jinja renders this variable on access,
+# after tasks/init.yml loads the platform vars file that sets the inputs.
+__run_nginx_effective_events_directives: >-
+  {{
+    __run_nginx_events_directives_defaults
+    | ansible.builtin.combine(__run_nginx_events_directives_overwrite, recursive=true)
+  }}
 
 
 # Default configuration directives for NGINX http{} config.
@@ -331,6 +355,18 @@ __run_nginx_http_directives_defaults:
 __run_nginx_http_directives_overwrite: {}
 
 
+# Effective NGINX http{} directives: the defaults deep-merged with the
+# platform-specific overrides.
+#
+# Lazy / late-bound evaluation: Jinja renders this variable on access,
+# after tasks/init.yml loads the platform vars file that sets the inputs.
+__run_nginx_effective_http_directives: >-
+  {{
+    __run_nginx_http_directives_defaults
+    | ansible.builtin.combine(__run_nginx_http_directives_overwrite, recursive=true)
+  }}
+
+
 # Additional default configuration for some NGINX configuration snippets.
 #
 # See run_nginx_snippet_settings in defaults/main.yml for a detailled
@@ -370,6 +406,19 @@ __run_nginx_snippet_settings_defaults:
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
 __run_nginx_snippet_settings_overwrite: {}
+
+
+# Effective snippet settings: defaults, then platform overrides, then the
+# user-supplied run_nginx_snippet_settings (highest priority), deep-merged.
+#
+# Lazy / late-bound evaluation: Jinja renders this variable on access,
+# after tasks/init.yml loads the platform vars file that sets the inputs.
+__run_nginx_effective_snippet_settings: >-
+  {{
+    __run_nginx_snippet_settings_defaults
+    | ansible.builtin.combine(__run_nginx_snippet_settings_overwrite, recursive=true)
+    | ansible.builtin.combine(run_nginx_snippet_settings, recursive=true)
+  }}
 
 
 # Daemon service name and paths of executables for management and validation.

@@ -130,62 +130,15 @@
 ## nginx specific
 
 
-- name: "Init | Merge NGINX main configuration directives (defaults, platform overrides)"
-  ansible.builtin.set_fact:
-    __run_nginx_effective_main_directives: >-
-      {{
-        __run_nginx_main_directives_defaults
-        | ansible.builtin.combine(__run_nginx_main_directives_overwrite, recursive=true)
-      }}
-
-
-- name: "Init | Show effective NGINX main configuration directives"
+- name: "Init | Show effective merged variables (computed lazily in vars/main.yml)"
   ansible.builtin.debug:
-    var: __run_nginx_effective_main_directives
+    msg: "{{ __run_nginx_effective_var }} = {{ lookup('ansible.builtin.vars', __run_nginx_effective_var) }}"
     verbosity: 3
-
-
-- name: "Init | Merge NGINX events{} configuration directives (defaults, platform overrides)"
-  ansible.builtin.set_fact:
-    __run_nginx_effective_events_directives: >-
-      {{
-        __run_nginx_events_directives_defaults
-        | ansible.builtin.combine(__run_nginx_events_directives_overwrite, recursive=true)
-      }}
-
-
-- name: "Init | Show effective NGINX events{} configuration directives"
-  ansible.builtin.debug:
-    var: __run_nginx_effective_events_directives
-    verbosity: 3
-
-
-- name: "Init | Merge NGINX http{} configuration directives (defaults, platform overrides)"
-  ansible.builtin.set_fact:
-    __run_nginx_effective_http_directives: >-
-      {{
-        __run_nginx_http_directives_defaults
-        | ansible.builtin.combine(__run_nginx_http_directives_overwrite, recursive=true)
-      }}
-
-
-- name: "Init | Show effective NGINX http{} configuration directives"
-  ansible.builtin.debug:
-    var: __run_nginx_effective_http_directives
-    verbosity: 3
-
-
-- name: "Init | Merge snippet settings (defaults, platform overrides, user)"
-  ansible.builtin.set_fact:
-    __run_nginx_effective_snippet_settings: >-
-      {{
-        __run_nginx_snippet_settings_defaults
-        | ansible.builtin.combine(__run_nginx_snippet_settings_overwrite, recursive=true)
-        | ansible.builtin.combine(run_nginx_snippet_settings, recursive=true)
-      }}
-
-
-- name: "Init | Show effective snippet settings"
-  ansible.builtin.debug:
-    var: __run_nginx_effective_snippet_settings
-    verbosity: 3
+  loop:
+    - "__run_nginx_effective_main_directives"
+    - "__run_nginx_effective_events_directives"
+    - "__run_nginx_effective_http_directives"
+    - "__run_nginx_effective_snippet_settings"
+  loop_control:
+    loop_var: "__run_nginx_effective_var"
+    label: "{{ __run_nginx_effective_var }}"

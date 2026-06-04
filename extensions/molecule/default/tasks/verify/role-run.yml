@@ -652,3 +652,69 @@
       Response headers: {{ __testing_static_headers['stdout'] }}
     success_msg: >-
       The Cache-Control header for static assets contains 'public' and 'immutable'.
+
+
+## Regression tests: init-only merged variable evaluation
+#
+# Re-run the role's init with controlled inputs and assert the merged
+# directive/snippet variables directly (whether materialized in tasks/init.yml
+# or lazily in vars/main.yml): defaults must render, a simulated platform
+# override must win for the main directives, and the snippet settings must
+# layer defaults, the (RedHat-family) platform override and the user settings
+# correctly.
+#
+# Inputs are set via set_fact so they outrank the converge-time facts restored
+# at the top of this file and stay in scope when the assertions dereference the
+# (lazily evaluated) effective variables.
+
+- name: "Molecule | Verify | Validate effective merged variables (init-only)"
+  block:
+
+    - name: "Molecule | Verify | Set controlled inputs for the merge checks"
+      ansible.builtin.set_fact:
+        __run_nginx_main_directives_overwrite:
+          worker_processes: "4"
+        run_nginx_snippet_settings:
+          hsts:
+            max_age: 4321
+
+
+    - name: "Molecule | Verify | Re-initialize nginx with controlled inputs"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+        tasks_from: "init"
+        public: true
+
+
+    - name: "Molecule | Verify | Assert effective main directives merged correctly"
+      ansible.builtin.assert:
+        that:
+          # simulated platform override wins over the default ("auto")
+          - __run_nginx_effective_main_directives['worker_processes'] == "4"
+          # an untouched default survives
+          - __run_nginx_effective_main_directives['pid'] == "/run/nginx.pid"
+        fail_msg: "__run_nginx_effective_main_directives did not merge defaults and overrides as expected."
+        success_msg: "__run_nginx_effective_main_directives merged defaults and overrides correctly."
+
+
+    - name: "Molecule | Verify | Assert effective events and http directives render defaults"
+      ansible.builtin.assert:
+        that:
+          - __run_nginx_effective_events_directives['worker_connections'] == 1024
+          - __run_nginx_effective_http_directives['sendfile'] | ansible.builtin.bool
+          - __run_nginx_effective_http_directives['keepalive_timeout'] == 65
+        fail_msg: "__run_nginx_effective_events_directives / _http_directives did not render the expected defaults."
+        success_msg: "__run_nginx_effective_events_directives and _http_directives rendered the expected defaults."
+
+
+    - name: "Molecule | Verify | Assert effective snippet settings merged correctly"
+      ansible.builtin.assert:
+        that:
+          # user setting wins (highest priority)
+          - __run_nginx_effective_snippet_settings['hsts']['max_age'] == 4321
+          # platform overwrite (RedHat family) is present
+          - __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] == "/etc/pki/tls/certs/dhparam_ffdhe3072.pem"
+          # an untouched default survives
+          - __run_nginx_effective_snippet_settings['php-fpm']['tcp_port'] == 9000
+        fail_msg: "__run_nginx_effective_snippet_settings did not merge defaults, platform overrides and user settings as expected."
+        success_msg: "__run_nginx_effective_snippet_settings merged defaults, platform overrides and user settings correctly."
