@@ -369,7 +369,7 @@ __run_nginx_effective_http_directives: >-
 
 # Additional default configuration for some NGINX configuration snippets.
 #
-# See run_nginx_snippet_settings in defaults/main.yml for a detailled
+# See run_nginx_snippet_settings in defaults/main.yml for a detailed
 # description of the structure (as this variable is using the same).
 __run_nginx_snippet_settings_defaults:
   hsts:
