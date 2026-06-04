@@ -712,8 +712,10 @@
         that:
           # user setting wins (highest priority)
           - __run_nginx_effective_snippet_settings['hsts']['max_age'] == 4321
-          # platform overwrite (RedHat family) is present
-          - __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] == "/etc/pki/tls/certs/dhparam_ffdhe3072.pem"
+          # the tls-baseline dhparam_path resolves to the platform's DH params
+          # path (set per platform in vars/main.yml or vars/<platform>.yml);
+          # comparing to the internal var keeps this assertion platform-agnostic.
+          - __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] == __run_nginx_dhparam_ffdhe3072_path
           # an untouched default survives
           - __run_nginx_effective_snippet_settings['php-fpm']['tcp_port'] == 9000
         fail_msg: "__run_nginx_effective_snippet_settings did not merge defaults, platform overrides and user settings as expected."
