@@ -1,0 +1,15 @@
+---
+
+bugfixes:
+  - >
+    ``run`` role - Changes to the main ``nginx.conf`` (baseline directives,
+    ``run_nginx_main_config_block``, default-server handling, etc.) now notify
+    configuration validation and a service restart. Previously the template task
+    had no ``notify``, so the running NGINX process could keep the old
+    configuration until an unrelated task happened to trigger the handlers.
+  - >
+    ``run`` role - Stale enabled-site symlinks are now reaped. The
+    unmanaged-site cleanup used ``find`` with ``file_type: "file"``, which
+    skipped the symlinks in ``sites-enabled``; removing a site from
+    ``run_nginx_sites_config`` (with ``run_nginx_sites_delete_unmanaged``) could
+    leave the old enabled vhost active. The cleanup now matches symlinks too.

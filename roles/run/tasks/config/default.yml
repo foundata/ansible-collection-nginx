@@ -121,6 +121,9 @@
     tpl_http_config_baseline_manage: "{{ run_nginx_http_config_baseline_manage }}"
     tpl_http_config_baseline_directives: "{{ __run_nginx_effective_http_directives }}"
     tpl_http_config_defaultserver_manage: "{{ run_nginx_sites_defaultserver_manage }}"
+  notify:
+    - "run_nginx: validate configuration"
+    - "run_nginx: restart nginx.service"
 
 
 ## Config snippets
@@ -341,7 +344,12 @@
           - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}"
         patterns:
           - "*.conf"
-        file_type: "file"
+        # "any" so the enabled-site symlinks (sites-enabled/*.conf) are matched
+        # too; with "file" they were skipped and stale enabled vhosts stayed
+        # active after a site was removed from run_nginx_sites_config. Real
+        # directories are excluded again before removal (rejectattr('isdir')
+        # below) so a '*.conf'-named subdirectory is never deleted recursively.
+        file_type: "any"
         hidden: true
       register: __run_nginx_site_conf_files
 
@@ -353,6 +361,7 @@
       loop: >-
         {{
           __run_nginx_site_conf_files['files']
+          | ansible.builtin.rejectattr('isdir')
           | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_site_filenames | map('regex_escape') | join('|')) ~ ')$')
           | ansible.builtin.list
         }}
