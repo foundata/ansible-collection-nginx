@@ -1,0 +1,9 @@
+---
+bugfixes:
+  - >
+    ``run`` role - Uninstall (``run_nginx_state: absent``) now removes managed
+    site configs by absolute path from both ``sites-available`` and
+    ``sites-enabled``. The removal list was built from bare filenames (e.g.
+    ``example.com.conf``) that did not resolve, so on Debian/SUSE (where the
+    site directories are intentionally kept) managed site files and their
+    enabled symlinks were left behind after uninstall.

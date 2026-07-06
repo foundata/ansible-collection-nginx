@@ -720,3 +720,59 @@
           - __run_nginx_effective_snippet_settings['php-fpm']['tcp_port'] == 9000
         fail_msg: "__run_nginx_effective_snippet_settings did not merge defaults, platform overrides and user settings as expected."
         success_msg: "__run_nginx_effective_snippet_settings merged defaults, platform overrides and user settings correctly."
+
+
+## Regression: uninstall removes managed site files/symlinks by absolute path
+#
+# This block runs LAST because it uninstalls the role. It guards the uninstall
+# path-join fix: managed site configs were removed by bare filename (e.g.
+# "example.com.conf"), which did not resolve, so they survived on Debian/SUSE
+# where the site directories are kept. A managed site file in sites-available
+# and its sites-enabled symlink must exist after converge and be gone after a
+# run_nginx_state: absent run.
+
+- name: "Molecule | Verify | Validate uninstall removes managed site files (integration)"
+  vars:
+    __testing_uninstall_site_available: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/example.com.conf"
+    __testing_uninstall_site_enabled: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/example.com.conf"
+  block:
+
+    - name: "Molecule | Verify | Stat managed site file and symlink before uninstall"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: __testing_uninstall_before
+      loop:
+        - "{{ __testing_uninstall_site_available }}"
+        - "{{ __testing_uninstall_site_enabled }}"
+
+    - name: "Molecule | Verify | Assert managed site file and symlink exist before uninstall"
+      ansible.builtin.assert:
+        that:
+          - __testing_uninstall_before['results'][0]['stat']['exists']
+          - __testing_uninstall_before['results'][1]['stat']['exists']
+        fail_msg: "Managed site file/symlink missing before uninstall; test setup invalid."
+        success_msg: "Managed site file and enabled symlink exist before uninstall."
+
+    - name: "Molecule | Verify | Uninstall the role (run_nginx_state: absent)"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+      vars:
+        run_nginx_state: "absent"
+
+    - name: "Molecule | Verify | Stat managed site file and symlink after uninstall"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: __testing_uninstall_after
+      loop:
+        - "{{ __testing_uninstall_site_available }}"
+        - "{{ __testing_uninstall_site_enabled }}"
+
+    - name: "Molecule | Verify | Assert managed site file and symlink were removed by uninstall"
+      ansible.builtin.assert:
+        that:
+          - not __testing_uninstall_after['results'][0]['stat']['exists']
+          - not __testing_uninstall_after['results'][1]['stat']['exists']
+        fail_msg: >-
+          Uninstall left managed site files behind (available exists={{ __testing_uninstall_after['results'][0]['stat']['exists'] }},
+          enabled exists={{ __testing_uninstall_after['results'][1]['stat']['exists'] }}).
+        success_msg: "Uninstall removed the managed site file and its enabled symlink."

@@ -21,25 +21,25 @@
     path: "{{ item }}"
     state: "absent"
   vars:
+    __run_nginx_managed_site_filenames: >-
+      {{
+        (run_nginx_sites_config | ansible.builtin.default([]))
+        | ansible.builtin.map(attribute='name')
+        | ansible.builtin.map('ansible.builtin.regex_replace', '$', '.conf')
+        | ansible.builtin.list
+      }}
     __run_nginx_paths_to_remove: >-
       {{
         (
           (
-            (run_nginx_sites_config | default([]))
-            | ansible.builtin.map(attribute='name')
-            | ansible.builtin.map('ansible.builtin.regex_replace', '$', '.conf')
+            __run_nginx_managed_site_filenames
+            | ansible.builtin.map('ansible.builtin.regex_replace', '^', __run_nginx_config_service_dropin_sites_available_dir_path ~ '/')
             | ansible.builtin.list
           )
           +
           (
-            (
-                query('ansible.builtin.fileglob', 'templates/snippets/*.conf.j2')
-              + query('ansible.builtin.fileglob', 'templates/snippets/http/*.conf.j2')
-              + query('ansible.builtin.fileglob', 'templates/snippets/location/*.conf.j2')
-              + query('ansible.builtin.fileglob', 'templates/snippets/server/*.conf.j2')
-            )
-            | ansible.builtin.map('ansible.builtin.basename')
-            | ansible.builtin.map('ansible.builtin.regex_replace', '\.j2$', '')
+            __run_nginx_managed_site_filenames
+            | ansible.builtin.map('ansible.builtin.regex_replace', '^', __run_nginx_config_service_dropin_sites_enabled_dir_path ~ '/')
             | ansible.builtin.list
           )
           +
