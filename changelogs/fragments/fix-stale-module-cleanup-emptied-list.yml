@@ -1,0 +1,10 @@
+---
+bugfixes:
+  - >
+    ``run`` role - Stale role-managed module configs are now removed even when
+    ``run_nginx_modules_enabled`` is emptied. The cleanup was nested inside the
+    "modules enabled is non-empty" block, so setting the list to ``[]`` (after
+    modules had previously been managed) left the old module symlinks enabled.
+    The cleanup now runs whenever ``run_nginx_modules_disable_unmanaged`` is true
+    and only ever removes files whose name is part of the role's module map
+    (``__run_nginx_modules_map_resources``).

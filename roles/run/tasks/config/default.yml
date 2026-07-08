@@ -453,49 +453,72 @@
         - "run_nginx: restart nginx.service"
 
 
-    - name: "Config | Default | Delete stale / unmanaged module configs"
-      when:
-        - run_nginx_modules_disable_unmanaged
-        - (__run_nginx_module_conf_entries | ansible.builtin.length) > 0
-      block:
+# Only files whose name is part of the role's module map are ever removed, so
+# distribution-provided files in modules-enabled/ (with names the role does not
+# know) are never touched. For symlinks, "state: absent" removes only the link,
+# never the linked target.
+- name: "Config | Default | Delete stale role-managed module configs"
+  when:
+    - run_nginx_modules_disable_unmanaged
+  block:
 
-        - name: "Config | Default | Build list of expected module config filenames"
-          ansible.builtin.set_fact:
-            __run_nginx_expected_module_filenames: >-
-              {{
-                __run_nginx_module_conf_entries
-                | ansible.builtin.map(attribute='name')
-                | ansible.builtin.list
-              }}
+    - name: "Config | Default | Build the role-managed and currently-enabled module config filename sets"
+      ansible.builtin.set_fact:
+        # Every module config filename the role could deploy (across all modules
+        # in the platform's module map), regardless of what is enabled now.
+        __run_nginx_modules_managed_filenames: >-
+          {{
+            __run_nginx_modules_map_resources.values()
+            | ansible.builtin.map(attribute='conf_files')
+            | ansible.builtin.flatten
+            | ansible.builtin.map(attribute='name')
+            | ansible.builtin.unique
+            | ansible.builtin.list
+          }}
+        # The subset that should remain: config filenames of the currently
+        # enabled modules.
+        __run_nginx_modules_expected_filenames: >-
+          {{
+            (run_nginx_modules_enabled | ansible.builtin.default([]))
+            | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+            | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
+            | ansible.builtin.map(attribute='conf_files')
+            | ansible.builtin.flatten
+            | ansible.builtin.map(attribute='name')
+            | ansible.builtin.unique
+            | ansible.builtin.list
+          }}
 
 
-        - name: "Config | Default | List existing module config files in modules-enabled"
-          ansible.builtin.find:
-            paths:
-              - "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
-            patterns:
-              - "*.conf"
-            file_type: "any"
-            hidden: true
-          register: __run_nginx_module_conf_files
+    - name: "Config | Default | List existing module config files in modules-enabled"
+      ansible.builtin.find:
+        paths:
+          - "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
+        patterns:
+          - "*.conf"
+        file_type: "any"
+        hidden: true
+      register: __run_nginx_module_conf_files
 
 
-        - name: "Config | Default | Remove stale, unmanaged module configs (not in run_nginx_modules_enabled)"
-          ansible.builtin.file:
-            path: "{{ item['path'] }}"
-            state: "absent"
-          when:
-            - (__run_nginx_module_conf_files['files'] | ansible.builtin.length) > 0
-          loop: >-
-            {{
-              __run_nginx_module_conf_files['files']
-              | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_expected_module_filenames
-                                                                     | ansible.builtin.map('ansible.builtin.regex_escape')
-                                                                     | ansible.builtin.join('|')) ~ ')$')
-              | ansible.builtin.list
-            }}
-          loop_control:
-            label: "{{ item['path'] }}"
-          notify:
-            - "run_nginx: validate configuration"
-            - "run_nginx: restart nginx.service"
+    - name: "Config | Default | Remove stale role-managed module configs (in the role's map, not currently enabled)"
+      ansible.builtin.file:
+        path: "{{ item['path'] }}"
+        state: "absent"
+      loop: >-
+        {{
+          __run_nginx_module_conf_files['files']
+          | ansible.builtin.rejectattr('isdir')
+          | ansible.builtin.selectattr('path', 'search', '/(' ~ (__run_nginx_modules_managed_filenames
+                                                                 | ansible.builtin.map('ansible.builtin.regex_escape')
+                                                                 | ansible.builtin.join('|')) ~ ')$')
+          | ansible.builtin.rejectattr('path', 'search', '/(' ~ (__run_nginx_modules_expected_filenames
+                                                                 | ansible.builtin.map('ansible.builtin.regex_escape')
+                                                                 | ansible.builtin.join('|')) ~ ')$')
+          | ansible.builtin.list
+        }}
+      loop_control:
+        label: "{{ item['path'] }}"
+      notify:
+        - "run_nginx: validate configuration"
+        - "run_nginx: restart nginx.service"

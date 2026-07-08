@@ -654,72 +654,71 @@
       The Cache-Control header for static assets contains 'public' and 'immutable'.
 
 
-## Regression tests: init-only merged variable evaluation
+## Regression: stale module cleanup runs when the enabled list is emptied
 #
-# Re-run the role's init with controlled inputs and assert the merged
-# directive/snippet variables directly (whether materialized in tasks/init.yml
-# or lazily in vars/main.yml): defaults must render, a simulated platform
-# override must win for the main directives, and the snippet settings must
-# layer defaults, the (RedHat-family) platform override and the user settings
-# correctly.
-#
-# Inputs are set via set_fact so they outrank the converge-time facts restored
-# at the top of this file and stay in scope when the assertions dereference the
-# (lazily evaluated) effective variables.
-
-- name: "Molecule | Verify | Validate effective merged variables (init-only)"
+# Debian-only (because that is where the role manages modules as symlinks); Platforms
+# without symlink-type modules (RedHat, SUSE) yield an empty managed set and remove
+# nothing.
+- name: "Molecule | Verify | Validate stale module cleanup on emptied list (Debian)"
+  when:
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
+  vars:
+    __testing_managed_module_filenames: >-
+      {{
+        (run_nginx_modules_enabled | ansible.builtin.default([]))
+        | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+        | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
+        | ansible.builtin.map(attribute='conf_files')
+        | ansible.builtin.flatten
+        | ansible.builtin.map(attribute='name')
+        | ansible.builtin.unique
+        | ansible.builtin.list
+      }}
   block:
 
-    - name: "Molecule | Verify | Set controlled inputs for the merge checks"
-      ansible.builtin.set_fact:
-        __run_nginx_main_directives_overwrite:
-          worker_processes: "4"
-        run_nginx_snippet_settings:
-          hsts:
-            max_age: 4321
+    - name: "Molecule | Verify | Stat role-managed module configs before emptying the list"
+      ansible.builtin.stat:
+        path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}"
+      register: __testing_module_before
+      loop: "{{ __testing_managed_module_filenames }}"
 
 
-    - name: "Molecule | Verify | Re-initialize nginx with controlled inputs"
+    - name: "Molecule | Verify | Assert at least one role-managed module config exists before"
+      ansible.builtin.assert:
+        that:
+          - (__testing_module_before['results'] | ansible.builtin.selectattr('stat.exists') | ansible.builtin.list | ansible.builtin.length) > 0
+        fail_msg: "No role-managed module configs found before test; setup invalid (managed={{ __testing_managed_module_filenames }})."
+        success_msg: "Role-managed module configs exist before emptying the list."
+
+
+    - name: "Molecule | Verify | Re-run role with an empty module list (disable_unmanaged)"
       ansible.builtin.include_role:
         name: "foundata.nginx.run"
-        tasks_from: "init"
-        public: true
+      vars:
+        run_nginx_modules_enabled: []
+        run_nginx_modules_disable_unmanaged: true
 
 
-    - name: "Molecule | Verify | Assert effective main directives merged correctly"
+    - name: "Molecule | Verify | Stat role-managed module configs after emptying the list"
+      ansible.builtin.stat:
+        path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}"
+      register: __testing_module_after
+      loop: "{{ __testing_managed_module_filenames }}"
+
+
+    - name: "Molecule | Verify | Assert role-managed module configs were removed"
       ansible.builtin.assert:
         that:
-          # simulated platform override wins over the default ("auto")
-          - __run_nginx_effective_main_directives['worker_processes'] == "4"
-          # an untouched default survives
-          - __run_nginx_effective_main_directives['pid'] == "/run/nginx.pid"
-        fail_msg: "__run_nginx_effective_main_directives did not merge defaults and overrides as expected."
-        success_msg: "__run_nginx_effective_main_directives merged defaults and overrides correctly."
+          - (__testing_module_after['results'] | ansible.builtin.selectattr('stat.exists') | ansible.builtin.list | ansible.builtin.length) == 0
+        fail_msg: "Stale module configs remained after emptying run_nginx_modules_enabled."
+        success_msg: "Emptying run_nginx_modules_enabled removed the role-managed module configs."
 
 
-    - name: "Molecule | Verify | Assert effective events and http directives render defaults"
-      ansible.builtin.assert:
-        that:
-          - __run_nginx_effective_events_directives['worker_connections'] == 1024
-          - __run_nginx_effective_http_directives['sendfile'] | ansible.builtin.bool
-          - __run_nginx_effective_http_directives['keepalive_timeout'] == 65
-        fail_msg: "__run_nginx_effective_events_directives / _http_directives did not render the expected defaults."
-        success_msg: "__run_nginx_effective_events_directives and _http_directives rendered the expected defaults."
-
-
-    - name: "Molecule | Verify | Assert effective snippet settings merged correctly"
-      ansible.builtin.assert:
-        that:
-          # user setting wins (highest priority)
-          - __run_nginx_effective_snippet_settings['hsts']['max_age'] == 4321
-          # the tls-baseline dhparam_path resolves to the platform's DH params
-          # path (set per platform in vars/main.yml or vars/<platform>.yml);
-          # comparing to the internal var keeps this assertion platform-agnostic.
-          - __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] == __run_nginx_dhparam_ffdhe3072_path
-          # an untouched default survives
-          - __run_nginx_effective_snippet_settings['php-fpm']['tcp_port'] == 9000
-        fail_msg: "__run_nginx_effective_snippet_settings did not merge defaults, platform overrides and user settings as expected."
-        success_msg: "__run_nginx_effective_snippet_settings merged defaults, platform overrides and user settings correctly."
+# Flush pending config-validation/restart handlers now, while the role is still
+# installed and its configuration is valid, so they do not run at play end after
+# the uninstall regression below has removed the package and its config.
+- name: "Molecule | Verify | Flush handlers before the uninstall regression"
+  ansible.builtin.meta: flush_handlers
 
 
 ## Regression: uninstall removes managed site files/symlinks by absolute path
@@ -776,3 +775,74 @@
           Uninstall left managed site files behind (available exists={{ __testing_uninstall_after['results'][0]['stat']['exists'] }},
           enabled exists={{ __testing_uninstall_after['results'][1]['stat']['exists'] }}).
         success_msg: "Uninstall removed the managed site file and its enabled symlink."
+
+
+## Regression tests: init-only merged variable evaluation
+#
+# Re-run the role's init with controlled inputs and assert the merged
+# directive/snippet variables directly (whether materialized in tasks/init.yml
+# or lazily in vars/main.yml): defaults must render, a simulated platform
+# override must win for the main directives, and the snippet settings must
+# layer defaults, the (RedHat-family) platform override and the user settings
+# correctly.
+#
+# Inputs are set via set_fact so they outrank the converge-time facts restored
+# at the top of this file and stay in scope when the assertions dereference the
+# (lazily evaluated) effective variables. This runs LAST: the set_fact of the
+# internal __run_nginx_main_directives_overwrite would otherwise shadow the
+# platform include_vars value (e.g. Debian's "user www-data") and leak into any
+# full role run that follows. Only role init runs here, so it needs no package.
+
+- name: "Molecule | Verify | Validate effective merged variables (init-only)"
+  block:
+
+    - name: "Molecule | Verify | Set controlled inputs for the merge checks"
+      ansible.builtin.set_fact:
+        __run_nginx_main_directives_overwrite:
+          worker_processes: "4"
+        run_nginx_snippet_settings:
+          hsts:
+            max_age: 4321
+
+
+    - name: "Molecule | Verify | Re-initialize nginx with controlled inputs"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+        tasks_from: "init"
+        public: true
+
+
+    - name: "Molecule | Verify | Assert effective main directives merged correctly"
+      ansible.builtin.assert:
+        that:
+          # simulated platform override wins over the default ("auto")
+          - __run_nginx_effective_main_directives['worker_processes'] == "4"
+          # an untouched default survives
+          - __run_nginx_effective_main_directives['pid'] == "/run/nginx.pid"
+        fail_msg: "__run_nginx_effective_main_directives did not merge defaults and overrides as expected."
+        success_msg: "__run_nginx_effective_main_directives merged defaults and overrides correctly."
+
+
+    - name: "Molecule | Verify | Assert effective events and http directives render defaults"
+      ansible.builtin.assert:
+        that:
+          - __run_nginx_effective_events_directives['worker_connections'] == 1024
+          - __run_nginx_effective_http_directives['sendfile'] | ansible.builtin.bool
+          - __run_nginx_effective_http_directives['keepalive_timeout'] == 65
+        fail_msg: "__run_nginx_effective_events_directives / _http_directives did not render the expected defaults."
+        success_msg: "__run_nginx_effective_events_directives and _http_directives rendered the expected defaults."
+
+
+    - name: "Molecule | Verify | Assert effective snippet settings merged correctly"
+      ansible.builtin.assert:
+        that:
+          # user setting wins (highest priority)
+          - __run_nginx_effective_snippet_settings['hsts']['max_age'] == 4321
+          # the tls-baseline dhparam_path resolves to the platform's DH params
+          # path (set per platform in vars/main.yml or vars/<platform>.yml);
+          # comparing to the internal var keeps this assertion platform-agnostic.
+          - __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] == __run_nginx_dhparam_ffdhe3072_path
+          # an untouched default survives
+          - __run_nginx_effective_snippet_settings['php-fpm']['tcp_port'] == 9000
+        fail_msg: "__run_nginx_effective_snippet_settings did not merge defaults, platform overrides and user settings as expected."
+        success_msg: "__run_nginx_effective_snippet_settings merged defaults, platform overrides and user settings correctly."
