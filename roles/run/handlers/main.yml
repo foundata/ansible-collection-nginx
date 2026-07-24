@@ -21,7 +21,7 @@
     name: "{{ __run_nginx_nginx_servicename }}"
     state: "restarted"
   when:
-    - run_nginx_service_state != 'unmanaged'
+    - run_nginx_service_state in ['enabled', 'running']
   listen:
     - "run_nginx: restart nginx.service"
 
@@ -31,7 +31,7 @@
     name: "{{ __run_nginx_nginx_servicename }}"
     state: "reloaded"
   when:
-    - run_nginx_service_state != 'unmanaged'
+    - run_nginx_service_state in ['enabled', 'running']
   listen:
     - "run_nginx: reload nginx.service"
 
