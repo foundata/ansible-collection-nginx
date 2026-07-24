@@ -31,7 +31,53 @@ It provides resources to manage and use [NGINX](https://nginx.org/), a HTTP web 
 
 ### Role: `foundata.nginx.run`
 
-The primary resource in this collection to configure and maintain NGINX, including sites / virtual hosts (`server {}`) and related configuration. See the [role's `README.md`](./roles/run/README.md) for more information and usage examples.
+The primary role in this collection to configure and maintain NGINX, including sites / virtual hosts (`server {}`) and related configuration. [Its `README.md`](./roles/run/README.md) covers configuration, usage examples, and more:
+
+<!-- ANSIBLE DOCSMITH TOC-FULL run START -->
+- [Ansible role: `foundata.nginx.run`](roles/run/README.md#ansible-role-foundatanginxrun)
+  - [Table of contents](roles/run/README.md#toc)
+  - [Features](roles/run/README.md#features)
+  - [Example playbooks, using this role](roles/run/README.md#examples)
+  - [Supported tags](roles/run/README.md#tags)
+  - [Role variables](roles/run/README.md#variables)
+    - [`run_nginx_state`](roles/run/README.md#variable-run_nginx_state)
+    - [`run_nginx_autoupgrade`](roles/run/README.md#variable-run_nginx_autoupgrade)
+    - [`run_nginx_service_state`](roles/run/README.md#variable-run_nginx_service_state)
+    - [`run_nginx_main_config_block`](roles/run/README.md#variable-run_nginx_main_config_block)
+    - [`run_nginx_events_config_block`](roles/run/README.md#variable-run_nginx_events_config_block)
+    - [`run_nginx_http_config_block`](roles/run/README.md#variable-run_nginx_http_config_block)
+    - [`run_nginx_main_config_baseline_manage`](roles/run/README.md#variable-run_nginx_main_config_baseline_manage)
+    - [`run_nginx_events_config_baseline_manage`](roles/run/README.md#variable-run_nginx_events_config_baseline_manage)
+    - [`run_nginx_http_config_baseline_manage`](roles/run/README.md#variable-run_nginx_http_config_baseline_manage)
+    - [`run_nginx_sites_config`](roles/run/README.md#variable-run_nginx_sites_config)
+      - [`run_nginx_sites_config['name']`](roles/run/README.md#variable-run_nginx_sites_config-sub-name)
+      - [`run_nginx_sites_config['enabled']`](roles/run/README.md#variable-run_nginx_sites_config-sub-enabled)
+      - [`run_nginx_sites_config['content']`](roles/run/README.md#variable-run_nginx_sites_config-sub-content)
+    - [`run_nginx_sites_delete_unmanaged`](roles/run/README.md#variable-run_nginx_sites_delete_unmanaged)
+    - [`run_nginx_sites_defaultserver_manage`](roles/run/README.md#variable-run_nginx_sites_defaultserver_manage)
+    - [`run_nginx_modules_enabled`](roles/run/README.md#variable-run_nginx_modules_enabled)
+    - [`run_nginx_modules_disable_unmanaged`](roles/run/README.md#variable-run_nginx_modules_disable_unmanaged)
+    - [`run_nginx_snippets_manage`](roles/run/README.md#variable-run_nginx_snippets_manage)
+    - [`run_nginx_snippet_settings`](roles/run/README.md#variable-run_nginx_snippet_settings)
+      - [`run_nginx_snippet_settings['hsts']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-hsts)
+        - [`run_nginx_snippet_settings['hsts']['max_age']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-hsts-sub-max_age)
+        - [`run_nginx_snippet_settings['hsts']['include_subdomains']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-hsts-sub-include_subdomains)
+        - [`run_nginx_snippet_settings['hsts']['preload']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-hsts-sub-preload)
+      - [`run_nginx_snippet_settings['php-fpm']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-php-fpm)
+        - [`run_nginx_snippet_settings['php-fpm']['type']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-php-fpm-sub-type)
+        - [`run_nginx_snippet_settings['php-fpm']['socket']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-php-fpm-sub-socket)
+        - [`run_nginx_snippet_settings['php-fpm']['tcp_host']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-php-fpm-sub-tcp_host)
+        - [`run_nginx_snippet_settings['php-fpm']['tcp_port']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-php-fpm-sub-tcp_port)
+      - [`run_nginx_snippet_settings['tls-baseline']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline)
+        - [`run_nginx_snippet_settings['tls-baseline']['dhparam_path']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-dhparam_path)
+        - [`run_nginx_snippet_settings['tls-baseline']['ecdh_curves']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-ecdh_curves)
+        - [`run_nginx_snippet_settings['tls-baseline']['resolvers']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolvers)
+        - [`run_nginx_snippet_settings['tls-baseline']['resolver_timeout']`](roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolver_timeout)
+    - [`run_nginx_snippets_delete_unmanaged`](roles/run/README.md#variable-run_nginx_snippets_delete_unmanaged)
+  - [Dependencies](roles/run/README.md#dependencies)
+  - [Compatibility](roles/run/README.md#compatibility)
+  - [External requirements](roles/run/README.md#requirements)
+<!-- ANSIBLE DOCSMITH TOC-FULL run END -->
 
 
 
