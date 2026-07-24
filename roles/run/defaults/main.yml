@@ -86,7 +86,7 @@ run_nginx_sites_defaultserver_manage: true
 #
 # - Type: str
 # - Required: No
-# - Default:
+# - Default: ""
 run_nginx_main_config_block: ""
 
 # Additional NGINX configuration directives for the `events {}` block in the
@@ -101,7 +101,7 @@ run_nginx_main_config_block: ""
 #
 # - Type: str
 # - Required: No
-# - Default:
+# - Default: ""
 run_nginx_events_config_block: ""
 
 # Additional NGINX configuration directives for the `http {}` block in the main
@@ -118,7 +118,7 @@ run_nginx_events_config_block: ""
 #
 # - Type: str
 # - Required: No
-# - Default:
+# - Default: ""
 run_nginx_http_config_block: ""
 
 # Controls whether the role injects curated baseline directives into the main
@@ -138,8 +138,8 @@ run_nginx_http_config_block: ""
 # - Default: true
 run_nginx_main_config_baseline_manage: true
 
-# Controls whether the role injects curated baseline directives into the `events
-# {}` block of the main configuration file (`nginx.conf`).
+# Controls whether the role injects curated baseline directives into the
+# `events {}` block of the main configuration file (`nginx.conf`).
 #
 # When set to `true`, the role provides sane defaults for the events context
 # (e.g., `worker_connections`). These baseline directives are merged from
@@ -153,8 +153,8 @@ run_nginx_main_config_baseline_manage: true
 # - Default: true
 run_nginx_events_config_baseline_manage: true
 
-# Controls whether the role injects curated baseline directives into the `http
-# {}` block of the main configuration file (`nginx.conf`).
+# Controls whether the role injects curated baseline directives into the
+# `http {}` block of the main configuration file (`nginx.conf`).
 #
 # When set to `true`, the role provides sane defaults for the HTTP context
 # (e.g., `sendfile`, `tcp_nopush`, `types_hash_max_size`, MIME type includes).
@@ -226,6 +226,38 @@ run_nginx_http_config_baseline_manage: true
 # - Type: list
 # - Required: No
 # - Default: []
+# - Dict attributes:
+#   - name: Identifier used to build the config filename (`<name>.conf`) below
+#     `sites-available/` and `sites-enabled/`. Must be unique within
+#     `run_nginx_sites_config`.
+#
+#     Allowed characters: `a-z`, `A-Z`, `0-9`, dot (`.`), underscore (`_`), and
+#     hyphen (`-`). Any other character causes the role to fail with a
+#     validation error.
+#     - Type: str
+#     - Required: No
+#   - enabled: Controls whether the site is active.
+#
+#     When `true`, a symlink is created in `sites-enabled/` pointing to the
+#     corresponding file in `sites-available/`, so NGINX includes it. When
+#     `false`, the symlink is removed while the file in `sites-available/` is
+#     kept in place, allowing the site to be disabled without losing its
+#     configuration.
+#     - Type: bool
+#     - Required: No
+#     - Default: false
+#   - content:
+#     Raw NGINX configuration for the site, inserted verbatim into the rendered
+#     file. Any valid NGINX configuration at the `http {}` child-context level
+#     is accepted, typically at least one `server {}` block, and optionally
+#     `upstream {}` or other supporting blocks.
+#
+#     Do not wrap the content in an `http {}` block: it is already placed inside
+#     the main `http {}` context via the include from `sites-enabled/`. Snippets
+#     provided by this role can be pulled in with
+#     `include snippets/<name>.conf;` as needed.
+#     - Type: str
+#     - Required: No
 run_nginx_sites_config: []
 
 # Controls whether the role removes stale site files that are not declared in
@@ -246,8 +278,8 @@ run_nginx_sites_config: []
 run_nginx_sites_delete_unmanaged: true
 
 # Controls whether the role ships and manages its curated NGINX config snippets
-# (reusable, centrally maintained config blocks meant to be pulled into `server
-# {}` / `location {}` blocks via `include snippets/<name>.conf;`).
+# (reusable, centrally maintained config blocks meant to be pulled into
+# `server {}` / `location {}` blocks via `include snippets/<name>.conf;`).
 #
 # When set to `true`, the role ensures the
 # `/etc/nginx/snippets/{http,location,server}/` directories exist and renders
@@ -309,6 +341,102 @@ run_nginx_snippets_delete_unmanaged: false
 # - Type: dict
 # - Required: No
 # - Default: {}
+# - Dict attributes:
+#   - hsts: Settings for the `server/headers-hsts.conf` snippet that renders the
+#     `Strict-Transport-Security` HTTP response header.
+#     - Type: dict
+#     - Required: No
+#     - Dict attributes:
+#       - max_age:
+#         Duration in seconds that the browser should remember to only access
+#         the site via HTTPS. The default of 31536000 corresponds to one year,
+#         which is the minimum recommended by https://hstspreload.org/.
+#         - Type: int
+#         - Required: No
+#         - Default: 31536000
+#       - include_subdomains:
+#         Whether to extend the HSTS policy to all subdomains of the current
+#         domain. Required for HSTS preload list submission.
+#         - Type: bool
+#         - Required: No
+#         - Default: true
+#       - preload:
+#         Whether to add the `preload` directive, signalling to browser vendors
+#         that the domain should be included in the HSTS Preload List (hardcoded
+#         into browsers). This is practically irreversible; removal takes
+#         months.
+#         - Type: bool
+#         - Required: No
+#         - Default: false
+#   - php-fpm:
+#     Settings for the `location/php-fpm.conf` snippet that configures FastCGI
+#     proxying to a PHP-FPM backend. The snippet renders a `location ~ \.php$`
+#     block with the appropriate `fastcgi_pass` directive.
+#     - Type: dict
+#     - Required: No
+#     - Dict attributes:
+#       - type:
+#         Connection method to the PHP-FPM backend. `socket` connects via a Unix
+#         domain socket (lower overhead, same-host only). `tcp` connects via TCP
+#         (allows remote backends).
+#         - Type: str
+#         - Required: No
+#         - Default: socket
+#         - Choices: socket, tcp
+#       - socket:
+#         Absolute path to the PHP-FPM Unix socket. Only used when `type` is set
+#         to `socket`.
+#         - Type: str
+#         - Required: No
+#         - Default: /run/php/php-fpm.sock
+#       - tcp_host:
+#         Hostname or IP address of the PHP-FPM backend. Only used when `type`
+#         is set to `tcp`.
+#         - Type: str
+#         - Required: No
+#         - Default: 127.0.0.1
+#       - tcp_port:
+#         TCP port of the PHP-FPM backend. Only used when `type` is set to
+#         `tcp`.
+#         - Type: int
+#         - Required: No
+#         - Default: 9000
+#   - tls-baseline:
+#     Settings for the `http/tls-baseline.conf` snippet that provides TLS
+#     hardening following the Mozilla "Intermediate" profile (Guideline v6.0).
+#     - Type: dict
+#     - Required: No
+#     - Dict attributes:
+#       - dhparam_path:
+#         Absolute path where the DH parameters file is deployed. The role ships
+#         RFC 7919 ffdhe3072 parameters and deploys them to this path
+#         automatically. Platform-specific vars files override this to match
+#         each distribution's conventional TLS directory (e.g.
+#         `/etc/pki/tls/certs/` on Red Hat).
+#         - Type: str
+#         - Required: No
+#         - Default: /etc/ssl/certs/dhparam_ffdhe3072.pem
+#       - ecdh_curves:
+#         Colon-separated list of elliptic curves for ECDHE key exchange, passed
+#         to the `ssl_ecdh_curve` directive. The default includes the
+#         post-quantum hybrid `X25519MLKEM768` (requires OpenSSL >= 3.5);
+#         platforms with older OpenSSL automatically fall back to a
+#         classical-only list via version-specific vars files.
+#         - Type: str
+#         - Required: No
+#         - Default: X25519MLKEM768:X25519:prime256v1:secp384r1
+#       - resolvers:
+#         List of DNS resolver IP addresses used by NGINX for OCSP stapling
+#         lookups. Using a local resolver (e.g. unbound, systemd-resolved at
+#         `127.0.0.1`) is recommended for privacy and latency.
+#         - Type: list
+#         - Required: No
+#         - List elements: str
+#       - resolver_timeout:
+#         Timeout for DNS resolver queries used by OCSP stapling.
+#         - Type: str
+#         - Required: No
+#         - Default: 3s
 run_nginx_snippet_settings: {}
 
 # List of dynamic NGINX module names to enable at runtime.

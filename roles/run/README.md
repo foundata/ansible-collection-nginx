@@ -249,6 +249,8 @@ There are also tags usually not meant to be called directly but listed for the s
 
 ## Role variables<a id="variables"></a>
 
+Main entry point for the foundata.nginx.run role
+
 The following variables can be configured for this role:
 
 | Variable | Type | Required | Default | Description (abstract) |
