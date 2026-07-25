@@ -714,6 +714,102 @@
         success_msg: "Emptying run_nginx_modules_enabled removed the role-managed module configs."
 
 
+## Migration: pre-existing, unmanaged site configs (brownfield)
+#
+# Taking over a host that already serves sites is the common migration case, and
+# run_nginx_sites_delete_unmanaged decides what happens to those files. Both
+# directions are contractual: with deletion enabled the role owns the site
+# directories exclusively, with it disabled foreign sites must survive so the
+# role can be adopted next to an existing setup.
+#
+# The planted site is created in sites-available only and never enabled, so it
+# stays inert and cannot influence the configuration test that the role's
+# handlers run. Deletion is exercised regardless, because the role searches both
+# the available and the enabled directory.
+#
+# Order matters: the preserving run comes first, so the removing run afterwards
+# leaves the host in the clean state the uninstall regression below expects.
+
+- name: "Molecule | Verify | Validate unmanaged site handling on migration (integration)"
+  vars:
+    __testing_unmanaged_site: >-
+      {{ __run_nginx_config_service_dropin_sites_available_dir_path }}/molecule-unmanaged.conf
+    __testing_managed_site: >-
+      {{ __run_nginx_config_service_dropin_sites_available_dir_path }}/example.com.conf
+  block:
+
+    - name: "Molecule | Verify | Plant a pre-existing, unmanaged site config"
+      ansible.builtin.copy:
+        content: |
+          # Unmanaged site planted by the molecule test to simulate a host that
+          # already served sites before the role was adopted.
+          server {
+              listen 8099;
+              server_name molecule-unmanaged.example.net;
+              root /var/www/example.com;
+          }
+        dest: "{{ __testing_unmanaged_site }}"
+        owner: "{{ __run_nginx_config_service_dropin_sites_available_dir_owner }}"
+        group: "{{ __run_nginx_config_service_dropin_sites_available_dir_group }}"
+        mode: "u=rw,g=r,o=r" # 0644
+
+
+    - name: "Molecule | Verify | Re-run the role with unmanaged site deletion disabled"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+      vars:
+        run_nginx_sites_delete_unmanaged: false
+
+
+    - name: "Molecule | Verify | Stat the unmanaged site after the run with deletion disabled"
+      ansible.builtin.stat:
+        path: "{{ __testing_unmanaged_site }}"
+      register: __testing_unmanaged_site_kept
+
+
+    - name: "Molecule | Verify | Assert the unmanaged site survives when deletion is disabled"
+      ansible.builtin.assert:
+        that:
+          - __testing_unmanaged_site_kept['stat']['exists']
+        fail_msg: >-
+          The unmanaged site '{{ __testing_unmanaged_site }}' was removed even though
+          run_nginx_sites_delete_unmanaged was false. Adopting the role next to an existing
+          setup would delete foreign sites.
+        success_msg: >-
+          The unmanaged site was left untouched while run_nginx_sites_delete_unmanaged was
+          false.
+
+
+    - name: "Molecule | Verify | Re-run the role with unmanaged site deletion enabled"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+      vars:
+        run_nginx_sites_delete_unmanaged: true
+
+
+    - name: "Molecule | Verify | Stat the unmanaged and a managed site after the run with deletion enabled"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ __testing_unmanaged_site }}"
+        - "{{ __testing_managed_site }}"
+      register: __testing_unmanaged_site_reaped
+
+
+    - name: "Molecule | Verify | Assert the unmanaged site is removed while the managed one stays"
+      ansible.builtin.assert:
+        that:
+          - not __testing_unmanaged_site_reaped['results'][0]['stat']['exists']
+          - __testing_unmanaged_site_reaped['results'][1]['stat']['exists']
+        fail_msg: >-
+          Enabling run_nginx_sites_delete_unmanaged did not remove the unmanaged site
+          '{{ __testing_unmanaged_site }}', or it also removed the managed site
+          '{{ __testing_managed_site }}'.
+        success_msg: >-
+          Enabling run_nginx_sites_delete_unmanaged removed the unmanaged site and kept the
+          managed one.
+
+
 # Flush pending config-validation/restart handlers now, while the role is still
 # installed and its configuration is valid, so they do not run at play end after
 # the uninstall regression below has removed the package and its config.
