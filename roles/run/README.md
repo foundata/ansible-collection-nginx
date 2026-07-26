@@ -240,7 +240,7 @@ It might be useful and faster to only call parts of the role by using tags:
 - `run_nginx_config`: Manage settings, such as adapting or creating configuration files.
 - `run_nginx_service`: Manage services and daemons, such as running states and service boot configurations.
 
-There are also tags usually not meant to be called directly but listed for the sake of completeness** and edge cases:
+There are also tags that are generally not intended to be called directly but are included for completeness and to cover edge cases:
 
 - `run_nginx_always`, `always`: Tasks needed by the role itself for internal role setup and the Ansible environment.
 
