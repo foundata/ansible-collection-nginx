@@ -4,6 +4,14 @@
 # Generate YAML for the __run_nginx_modules_map_resources variable by querying
 # the local package manager for NGINX dynamic-module packages and their files.
 #
+# The output reflects the RELEASE THIS SCRIPT RUNS ON. The committed vars files
+# are family-wide supersets (package availability differs between releases, see
+# the comment above the map in e.g. vars/debian.yml), so when regenerating,
+# merge with the existing map instead of replacing it wholesale, or run the
+# script on every release of the family and union the results. Install the
+# module packages before running: for apt the enable priority (e.g. 10-, 50-,
+# 70-) is read from the installed package's postinst.
+#
 # Supported package managers:
 #   - apt    (Debian/Ubuntu) : libnginx-mod-*
 #   - dnf    (Fedora/RHEL)   : nginx-mod-*
@@ -296,7 +304,23 @@ emit_module_block() {
     cf_target="${module_confs[0]}"
     local cf_basename="${cf_target##*/}"
     case "${mgr}" in
-      'apt') cf_filename="50-${cf_basename}" ;;
+      'apt')
+        # dh_nginx enables modules with a priority prefix that is NOT uniform:
+        # most modules use 50-, but e.g. mod-http-ndk uses 10- (must load before
+        # its dependents) and the mod-stream-* modules use 70- (must load after
+        # mod-stream). The authoritative mapping is declared in each package's
+        # postinst ("for confpair in mod-X.conf:NN-mod-X.conf"), so parse it
+        # from the installed package and only fall back to 50- with a warning.
+        cf_filename=''
+        if [ -r "/var/lib/dpkg/info/${pkg}.postinst" ]; then
+          cf_filename="$(sed -n "s/^for confpair in ${cf_basename}:\([0-9][0-9]-${cf_basename}\).*/\1/p" \
+            "/var/lib/dpkg/info/${pkg}.postinst" | head -n 1)"
+        fi
+        if [ -z "${cf_filename}" ]; then
+          cf_filename="50-${cf_basename}"
+          msg --warning "Could not determine the enable priority of '${cf_basename}' from the postinst of '${pkg}' (package not installed?), assuming '50-'. Install the package and re-run, or verify manually!"
+        fi
+        ;;
       *) cf_filename="${cf_basename}" ;;
     esac
   else

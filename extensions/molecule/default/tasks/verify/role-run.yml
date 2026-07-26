@@ -714,6 +714,42 @@
         success_msg: "Emptying run_nginx_modules_enabled removed the role-managed module configs."
 
 
+## Module cleanup: preinstalled module with a non-default enable priority
+#
+# The prepare stage preinstalls libnginx-mod-stream-geoip2 on Debian-family
+# platforms; its postinst enables it as 70-mod-stream-geoip2.conf. The module
+# is not in run_nginx_modules_enabled, so the role's unmanaged-module cleanup
+# must remove exactly that file. When the module map records a wrong filename
+# (it once said 50-), the file survives while its prerequisite mod-stream is
+# removed, and nginx cannot start because of the orphaned dlopen - the
+# service-running assert above would catch the outage, this assert names the
+# cause.
+
+- name: "Molecule | Verify | Check the preinstalled non-default-priority module config is removed (Debian family)"
+  when:
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
+  block:
+
+    - name: "Molecule | Verify | Stat the preinstalled module's enable symlink"
+      ansible.builtin.stat:
+        path: "/etc/nginx/modules-enabled/70-mod-stream-geoip2.conf"
+      register: __testing_geoip2_module_conf
+
+
+    - name: "Molecule | Verify | Assert the unmanaged module's enable symlink was removed"
+      ansible.builtin.assert:
+        that:
+          - not __testing_geoip2_module_conf['stat']['exists']
+        fail_msg: >-
+          /etc/nginx/modules-enabled/70-mod-stream-geoip2.conf still exists although the
+          module is not in run_nginx_modules_enabled. The module map's conf filename does
+          not match the name the package enables, so the unmanaged-module cleanup cannot
+          find it.
+        success_msg: >-
+          The preinstalled 70-mod-stream-geoip2.conf was removed by the unmanaged-module
+          cleanup.
+
+
 ## Migration: pre-existing, unmanaged site configs (brownfield)
 #
 # Taking over a host that already serves sites is the common migration case, and

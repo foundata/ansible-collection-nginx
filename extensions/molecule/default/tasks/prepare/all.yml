@@ -111,3 +111,17 @@
   loop:
     - cert: "{{ __testing_examplecom_cert }}"
       key: "{{ __testing_examplecom_key }}"
+
+
+# Regression fixture: a preinstalled module whose enable priority is not 50-.
+# Ubuntu 22.04's nginx metapackage drags in libnginx-mod-stream-geoip2, whose
+# postinst enables it as 70-mod-stream-geoip2.conf (it must load after
+# mod-stream at 50-). Preinstall the module on every Debian-family platform so
+# the converge exercises that cleanup path everywhere, not only on Ubuntu 22.04.
+- name: "Molecule | Prepare | Install an nginx module that enables itself with a non-default priority (Debian family)"
+  ansible.builtin.apt:
+    name: "libnginx-mod-stream-geoip2"
+    state: "present"
+    update_cache: true
+  when:
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'

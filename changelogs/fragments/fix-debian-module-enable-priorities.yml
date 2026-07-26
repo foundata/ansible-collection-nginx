@@ -1,0 +1,19 @@
+---
+
+bugfixes:
+  - >
+    ``run`` role - Corrected the module map filenames for the Debian family to
+    the names the packages actually enable: ``10-mod-http-ndk.conf`` (loads
+    before its dependents) and ``70-mod-stream-geoip.conf``,
+    ``70-mod-stream-geoip2.conf``, ``70-mod-stream-js.conf`` (load after
+    ``50-mod-stream.conf``). The map recorded a uniform ``50-`` prefix, so the
+    unmanaged-module cleanup could not match these files: on Ubuntu 22.04, whose
+    ``nginx`` metapackage preinstalls ``libnginx-mod-stream-geoip2``, the
+    cleanup removed ``50-mod-stream.conf`` but left the dependent
+    ``70-mod-stream-geoip2.conf`` enabled, and nginx failed to start over the
+    orphaned module (``undefined symbol: ngx_stream_core_module``). The same
+    mismatch also affected enabling these modules through
+    ``run_nginx_modules_enabled``, which would have loaded them under a second
+    filename next to the package's own. The map generator
+    (``hack/gen-modules-map-resources.sh``) now reads the enable priority from
+    the package's postinst instead of assuming ``50-``.

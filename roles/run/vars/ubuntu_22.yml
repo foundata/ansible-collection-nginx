@@ -132,7 +132,7 @@ __run_nginx_modules_map_resources:
       - "libnginx-mod-nchan"
   ndk_http:
     conf_files:
-      - name: "50-mod-http-ndk.conf"
+      - name: "10-mod-http-ndk.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules-available/mod-http-ndk.conf"
     packages:
@@ -153,14 +153,14 @@ __run_nginx_modules_map_resources:
       - "libnginx-mod-stream"
   stream_geoip:
     conf_files:
-      - name: "50-mod-stream-geoip.conf"
+      - name: "70-mod-stream-geoip.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules-available/mod-stream-geoip.conf"
     packages:
       - "libnginx-mod-stream-geoip"
   stream_geoip2:
     conf_files:
-      - name: "50-mod-stream-geoip2.conf"
+      - name: "70-mod-stream-geoip2.conf"
         type: "symlink"
         target: "/usr/share/nginx/modules-available/mod-stream-geoip2.conf"
     packages:

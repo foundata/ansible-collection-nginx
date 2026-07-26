@@ -287,6 +287,11 @@ argument_specs:
           (e.g. `http_perl` from `ngx_http_perl_module.so`). See the naming
           convention comment in `vars/main.yml` for the full specification.
 
+          Module availability varies between distributions and releases (for
+          example, `http_auth_spnego` and `http_push_stream` are not packaged
+          for Debian 12 and Ubuntu 24.04). Enabling a module that is not
+          packaged for the target platform fails at the package installation.
+
           Example:
           ```yaml
           run_nginx_modules_enabled:
