@@ -82,7 +82,7 @@ __run_nginx_packages_uninstall: >-
   {{
     __run_nginx_packages_install
     + (__run_nginx_modules_map_resources.values()
-       | map(attribute='packages')
+       | ansible.builtin.map(attribute='packages')
        | ansible.builtin.flatten
        | ansible.builtin.unique
        | ansible.builtin.list)

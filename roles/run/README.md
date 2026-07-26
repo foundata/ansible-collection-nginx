@@ -228,7 +228,7 @@ On SELinux-enabled systems (RHEL, Fedora, AlmaLinux, CentOS Stream), NGINX may n
     state: true
     persistent: true
   when:
-    - ansible_facts['selinux']['status'] | default('disabled') == 'enabled'
+    - ansible_facts['selinux']['status'] | ansible.builtin.default('disabled') == 'enabled'
 ```
 
 
