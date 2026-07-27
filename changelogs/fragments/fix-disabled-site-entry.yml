@@ -1,0 +1,8 @@
+---
+
+bugfixes:
+  - >
+    ``run`` role - A ``run_nginx_sites_config`` entry without
+    ``enabled: true`` no longer fails the run: the enable/disable task passed
+    ``src`` together with ``state: absent``, which ansible-core rejects. The
+    options are now omitted when the symlink is being removed.
