@@ -14,9 +14,9 @@
     "{{ item['key'] }}": "{{ item['value'] }}"
   loop: >-
     {{
-      (__testing_state | default({}, true))
+      (__testing_state | ansible.builtin.default({}, true))
       | ansible.builtin.dict2items
-      | ansible.builtin.selectattr('key', 'match', '^(run_nginx_|__testing_)')
+      | ansible.builtin.selectattr('key', 'ansible.builtin.match', '^(run_nginx_|__testing_)')
       | ansible.builtin.list
     }}
 
@@ -426,7 +426,7 @@
       - __testing_headers_result['server'] is not ansible.builtin.search('nginx/[0-9]')
     fail_msg: >-
       The response headers contain NGINX version information in the Server header.
-      Server header value: '{{ __testing_headers_result['server'] | default('') }}'
+      Server header value: '{{ __testing_headers_result['server'] | ansible.builtin.default('') }}'
     success_msg: >-
       The response headers do not contain NGINX version information.
 
@@ -475,8 +475,8 @@
     fail_msg: >-
       DH parameters file does not exist or has wrong permissions at
       '{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] }}'.
-      Exists: {{ __testing_dhparam_file['stat']['exists'] | default(false) }},
-      Mode: {{ __testing_dhparam_file['stat']['mode'] | default('N/A') }}
+      Exists: {{ __testing_dhparam_file['stat']['exists'] | ansible.builtin.default(false) }},
+      Mode: {{ __testing_dhparam_file['stat']['mode'] | ansible.builtin.default('N/A') }}
     success_msg: >-
       DH parameters file exists with correct permissions (0644) at
       '{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] }}'.
@@ -498,7 +498,7 @@
       - __testing_nginx_full_config['rc'] == 0
     fail_msg: >-
       nginx -T failed with return code {{ __testing_nginx_full_config['rc'] }}.
-      stderr: {{ __testing_nginx_full_config['stderr'] | default('') }}
+      stderr: {{ __testing_nginx_full_config['stderr'] | ansible.builtin.default('') }}
     success_msg: >-
       nginx -T succeeded, configuration is valid.
 

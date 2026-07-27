@@ -15,7 +15,7 @@
 {%-   endif -%}
 {%-   if baseline_manage == true -%}
 {%-     for directive, value in (baseline_directives | ansible.builtin.default({})).items() -%}
-{%-       if value is ansible.builtin.sequence and value is not string -%}
+{%-       if value is ansible.builtin.sequence and value is not ansible.builtin.string -%}
 {%-         for item in value -%}
 {{- render_directive(directive, item, indent) -}}
 {%            if not loop.last -%}
