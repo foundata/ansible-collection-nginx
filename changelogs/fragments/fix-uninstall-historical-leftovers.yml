@@ -1,0 +1,10 @@
+---
+
+bugfixes:
+  - >
+    ``run`` role - Uninstall now removes historical leftovers it previously
+    could not see: site config and ``load_module`` files carry an ownership
+    marker and the site and module directories are swept for it (covering
+    sites renamed or de-listed since deployment on Debian/SUSE, where the
+    directories are kept), and role-managed module symlinks are removed from
+    ``modules-enabled`` on Debian.

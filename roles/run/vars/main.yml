@@ -179,6 +179,16 @@ __run_nginx_config_service_dropin_file_mode: "{{ __run_nginx_config_service_file
 # Most of the folling directories are Debian-style (and should be already
 # existing there) but they also make sense for this role's logic on most other
 # platforms.
+# Marker line rendered into every site config and load_module file created by
+# this role. Load-bearing for the cleanup logic: uninstall sweeps the site and
+# module directories for files carrying this marker, so renamed or de-listed
+# sites from earlier runs are removed as well (their names cannot be derived
+# from the current run_nginx_sites_config value).
+__run_nginx_config_file_marker: "# Managed by Ansible (foundata.nginx.run)"
+
+__run_nginx_grep_exec_path: "/usr/bin/grep"
+
+
 __run_nginx_config_service_dropin_sites_available_dir_path: "/etc/nginx/sites-available"
 __run_nginx_config_service_dropin_sites_available_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
 __run_nginx_config_service_dropin_sites_available_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"

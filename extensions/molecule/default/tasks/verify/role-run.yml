@@ -884,6 +884,22 @@
         fail_msg: "Managed site file/symlink missing before uninstall; test setup invalid."
         success_msg: "Managed site file and enabled symlink exist before uninstall."
 
+    # Simulate a site that was renamed since deployment: the marker-carrying
+    # file exists on disk but is absent from run_nginx_sites_config, so only
+    # the marker sweep can find it during uninstall.
+    - name: "Molecule | Verify | Plant a renamed historical site file before uninstall"
+      ansible.builtin.copy:
+        src: "{{ __testing_uninstall_site_available }}"
+        dest: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
+        remote_src: true
+        mode: "preserve"
+
+    - name: "Molecule | Verify | Plant the matching enabled symlink for the historical site"
+      ansible.builtin.file:
+        src: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
+        dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/renamed-leftover.conf"
+        state: "link"
+
     - name: "Molecule | Verify | Uninstall the role (run_nginx_state: absent)"
       ansible.builtin.include_role:
         name: "foundata.nginx.run"
@@ -907,6 +923,24 @@
           Uninstall left managed site files behind (available exists={{ __testing_uninstall_after['results'][0]['stat']['exists'] }},
           enabled exists={{ __testing_uninstall_after['results'][1]['stat']['exists'] }}).
         success_msg: "Uninstall removed the managed site file and its enabled symlink."
+
+    - name: "Molecule | Verify | Stat the planted historical site after uninstall"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: __testing_uninstall_leftover_after
+      loop:
+        - "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
+        - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/renamed-leftover.conf"
+
+    - name: "Molecule | Verify | Assert the marker sweep removed the renamed historical site"
+      ansible.builtin.assert:
+        that:
+          - not __testing_uninstall_leftover_after['results'][0]['stat']['exists']
+          - not __testing_uninstall_leftover_after['results'][1]['stat']['exists']
+        fail_msg: >-
+          A marker-carrying site file absent from run_nginx_sites_config
+          survived the uninstall (renamed historical sites would linger).
+        success_msg: "The renamed historical site was removed by the marker sweep."
 
 
 ## Regression tests: init-only merged variable evaluation
