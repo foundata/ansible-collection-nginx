@@ -900,6 +900,23 @@
         dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/renamed-leftover.conf"
         state: "link"
 
+
+    # An administrator's own site file (no ownership marker). On Debian and
+    # SUSE the site directories are kept (stock respectively shared
+    # directories), so the file has to survive the marker sweep. On Red Hat
+    # platforms the role created the directories itself and removes them
+    # completely - nothing to plant there.
+    - name: "Molecule | Verify | Plant an administrator-owned site file without the marker"
+      ansible.builtin.copy:
+        dest: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/admin-own.conf"
+        content: |
+          # hand-made by the administrator, not Ansible
+        owner: "root"
+        group: "root"
+        mode: "u=rw,g=r,o=r"
+      when:
+        - ansible_facts['os_family'] in ['Debian', 'Suse']
+
     - name: "Molecule | Verify | Uninstall the role (run_nginx_state: absent)"
       ansible.builtin.include_role:
         name: "foundata.nginx.run"
@@ -941,6 +958,37 @@
           A marker-carrying site file absent from run_nginx_sites_config
           survived the uninstall (renamed historical sites would linger).
         success_msg: "The renamed historical site was removed by the marker sweep."
+
+
+    - name: "Molecule | Verify | Check the site directories are gone after uninstall (Red Hat platforms)"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: __testing_uninstall_dirs_stat
+      failed_when:
+        - __testing_uninstall_dirs_stat['stat']['exists']
+      loop:
+        - "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}"
+        - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}"
+      when:
+        - ansible_facts['os_family'] not in ['Debian', 'Suse']
+
+
+    - name: "Molecule | Verify | Check the administrator's site file survived the uninstall (Debian, SUSE)"
+      ansible.builtin.stat:
+        path: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/admin-own.conf"
+      register: __testing_uninstall_admin_stat
+      failed_when:
+        - not __testing_uninstall_admin_stat['stat']['exists']
+      when:
+        - ansible_facts['os_family'] in ['Debian', 'Suse']
+
+
+    - name: "Molecule | Verify | Remove the administrator-owned test file (Debian, SUSE)"
+      ansible.builtin.file:
+        path: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/admin-own.conf"
+        state: "absent"
+      when:
+        - ansible_facts['os_family'] in ['Debian', 'Suse']
 
 
 ## Regression tests: init-only merged variable evaluation
