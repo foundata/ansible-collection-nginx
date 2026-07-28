@@ -279,6 +279,40 @@
     - item['name'] is not ansible.builtin.match('^[a-zA-Z0-9._-]+$')
 
 
+# Each entry writes '<name>.conf' and manages the matching enable-symlink, so
+# entries sharing a name rewrite the same file with different content on every
+# run: the result is order-dependent and never idempotent.
+- name: "Config | Default | Validate nginx site (config file) names are unique"
+  ansible.builtin.fail:
+    msg: >-
+      Duplicate site name(s) in 'run_nginx_sites_config':
+      {{ __run_nginx_site_name_duplicates | ansible.builtin.unique | ansible.builtin.join(', ') }}.
+      Each entry writes '<name>.conf', so entries sharing a name overwrite each
+      other's configuration file on every run.
+  vars:
+    __run_nginx_site_names: >-
+      {{
+        run_nginx_sites_config
+        | ansible.builtin.default([])
+        | ansible.builtin.map(attribute='name')
+        | ansible.builtin.list
+      }}
+    __run_nginx_site_name_duplicates: >-
+      {%- set _seen = [] -%}
+      {%- set _dupes = [] -%}
+      {%- for _name in __run_nginx_site_names -%}
+      {%-   if _name in _seen -%}
+      {%-     set _ = _dupes.append(_name) -%}
+      {%-   else -%}
+      {%-     set _ = _seen.append(_name) -%}
+      {%-   endif -%}
+      {%- endfor -%}
+      {{ _dupes }}
+  when:
+    - (__run_nginx_site_names | ansible.builtin.length)
+      != (__run_nginx_site_names | ansible.builtin.unique | ansible.builtin.length)
+
+
 - name: "Config | Default | Create or update site config files"
   ansible.builtin.template:
     src: "site.conf.j2"

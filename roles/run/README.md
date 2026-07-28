@@ -531,7 +531,8 @@ run_nginx_sites_config:
 
 Identifier used to build the config filename (`<name>.conf`) below
 `sites-available/` and `sites-enabled/`. Must be unique within
-`run_nginx_sites_config`.
+`run_nginx_sites_config`; duplicate names cause the role to fail
+with a validation error.
 
 Allowed characters: `a-z`, `A-Z`, `0-9`, dot (`.`), underscore
 (`_`), and hyphen (`-`). Any other character causes the role to

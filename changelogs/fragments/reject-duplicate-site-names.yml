@@ -1,0 +1,9 @@
+---
+
+bugfixes:
+  - >
+    ``run`` role - Duplicate ``name`` values in ``run_nginx_sites_config`` now
+    cause a validation error. Entries sharing a name wrote the same
+    ``<name>.conf`` file with different content on every run, producing
+    order-dependent results and permanent non-idempotence. Uniqueness was
+    already documented but not enforced.
