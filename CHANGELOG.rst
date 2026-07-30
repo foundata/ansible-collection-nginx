@@ -4,6 +4,37 @@ foundata.nginx Ansible collection Release Notes
 
 .. contents:: Topics
 
+v1.2.0
+======
+
+Release Summary
+---------------
+
+Release Date: 2026-07-30
+
+Maintenance and bugfix release.
+
+Minor Changes
+-------------
+
+- The Molecule ``default`` scenario now selects the test backend per platform via a ``type`` key: ``podman`` (container, the default when omitted) or ``libvirt`` (QEMU/KVM virtual machine from a vendor cloud image via a session libvirt daemon, without root privileges). VM platforms allow tests containers cannot cover; commented ``libvirt`` alternates for every platform are included in ``molecule.yml``. ``molecule login`` now works through a per-instance login command for both backends. See ``extensions/molecule/README.md`` for requirements and usage.
+
+Bugfixes
+--------
+
+- The comment written into neutralized distribution config files contained a stray double quote in the Debian hint (``dpkg -S '<file>'"``), so the suggested command could not be copied and pasted as-is. The quote is removed.
+- ``run`` role - A ``run_nginx_sites_config`` entry without ``enabled: true`` no longer fails the run: the enable/disable task passed ``src`` together with ``state: absent``, which ansible-core rejects. The options are now omitted when the symlink is being removed.
+- ``run`` role - Changes to the main ``nginx.conf`` (baseline directives, ``run_nginx_main_config_block``, default-server handling, etc.) now notify configuration validation and a service restart. Previously the template task had no ``notify``, so the running NGINX process could keep the old configuration until an unrelated task happened to trigger the handlers.
+- ``run`` role - Corrected the module map filenames for the Debian family to the names the packages actually enable: ``10-mod-http-ndk.conf`` (loads before its dependents) and ``70-mod-stream-geoip.conf``, ``70-mod-stream-geoip2.conf``, ``70-mod-stream-js.conf`` (load after ``50-mod-stream.conf``). The map recorded a uniform ``50-`` prefix, so the unmanaged-module cleanup could not match these files: on Ubuntu 22.04, whose ``nginx`` metapackage preinstalls ``libnginx-mod-stream-geoip2``, the cleanup removed ``50-mod-stream.conf`` but left the dependent ``70-mod-stream-geoip2.conf`` enabled, and nginx failed to start over the orphaned module (``undefined symbol: ngx_stream_core_module``). The same mismatch also affected enabling these modules through ``run_nginx_modules_enabled``, which would have loaded them under a second filename next to the package's own. The map generator (``hack/gen-modules-map-resources.sh``) now reads the enable priority from the package's postinst instead of assuming ``50-``.
+- ``run`` role - Duplicate ``name`` values in ``run_nginx_sites_config`` now cause a validation error. Entries sharing a name wrote the same ``<name>.conf`` file with different content on every run, producing order-dependent results and permanent non-idempotence. Uniqueness was already documented but not enforced.
+- ``run`` role - Platform-specific task files are now guaranteed to run before the shared default tasks. The former single include loop did not preserve that order with several platforms in one play: Ansible batches the includes across hosts and the insertion order depends on when results arrive (non-deterministic), so default tasks could run before platform-specific ones. The includes are now two sequential tasks, which is a hard ordering barrier.
+- ``run`` role - Stale enabled-site symlinks are now reaped. The unmanaged-site cleanup used ``find`` with ``file_type: "file"``, which skipped the symlinks in ``sites-enabled``; removing a site from ``run_nginx_sites_config`` (with ``run_nginx_sites_delete_unmanaged``) could leave the old enabled vhost active. The cleanup now matches symlinks too.
+- ``run`` role - Stale role-managed module configs are now removed even when ``run_nginx_modules_enabled`` is emptied. The cleanup was nested inside the "modules enabled is non-empty" block, so setting the list to ``[]`` (after modules had previously been managed) left the old module symlinks enabled. The cleanup now runs whenever ``run_nginx_modules_disable_unmanaged`` is true and only ever removes files whose name is part of the role's module map (``__run_nginx_modules_map_resources``).
+- ``run`` role - The documentation of the ``unmanaged`` service state falsely claimed the service "will not start at boot". The role leaves the service completely alone in this state: both the running state and the boot (enablement) state stay exactly as they are. The description now documents the real behavior.
+- ``run`` role - The service restart and reload handlers were gated only on ``run_nginx_service_state != 'unmanaged'``. With ``run_nginx_service_state: "disabled"`` a configuration change still notified them and, because handlers run after the service management tasks, the restart started the just-stopped unit again (and the reload failed on the inactive unit), leaving a running service although the declared state is stopped. The handlers are now gated on ``run_nginx_service_state in ['enabled', 'running']``.
+- ``run`` role - Uninstall (``run_nginx_state: absent``) now removes managed site configs by absolute path from both ``sites-available`` and ``sites-enabled``. The removal list was built from bare filenames (e.g. ``example.com.conf``) that did not resolve, so on Debian/SUSE (where the site directories are intentionally kept) managed site files and their enabled symlinks were left behind after uninstall.
+- ``run`` role - Uninstall now removes historical leftovers it previously could not see: site config and ``load_module`` files carry an ownership marker and the site and module directories are swept for it (covering sites renamed or de-listed since deployment on Debian/SUSE, where the directories are kept), and role-managed module symlinks are removed from ``modules-enabled`` on Debian.
+
 v1.1.0
 ======
 
