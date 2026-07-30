@@ -905,12 +905,16 @@
     # SUSE the site directories are kept (stock respectively shared
     # directories), so the file has to survive the marker sweep. On Red Hat
     # platforms the role created the directories itself and removes them
-    # completely - nothing to plant there.
+    # completely - nothing to plant there. The content mentions the marker as
+    # a substring on purpose: ownership requires the exact marker line, a mere
+    # mention (e.g. quoted in a comment) must not get the file deleted.
     - name: "Molecule | Verify | Plant an administrator-owned site file without the marker"
       ansible.builtin.copy:
         dest: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/admin-own.conf"
         content: |
-          # hand-made by the administrator, not Ansible
+          # hand-made by the administrator, not Ansible. Files containing the
+          # exact "{{ __run_nginx_config_file_marker }}" line are role-owned;
+          # this one merely quotes that marker.
         owner: "root"
         group: "root"
         mode: "u=rw,g=r,o=r"

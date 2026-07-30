@@ -79,7 +79,7 @@
   ansible.builtin.command:
     argv: >-
       {{
-        [__run_nginx_grep_exec_path, '-l', '-s', '--', __run_nginx_config_file_marker]
+        [__run_nginx_grep_exec_path, '-l', '-s', '-x', '-F', '--', __run_nginx_config_file_marker]
         + (__run_nginx_uninstall_find_result['files']
            | ansible.builtin.rejectattr('isdir')
            | ansible.builtin.map(attribute='path') | ansible.builtin.list)
@@ -180,7 +180,7 @@
   ansible.builtin.command:
     argv: >-
       {{
-        [__run_nginx_grep_exec_path, '-l', '-s', '--', __run_nginx_config_file_marker]
+        [__run_nginx_grep_exec_path, '-l', '-s', '-x', '-F', '--', __run_nginx_config_file_marker]
         + (__run_nginx_uninstall_modules_find_result['files']
            | ansible.builtin.map(attribute='path') | ansible.builtin.list)
       }}
