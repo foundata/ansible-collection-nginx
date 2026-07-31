@@ -106,7 +106,7 @@
     path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}"
     state: "absent"
   when:
-    - ansible_facts['os_family'] != 'Debian'
+    - (ansible_facts['os_family'] | ansible.builtin.lower) != 'debian'
 
 
 - name: "Setup | Uninstall | Remove sites directories (non-Debian/SUSE platforms)"
@@ -114,7 +114,7 @@
     path: "{{ item }}"
     state: "absent"
   when:
-    - ansible_facts['os_family'] not in ['Debian', 'Suse']
+    - (ansible_facts['os_family'] | ansible.builtin.lower) not in ['debian', 'suse']
   loop:
     - "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}"
     - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}"
@@ -156,7 +156,7 @@
     path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
     state: "absent"
   when:
-    - ansible_facts['os_family'] != 'Debian'
+    - (ansible_facts['os_family'] | ansible.builtin.lower) != 'debian'
 
 
 # modules-enabled is kept on Debian (package directory): remove the
@@ -173,7 +173,7 @@
     hidden: true
   register: __run_nginx_uninstall_modules_find_result
   when:
-    - ansible_facts['os_family'] == 'Debian'
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
 
 
 - name: "Setup | Uninstall | Determine marker-managed module config files (Debian)"
@@ -189,7 +189,7 @@
   failed_when:
     - __run_nginx_uninstall_modules_owned_result['rc'] not in [0, 1, 2]
   when:
-    - ansible_facts['os_family'] == 'Debian'
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
     - (__run_nginx_uninstall_modules_find_result['files'] | ansible.builtin.length) > 0
 
 
@@ -201,7 +201,7 @@
   loop_control:
     label: "{{ item }}"
   when:
-    - ansible_facts['os_family'] == 'Debian'
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
 
 
 - name: "Setup | Uninstall | Remove role-managed module config symlinks (Debian)"
@@ -209,7 +209,7 @@
     path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}"
     state: "absent"
   when:
-    - ansible_facts['os_family'] == 'Debian'
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
   loop: >-
     {{
       __run_nginx_modules_map_resources.values()
@@ -229,7 +229,7 @@
     path: "/etc/nginx/modules"
     state: "absent"
   when:
-    - ansible_facts['os_family'] != 'Debian'
+    - (ansible_facts['os_family'] | ansible.builtin.lower) != 'debian'
 
 
 - name: "Setup | Uninstall | Remove packages"

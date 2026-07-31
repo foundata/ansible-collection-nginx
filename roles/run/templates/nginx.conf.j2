@@ -57,7 +57,7 @@ http {
             this role still shipping nginx 1.18.x, so managing a dummy cert
             globally is not worth it (patches welcome though).
         -#}
-        {%  if not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] == '22') %}
+        {%  if not ((ansible_facts['distribution'] | ansible.builtin.lower) == 'ubuntu' and ansible_facts['distribution_major_version'] == '22') %}
         {{ '\n' }}
         listen 443 ssl default_server;
         listen [::]:443 ssl default_server;
