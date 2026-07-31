@@ -130,7 +130,7 @@
 
 - name: "Config | Default | Manage config snippets"
   when:
-    - run_nginx_snippets_manage
+    - run_nginx_snippets_manage | ansible.builtin.bool
   block:
 
     - name: "Config | Default | Ensure existence and permissions of snippet directories"
@@ -213,8 +213,8 @@
 
 - name: "Config | Default | Delete stale / unmanaged config snippets"
   when:
-    - run_nginx_snippets_manage
-    - run_nginx_snippets_delete_unmanaged
+    - run_nginx_snippets_manage | ansible.builtin.bool
+    - run_nginx_snippets_delete_unmanaged | ansible.builtin.bool
   block:
 
     - name: "Config | Default | Build list of expected config snippet filenames"
@@ -366,7 +366,7 @@
 
 - name: "Config | Default | Delete stale / unmanaged site configs"
   when:
-    - run_nginx_sites_delete_unmanaged
+    - run_nginx_sites_delete_unmanaged | ansible.builtin.bool
   block:
 
     - name: "Config | Default | Build list of expected site config filenames"
@@ -504,7 +504,7 @@
 # never the linked target.
 - name: "Config | Default | Delete stale role-managed module configs"
   when:
-    - run_nginx_modules_disable_unmanaged
+    - run_nginx_modules_disable_unmanaged | ansible.builtin.bool
   block:
 
     - name: "Config | Default | Build the role-managed and currently-enabled module config filename sets"

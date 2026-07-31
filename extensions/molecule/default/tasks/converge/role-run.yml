@@ -46,9 +46,12 @@
                 listen [::]:80;
                 server_name foo_bar;
             }
-      run_nginx_snippets_manage: true
-      run_nginx_snippets_delete_unmanaged: true
-      run_nginx_sites_delete_unmanaged: true
+      # Strings on purpose (as delivered by "-e var=true" command line
+      # extra-vars): the role has to coerce boolean arguments, not
+      # truthiness-evaluate them.
+      run_nginx_snippets_manage: "true"
+      run_nginx_snippets_delete_unmanaged: "true"
+      run_nginx_sites_delete_unmanaged: "true"
       run_nginx_modules_enabled:
         - mail
         - http_perl
