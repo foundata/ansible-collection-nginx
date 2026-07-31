@@ -14,7 +14,7 @@
 - name: "Setup | Install | Default | Install or upgrade packages"
   ansible.builtin.package:
     name: "{{ __run_nginx_packages_install }}"
-    state: "{{ 'latest' if run_nginx_autoupgrade else 'present' }}"
+    state: "{{ 'latest' if (run_nginx_autoupgrade | ansible.builtin.bool) else 'present' }}"
   when:
     - __run_nginx_packages_install is ansible.builtin.defined
     - (__run_nginx_packages_install | ansible.builtin.length) > 0
@@ -54,7 +54,7 @@
 - name: "Setup | Install | Default | Install module-specific packages"
   ansible.builtin.package:
     name: "{{ __run_nginx_modules_map_resources[item]['packages'] }}"
-    state: "{{ 'latest' if run_nginx_autoupgrade else 'present' }}"
+    state: "{{ 'latest' if (run_nginx_autoupgrade | ansible.builtin.bool) else 'present' }}"
   when:
     - (__run_nginx_modules_map_resources[item]['packages'] | ansible.builtin.length) > 0
   loop: >-
