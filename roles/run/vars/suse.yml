@@ -138,3 +138,9 @@ __run_nginx_http_directives_overwrite:
     - "/etc/nginx/mime.types"
     - "/etc/nginx/conf.d/*.conf"
     - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/*.conf"
+
+# Log directory as shipped by the openSUSE/SLE nginx package (0750
+# nginx:nginx; the package's logrotate configuration rotates as this user).
+__run_nginx_log_dir_owner: "nginx"
+__run_nginx_log_dir_group: "nginx"
+__run_nginx_log_dir_mode: "u=rwx,g=rx,o=" # 0750

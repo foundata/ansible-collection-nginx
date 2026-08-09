@@ -1,0 +1,12 @@
+---
+
+bugfixes:
+  - >-
+    run: the log directory `/var/log/nginx` was forced to `0755` `root:root`
+    on every platform, diverging from each distribution's package defaults
+    (`0755 root:adm` on Debian/Ubuntu, `0711 root:root` on Enterprise
+    Linux/Fedora, `0750 nginx:nginx` on openSUSE). A package (re)install
+    reverting the directory made the role re-apply its value and restart
+    nginx through the notify chain. The role now asserts the platform's own
+    package default via the OS-specific vars files, removing the divergence;
+    unknown platforms fall back to `0711`.

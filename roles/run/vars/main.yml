@@ -231,10 +231,15 @@ __run_nginx_config_service_dropin_snippets_server_dir_mode: "{{ __run_nginx_conf
 
 
 # The platforms's default fallback logfiles
+# The log directory settings follow the platform's nginx package (see the
+# OS-specific vars files); a role that asserts a different value fights the
+# package on every upgrade and re-triggers the notify chain. Fallback for
+# platforms without a definition: 0711 like the Enterprise Linux and Fedora
+# packages (traversal for explicitly known paths, no listing for others).
 __run_nginx_log_dir_path: "/var/log/nginx"
 __run_nginx_log_dir_owner: "root"
 __run_nginx_log_dir_group: "root"
-__run_nginx_log_dir_mode: "u=rwx,g=rx,o=rx" # 0755
+__run_nginx_log_dir_mode: "u=rwx,g=x,o=x" # 0711
 
 __run_nginx_access_log_default_file_path: "{{ __run_nginx_log_dir_path }}/access.log"
 __run_nginx_access_log_default_file_owner: "{{ __run_nginx_log_dir_owner }}"

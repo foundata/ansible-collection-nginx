@@ -241,3 +241,9 @@ __run_nginx_modules_map_resources:
         target: "/usr/share/nginx/modules-available/mod-stream-js.conf"
     packages:
       - "libnginx-mod-stream-js"
+
+# Log directory as shipped by the Debian/Ubuntu nginx packages (0755
+# root:adm; the adm group is the distribution's log-reader group).
+__run_nginx_log_dir_owner: "root"
+__run_nginx_log_dir_group: "adm"
+__run_nginx_log_dir_mode: "u=rwx,g=rx,o=rx" # 0755

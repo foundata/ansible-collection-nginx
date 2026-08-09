@@ -59,3 +59,9 @@ __run_nginx_modules_map_resources:
         target: "/usr/share/nginx/modules/mod-stream.conf"
     packages:
       - "nginx-mod-stream"
+
+# Log directory as shipped by the Enterprise Linux and Fedora nginx packages
+# (0711 root:root: traversal for explicitly known paths, no listing).
+__run_nginx_log_dir_owner: "root"
+__run_nginx_log_dir_group: "root"
+__run_nginx_log_dir_mode: "u=rwx,g=x,o=x" # 0711
