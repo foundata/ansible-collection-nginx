@@ -1,6 +1,41 @@
 ---
 ancestor: null
 releases:
+  1.2.1:
+    changes:
+      bugfixes:
+        - '``run`` - the uninstall sweeps only treat files as role-owned when they
+          contain the ownership marker as an exact line. Previously the marker was
+          matched as a substring (and with regex semantics), so a foreign file merely
+          mentioning the marker text (e.g. quoted in a comment) was deleted.
+
+          '
+        - 'boolean role arguments are now coerced with ``ansible.builtin.bool`` in
+          every conditional. String values, as delivered by ``-e var=false`` command
+          line extra-vars, were evaluated by truthiness before, so ``"false"`` enabled
+          the gated behavior instead of disabling it.
+
+          '
+        - 'run: the log directory `/var/log/nginx` was forced to `0755` `root:root`
+          on every platform, diverging from each distribution''s package defaults
+          (`0755 root:adm` on Debian/Ubuntu, `0711 root:root` on Enterprise Linux/Fedora,
+          `0750 nginx:nginx` on openSUSE). A package (re)install reverting the directory
+          made the role re-apply its value and restart nginx through the notify chain.
+          The role now asserts the platform''s own package default via the OS-specific
+          vars files, removing the divergence; unknown platforms fall back to `0711`.'
+      release_summary: 'Release Date: 2026-08-13
+
+
+        Bugfix release.
+
+        '
+    fragments:
+      - 1.2.1-release.yaml
+      - bool-coercion.yml
+      - log-dir-package-alignment.yml
+      - marker-exact-line.yml
+      - style-fact-normalization.yml
+    release_date: '2026-08-13'
   1.2.0:
     changes:
       bugfixes:
