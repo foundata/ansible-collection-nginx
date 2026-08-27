@@ -4,11 +4,11 @@
 
 - name: "Config | Default | Ensure existence and permissions of directories and files"
   ansible.builtin.file:
-    path: "{{ item['path'] }}"
-    state: "{{ item['state'] }}"
-    owner: "{{ item['owner'] }}"
-    group: "{{ item['group'] }}"
-    mode: "{{ item['mode'] }}"
+    path: "{{ __run_nginx_path_item['path'] }}"
+    state: "{{ __run_nginx_path_item['state'] }}"
+    owner: "{{ __run_nginx_path_item['owner'] }}"
+    group: "{{ __run_nginx_path_item['group'] }}"
+    mode: "{{ __run_nginx_path_item['mode'] }}"
     access_time: "preserve"
     modification_time: "preserve"
   loop:
@@ -55,7 +55,8 @@
       mode: "{{ __run_nginx_error_log_default_file_mode }}"
 
   loop_control:
-    label: "{{ item['path'] }}"
+    loop_var: "__run_nginx_path_item"
+    label: "{{ __run_nginx_path_item['path'] }}"
   notify:
     - "run_nginx: validate configuration"
     - "run_nginx: restart nginx.service"
@@ -135,11 +136,11 @@
 
     - name: "Config | Default | Ensure existence and permissions of snippet directories"
       ansible.builtin.file:
-        path: "{{ item['path'] }}"
+        path: "{{ __run_nginx_snippet_dir_item['path'] }}"
         state: "directory"
-        owner: "{{ item['owner'] }}"
-        group: "{{ item['group'] }}"
-        mode: "{{ item['mode'] }}"
+        owner: "{{ __run_nginx_snippet_dir_item['owner'] }}"
+        group: "{{ __run_nginx_snippet_dir_item['group'] }}"
+        mode: "{{ __run_nginx_snippet_dir_item['mode'] }}"
         access_time: "preserve"
         modification_time: "preserve"
       loop:
@@ -163,7 +164,8 @@
           group: "{{ __run_nginx_config_service_dropin_snippets_server_dir_group }}"
           mode: "{{ __run_nginx_config_service_dropin_snippets_server_dir_mode }}"
       loop_control:
-        label: "{{ item['path'] }}"
+        loop_var: "__run_nginx_snippet_dir_item"
+        label: "{{ __run_nginx_snippet_dir_item['path'] }}"
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -183,14 +185,14 @@
 
     - name: "Config | Default | Create or update config snippet files (to provide common, centrally maintained config blocks to include)"
       ansible.builtin.template:
-        src: "{{ item }}"
+        src: "{{ __run_nginx_snippet_template_item }}"
         dest: >-
           {{ __run_nginx_config_service_dropin_snippets_dir_path }}/{{
-            item
+            __run_nginx_snippet_template_item
             | ansible.builtin.dirname
             | ansible.builtin.basename
           }}/{{
-            item
+            __run_nginx_snippet_template_item
             | ansible.builtin.basename
             | ansible.builtin.splitext
             | ansible.builtin.first
@@ -206,6 +208,8 @@
         - "templates/snippets/http/*.conf.j2"
         - "templates/snippets/location/*.conf.j2"
         - "templates/snippets/server/*.conf.j2"
+      loop_control:
+        loop_var: "__run_nginx_snippet_template_item"
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -246,7 +250,7 @@
 
     - name: "Config | Default | Remove stale, unmanaged site files (not in run_nginx_sites_config)"
       ansible.builtin.file:
-        path: "{{ item['path'] }}"
+        path: "{{ __run_nginx_stale_snippet_item['path'] }}"
         state: "absent"
       loop: >-
         {{
@@ -257,7 +261,8 @@
           | ansible.builtin.list
         }}
       loop_control:
-        label: "{{ item['path'] }}"
+        loop_var: "__run_nginx_stale_snippet_item"
+        label: "{{ __run_nginx_stale_snippet_item['path'] }}"
       when:
         - (__run_nginx_snippet_conf_files['files'] | ansible.builtin.length) > 0
       notify:
@@ -270,13 +275,14 @@
 - name: "Config | Default | Validate nginx site (config file) names"
   ansible.builtin.fail:
     msg: >-
-      Invalid site name "{{ item['name'] }}".
+      Invalid site name "{{ __run_nginx_site_name_item['name'] }}".
       Allowed characters are: a-z, A-Z, 0-9, dot (.), underscore (_), and hyphen (-).
   loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
   loop_control:
-    label: "{{ item['name'] }}"
+    loop_var: "__run_nginx_site_name_item"
+    label: "{{ __run_nginx_site_name_item['name'] }}"
   when:
-    - item['name'] is not ansible.builtin.match('^[a-zA-Z0-9._-]+$')
+    - __run_nginx_site_name_item['name'] is not ansible.builtin.match('^[a-zA-Z0-9._-]+$')
 
 
 # Each entry writes '<name>.conf' and manages the matching enable-symlink, so
@@ -321,11 +327,12 @@
     group: "{{ __run_nginx_config_service_dropin_sites_available_dir_group }}"
     mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
   vars:
-    __run_nginx_loop_file_name: "{{ item['name'] }}.conf"
+    __run_nginx_loop_file_name: "{{ __run_nginx_site_item['name'] }}.conf"
     # Pass (and/or adjust) variables needed for the template
-    tpl_content: "{{ item['content'] }}"
+    tpl_content: "{{ __run_nginx_site_item['content'] }}"
   loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
   loop_control:
+    loop_var: "__run_nginx_site_item"
     label: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}"
   when:
     - ((run_nginx_sites_config | ansible.builtin.default([])) | ansible.builtin.length) > 0
@@ -350,10 +357,11 @@
     mode: "{{ __run_nginx_loop_enabled | ansible.builtin.ternary(__run_nginx_config_service_dropin_file_mode, omit) }}"
     force: true
   vars:
-    __run_nginx_loop_file_name: "{{ item['name'] }}.conf"
-    __run_nginx_loop_enabled: "{{ item['enabled'] | ansible.builtin.default(false) }}"
+    __run_nginx_loop_file_name: "{{ __run_nginx_site_symlink_item['name'] }}.conf"
+    __run_nginx_loop_enabled: "{{ __run_nginx_site_symlink_item['enabled'] | ansible.builtin.default(false) }}"
   loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
   loop_control:
+    loop_var: "__run_nginx_site_symlink_item"
     label: >-
       {{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}
       -> {{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}
@@ -399,7 +407,7 @@
 
     - name: "Config | Default | Remove stale, unmanaged site config files (not in run_nginx_sites_config)"
       ansible.builtin.file:
-        path: "{{ item['path'] }}"
+        path: "{{ __run_nginx_stale_site_item['path'] }}"
         state: "absent"
       loop: >-
         {{
@@ -411,7 +419,8 @@
           | ansible.builtin.list
         }}
       loop_control:
-        label: "{{ item['path'] }}"
+        loop_var: "__run_nginx_stale_site_item"
+        label: "{{ __run_nginx_stale_site_item['path'] }}"
       when:
         - (__run_nginx_site_conf_files['files'] | ansible.builtin.length) > 0
       notify:
@@ -457,17 +466,18 @@
 
     - name: "Config | Default | Create symlinks for package-provided module config files"
       ansible.builtin.file:
-        src: "{{ item['target'] }}"
-        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
+        src: "{{ __run_nginx_module_conf_item['target'] }}"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_module_conf_item['name'] }}"
         state: "link"
         force: true
       when:
-        - item['type'] == 'symlink'
+        - __run_nginx_module_conf_item['type'] == 'symlink'
       loop: "{{ __run_nginx_module_conf_entries }}"
       loop_control:
+        loop_var: "__run_nginx_module_conf_item"
         label: >-
-          {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}
-          -> {{ item['target'] }}
+          {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_module_conf_item['name'] }}
+          -> {{ __run_nginx_module_conf_item['target'] }}
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -476,7 +486,7 @@
     - name: "Config | Default | Create load_module config files for modules without package-provided ones"
       ansible.builtin.template:
         src: "module-load.conf.j2"
-        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_load_module_item['name'] }}"
         owner: "{{ __run_nginx_config_service_dropin_file_owner }}"
         group: "{{ __run_nginx_config_service_dropin_file_group }}"
         mode: "{{ __run_nginx_config_service_dropin_file_mode }}"
@@ -484,15 +494,16 @@
         # Pass (and/or adjust) variables needed for the templates
         tpl_module_so_paths: >-
           {{
-            [item['target']]
-            if (item['target'] is ansible.builtin.string)
-            else item['target']
+            [__run_nginx_load_module_item['target']]
+            if (__run_nginx_load_module_item['target'] is ansible.builtin.string)
+            else __run_nginx_load_module_item['target']
           }}
       when:
-        - item['type'] == 'load_module'
+        - __run_nginx_load_module_item['type'] == 'load_module'
       loop: "{{ __run_nginx_module_conf_entries }}"
       loop_control:
-        label: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
+        loop_var: "__run_nginx_load_module_item"
+        label: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_load_module_item['name'] }}"
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"
@@ -548,7 +559,7 @@
 
     - name: "Config | Default | Remove stale role-managed module configs (in the role's map, not currently enabled)"
       ansible.builtin.file:
-        path: "{{ item['path'] }}"
+        path: "{{ __run_nginx_stale_module_conf_item['path'] }}"
         state: "absent"
       loop: >-
         {{
@@ -563,7 +574,8 @@
           | ansible.builtin.list
         }}
       loop_control:
-        label: "{{ item['path'] }}"
+        loop_var: "__run_nginx_stale_module_conf_item"
+        label: "{{ __run_nginx_stale_module_conf_item['path'] }}"
       notify:
         - "run_nginx: validate configuration"
         - "run_nginx: restart nginx.service"

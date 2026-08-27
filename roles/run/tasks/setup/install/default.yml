@@ -53,10 +53,10 @@
 
 - name: "Setup | Install | Default | Install module-specific packages"
   ansible.builtin.package:
-    name: "{{ __run_nginx_modules_map_resources[item]['packages'] }}"
+    name: "{{ __run_nginx_modules_map_resources[__run_nginx_module_item]['packages'] }}"
     state: "{{ 'latest' if (run_nginx_autoupgrade | ansible.builtin.bool) else 'present' }}"
   when:
-    - (__run_nginx_modules_map_resources[item]['packages'] | ansible.builtin.length) > 0
+    - (__run_nginx_modules_map_resources[__run_nginx_module_item]['packages'] | ansible.builtin.length) > 0
   loop: >-
     {{
       run_nginx_modules_enabled
@@ -64,39 +64,43 @@
       | ansible.builtin.select('ansible.builtin.in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
       | ansible.builtin.list
     }}
+  loop_control:
+    loop_var: "__run_nginx_module_item"
 
 
 - name: "Setup | Install | Default | Remove unwanted files and directories (e.g., to prevent conflicts or resolve incompatibilities)"
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ __run_nginx_removal_path_item }}"
     state: "absent"
   when:
     - __run_nginx_paths_removal is ansible.builtin.defined
     - (__run_nginx_paths_removal | ansible.builtin.length) > 0
   loop: "{{ __run_nginx_paths_removal }}"
+  loop_control:
+    loop_var: "__run_nginx_removal_path_item"
 
 
 - name: "Setup | Install | Default | Neutralize distribution config files (overwrite to survive package updates)"
   ansible.builtin.copy:
-    dest: "{{ item['key'] }}"
+    dest: "{{ __run_nginx_neutralize_item['key'] }}"
     content: |
-      {{ item['value'] }} Managed by Ansible (foundata.nginx.run)
-      {{ item['value'] }}
-      {{ item['value'] }} Content intentionally cleared. The original distribution file conflicted
-      {{ item['value'] }} with configuration managed by the foundata.nginx.run role.
-      {{ item['value'] }}
-      {{ item['value'] }} To restore the original file content, reinstall the owning package:
+      {{ __run_nginx_neutralize_item['value'] }} Managed by Ansible (foundata.nginx.run)
+      {{ __run_nginx_neutralize_item['value'] }}
+      {{ __run_nginx_neutralize_item['value'] }} Content intentionally cleared. The original distribution file conflicted
+      {{ __run_nginx_neutralize_item['value'] }} with configuration managed by the foundata.nginx.run role.
+      {{ __run_nginx_neutralize_item['value'] }}
+      {{ __run_nginx_neutralize_item['value'] }} To restore the original file content, reinstall the owning package:
       {% if (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian' %}
-      {{ item['value'] }}   dpkg -S '{{ item['key'] }}'  # find the package that owns this file
-      {{ item['value'] }}   apt-get install --reinstall <package>  # reinstall it to restore the original
+      {{ __run_nginx_neutralize_item['value'] }}   dpkg -S '{{ __run_nginx_neutralize_item['key'] }}'  # find the package that owns this file
+      {{ __run_nginx_neutralize_item['value'] }}   apt-get install --reinstall <package>  # reinstall it to restore the original
       {% elif (ansible_facts['os_family'] | ansible.builtin.lower) == 'suse' %}
-      {{ item['value'] }}   rpm -qf '{{ item['key'] }}'  # find the package that owns this file
-      {{ item['value'] }}   zypper install --force <package>  # reinstall it to restore the original
+      {{ __run_nginx_neutralize_item['value'] }}   rpm -qf '{{ __run_nginx_neutralize_item['key'] }}'  # find the package that owns this file
+      {{ __run_nginx_neutralize_item['value'] }}   zypper install --force <package>  # reinstall it to restore the original
       {% elif (ansible_facts['os_family'] | ansible.builtin.lower) == 'redhat' %}
-      {{ item['value'] }}   rpm -qf '{{ item['key'] }}'  # find the package that owns this file
-      {{ item['value'] }}   dnf reinstall <package>  # reinstall it to restore the original
+      {{ __run_nginx_neutralize_item['value'] }}   rpm -qf '{{ __run_nginx_neutralize_item['key'] }}'  # find the package that owns this file
+      {{ __run_nginx_neutralize_item['value'] }}   dnf reinstall <package>  # reinstall it to restore the original
       {% else %}
-      {{ item['value'] }}   Use your package manager to find the owning package and reinstall it.
+      {{ __run_nginx_neutralize_item['value'] }}   Use your package manager to find the owning package and reinstall it.
       {% endif %}
     owner: "root"
     group: "root"
@@ -106,4 +110,5 @@
     - (__run_nginx_paths_neutralize | ansible.builtin.length) > 0
   loop: "{{ __run_nginx_paths_neutralize | ansible.builtin.dict2items }}"
   loop_control:
-    label: "{{ item['key'] }}"
+    loop_var: "__run_nginx_neutralize_item"
+    label: "{{ __run_nginx_neutralize_item['key'] }}"

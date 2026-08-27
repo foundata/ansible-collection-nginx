@@ -122,10 +122,12 @@
   ansible.builtin.include_vars:
     file: "{{ __run_nginx_vars_file }}"
   vars:
-    __run_nginx_vars_file: "{{ role_path }}/vars/{{ item }}"
+    __run_nginx_vars_file: "{{ role_path }}/vars/{{ __run_nginx_varsfile_item }}"
   when:
     - __run_nginx_vars_file is ansible.builtin.file
   loop: "{{ __run_nginx_platform_filenames_most_specific_last }}"
+  loop_control:
+    loop_var: "__run_nginx_varsfile_item"
 
 
 ## nginx specific
@@ -133,7 +135,7 @@
 
 - name: "Init | Show effective merged variables (computed lazily in vars/main.yml)"
   ansible.builtin.debug:
-    msg: "{{ __run_nginx_effective_var }} = {{ lookup('ansible.builtin.vars', __run_nginx_effective_var) }}"
+    msg: "{{ __run_nginx_effective_var_item }} = {{ lookup('ansible.builtin.vars', __run_nginx_effective_var_item) }}"
     verbosity: 3
   loop:
     - "__run_nginx_effective_main_directives"
@@ -141,5 +143,5 @@
     - "__run_nginx_effective_http_directives"
     - "__run_nginx_effective_snippet_settings"
   loop_control:
-    loop_var: "__run_nginx_effective_var"
-    label: "{{ __run_nginx_effective_var }}"
+    loop_var: "__run_nginx_effective_var_item"
+    label: "{{ __run_nginx_effective_var_item }}"
