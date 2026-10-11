@@ -1,3 +1,7 @@
+{#
+SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+SPDX-License-Identifier: GPL-3.0-or-later
+#}
 {%- macro render_directive(directive, value, indent=4) -%}
 {%-   set rendered_directive_value = (
         'on' if value is ansible.builtin.boolean and value

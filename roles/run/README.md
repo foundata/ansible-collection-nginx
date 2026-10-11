@@ -1,5 +1,10 @@
 # Ansible role: `foundata.nginx.run`
 
+<!--
+SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 The `foundata.nginx.run` Ansible role (part of the `foundata.nginx` Ansible collection). It provides automated installation, configuration management, and hardening of [NGINX](https://nginx.org/) across major Linux distributions.
 
 

@@ -28,7 +28,7 @@
 #     chmod +x /tmp/gen-modules-map-resources.sh && \
 #     /tmp/gen-modules-map-resources.sh
 #
-# SPDX-FileCopyrightText: 2026, foundata GmbH (https://foundata.com)
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # --- BOILERPLATE START v1.1.0 ---
