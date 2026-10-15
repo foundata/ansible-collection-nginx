@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 ---
-
 - name: "Setup | Uninstall | Gather service facts"
   ansible.builtin.service_facts:
 
@@ -14,11 +13,11 @@
     name: "{{ __run_nginx_nginx_servicename }}"
     state: "stopped"
     enabled: false
-  failed_when: false # best-effort service stop
   when:
     - __run_nginx_nginx_servicename in ansible_facts['services']
 
-
+  failed_when:
+    - false # best-effort service stop
 - name: "Setup | Uninstall | Remove drop-in config files (snippets, sites)"
   ansible.builtin.file:
     path: "{{ __run_nginx_dropin_path_item }}"
@@ -60,7 +59,6 @@
   loop_control:
     loop_var: "__run_nginx_dropin_path_item"
 
-
 # Historical sites (renamed or de-listed since deployment) cannot be derived
 # from the current run_nginx_sites_config value. On Debian/SUSE the site
 # directories are kept, so sweep them for files carrying the role's ownership
@@ -79,7 +77,6 @@
     hidden: true
   register: __run_nginx_uninstall_find_result
 
-
 - name: "Setup | Uninstall | Determine marker-managed site config files"
   ansible.builtin.command:
     argv: >-
@@ -89,14 +86,14 @@
            | ansible.builtin.rejectattr('isdir')
            | ansible.builtin.map(attribute='path') | ansible.builtin.list)
       }}
-  register: __run_nginx_uninstall_owned_result
-  changed_when: false
-  failed_when:
-    - __run_nginx_uninstall_owned_result['rc'] not in [0, 1, 2]
   when:
     - (__run_nginx_uninstall_find_result['files'] | ansible.builtin.length) > 0
 
-
+  changed_when:
+    - false
+  failed_when:
+    - __run_nginx_uninstall_owned_result['rc'] not in [0, 1, 2]
+  register: __run_nginx_uninstall_owned_result
 - name: "Setup | Uninstall | Remove marker-managed site config files"
   ansible.builtin.file:
     path: "{{ __run_nginx_marked_site_item }}"
@@ -106,14 +103,12 @@
     loop_var: "__run_nginx_marked_site_item"
     label: "{{ __run_nginx_marked_site_item }}"
 
-
 - name: "Setup | Uninstall | Remove snippets directory (non-Debian platforms)"
   ansible.builtin.file:
     path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}"
     state: "absent"
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) != 'debian'
-
 
 - name: "Setup | Uninstall | Remove sites directories (non-Debian/SUSE platforms)"
   ansible.builtin.file:
@@ -127,12 +122,10 @@
   loop_control:
     loop_var: "__run_nginx_sites_dir_item"
 
-
 - name: "Setup | Uninstall | Check if platform's original nginx.conf backup exists"
   ansible.builtin.stat:
     path: "{{ __run_nginx_config_service_file_distbackup_path }}"
   register: __run_nginx_distbackup_stat
-
 
 - name: "Setup | Uninstall | Restore platform's original nginx.conf from backup"
   when:
@@ -158,14 +151,12 @@
         path: "{{ __run_nginx_config_service_file_distbackup_path }}"
         state: "absent"
 
-
 - name: "Setup | Uninstall | Remove module config directory (modules-enabled)"
   ansible.builtin.file:
     path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}"
     state: "absent"
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) != 'debian'
-
 
 # modules-enabled is kept on Debian (package directory): remove the
 # marker-carrying load_module files this role wrote and the symlinks for the
@@ -179,11 +170,10 @@
       - "*.conf"
     file_type: "file"
     hidden: true
-  register: __run_nginx_uninstall_modules_find_result
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
 
-
+  register: __run_nginx_uninstall_modules_find_result
 - name: "Setup | Uninstall | Determine marker-managed module config files (Debian)"
   ansible.builtin.command:
     argv: >-
@@ -192,27 +182,26 @@
         + (__run_nginx_uninstall_modules_find_result['files']
            | ansible.builtin.map(attribute='path') | ansible.builtin.list)
       }}
-  register: __run_nginx_uninstall_modules_owned_result
-  changed_when: false
-  failed_when:
-    - __run_nginx_uninstall_modules_owned_result['rc'] not in [0, 1, 2]
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
     - (__run_nginx_uninstall_modules_find_result['files'] | ansible.builtin.length) > 0
 
-
+  changed_when:
+    - false
+  failed_when:
+    - __run_nginx_uninstall_modules_owned_result['rc'] not in [0, 1, 2]
+  register: __run_nginx_uninstall_modules_owned_result
 - name: "Setup | Uninstall | Remove marker-managed module config files (Debian)"
   ansible.builtin.file:
     path: "{{ __run_nginx_marked_module_item }}"
     state: "absent"
+  when:
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
+
   loop: "{{ __run_nginx_uninstall_modules_owned_result['stdout_lines'] | ansible.builtin.default([]) }}"
   loop_control:
     loop_var: "__run_nginx_marked_module_item"
     label: "{{ __run_nginx_marked_module_item }}"
-  when:
-    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
-
-
 - name: "Setup | Uninstall | Remove role-managed module config symlinks (Debian)"
   ansible.builtin.file:
     path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_module_symlink_item }}"
@@ -233,14 +222,12 @@
     loop_var: "__run_nginx_module_symlink_item"
     label: "{{ __run_nginx_module_symlink_item }}"
 
-
 - name: "Setup | Uninstall | Remove /etc/nginx/modules symlink (non-Debian platforms)"
   ansible.builtin.file:
     path: "/etc/nginx/modules"
     state: "absent"
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) != 'debian'
-
 
 - name: "Setup | Uninstall | Remove packages"
   ansible.builtin.package:

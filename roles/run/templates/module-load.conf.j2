@@ -2,8 +2,8 @@
 SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 #}
-{{ __run_nginx_config_file_marker }}
-# {{ ansible_managed }}
+{{ tpl_config_file_marker }}
+# {{ tpl_managed }}
 
 {% for so_path in tpl_module_so_paths -%}
 load_module {{ so_path }};

@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 ---
-
 - name: "Config | Default | Ensure existence and permissions of directories and files"
   ansible.builtin.file:
     path: "{{ __run_nginx_path_item['path'] }}"
@@ -61,9 +60,8 @@
     loop_var: "__run_nginx_path_item"
     label: "{{ __run_nginx_path_item['path'] }}"
   notify:
-    - "run_nginx: validate configuration"
-    - "run_nginx: restart nginx.service"
-
+    - "run_nginx_validate_configuration"
+    - "run_nginx_restart_nginx"
 
 ## Backup original main config file (nginx.conf) if needed
 
@@ -72,15 +70,13 @@
     path: "{{ __run_nginx_config_service_file_distbackup_path }}"
   register: __run_nginx_distbackup_stat
 
-
 - name: "Config | Default | Check if current config is already Ansible managed"
   ansible.builtin.slurp:
     src: "{{ __run_nginx_config_service_file_path }}"
-  register: __run_nginx_config_current_content
   when:
     - not __run_nginx_distbackup_stat['stat']['exists']
 
-
+  register: __run_nginx_config_current_content
 - name: "Config | Default | Backup the platform's original nginx.conf"
   ansible.builtin.copy:
     src: "{{ __run_nginx_config_service_file_path }}"
@@ -93,7 +89,6 @@
     - not __run_nginx_distbackup_stat['stat']['exists']
     - "'Ansible managed' not in (__run_nginx_config_current_content['content'] | ansible.builtin.b64decode)"
 
-
 - name: "Config | Default | Add backup notice comment to the nginx.conf backup"
   ansible.builtin.lineinfile:
     path: "{{ __run_nginx_config_service_file_distbackup_path }}"
@@ -102,7 +97,6 @@
   when:
     - not __run_nginx_distbackup_stat['stat']['exists']
     - "'Ansible managed' not in (__run_nginx_config_current_content['content'] | ansible.builtin.b64decode)"
-
 
 ## Main config file (nginx.conf)
 
@@ -125,10 +119,11 @@
     tpl_http_config_baseline_manage: "{{ run_nginx_http_config_baseline_manage }}"
     tpl_http_config_baseline_directives: "{{ __run_nginx_effective_http_directives }}"
     tpl_http_config_defaultserver_manage: "{{ run_nginx_sites_defaultserver_manage }}"
+    tpl_ansible_facts: "{{ ansible_facts }}"
+    tpl_managed: "{{ ansible_managed }}"
   notify:
-    - "run_nginx: validate configuration"
-    - "run_nginx: restart nginx.service"
-
+    - "run_nginx_validate_configuration"
+    - "run_nginx_restart_nginx"
 
 ## Config snippets
 
@@ -136,7 +131,6 @@
   when:
     - run_nginx_snippets_manage | ansible.builtin.bool
   block:
-
     - name: "Config | Default | Ensure existence and permissions of snippet directories"
       ansible.builtin.file:
         path: "{{ __run_nginx_snippet_dir_item['path'] }}"
@@ -170,9 +164,8 @@
         loop_var: "__run_nginx_snippet_dir_item"
         label: "{{ __run_nginx_snippet_dir_item['path'] }}"
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: restart nginx.service"
-
+        - "run_nginx_validate_configuration"
+        - "run_nginx_restart_nginx"
 
     - name: "Config | Default | Deploy Diffie-Hellman (DH) parameters file for TLS baseline snippet"
       ansible.builtin.copy:
@@ -182,9 +175,8 @@
         group: "{{ __run_nginx_dhparam_ffdhe3072_group }}"
         mode: "{{ __run_nginx_dhparam_ffdhe3072_mode }}"
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: restart nginx.service"
-
+        - "run_nginx_validate_configuration"
+        - "run_nginx_restart_nginx"
 
     - name: "Config | Default | Create or update config snippet files (to provide common, centrally maintained config blocks to include)"
       ansible.builtin.template:
@@ -206,24 +198,23 @@
       vars:
         # Pass (and/or adjust) variables needed for the templates
         tpl_settings: "{{ __run_nginx_effective_snippet_settings }}"
+        tpl_managed: "{{ ansible_managed }}"
+      loop_control:
+        loop_var: "__run_nginx_snippet_template_item"
       with_fileglob:
         - "templates/snippets/*.conf.j2"
         - "templates/snippets/http/*.conf.j2"
         - "templates/snippets/location/*.conf.j2"
         - "templates/snippets/server/*.conf.j2"
-      loop_control:
-        loop_var: "__run_nginx_snippet_template_item"
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: restart nginx.service"
-
+        - "run_nginx_validate_configuration"
+        - "run_nginx_restart_nginx"
 
 - name: "Config | Default | Delete stale / unmanaged config snippets"
   when:
     - run_nginx_snippets_manage | ansible.builtin.bool
     - run_nginx_snippets_delete_unmanaged | ansible.builtin.bool
   block:
-
     - name: "Config | Default | Build list of expected config snippet filenames"
       ansible.builtin.set_fact:
         __run_nginx_expected_snippet_filenames: >-
@@ -250,11 +241,12 @@
         hidden: true
       register: __run_nginx_snippet_conf_files
 
-
     - name: "Config | Default | Remove stale, unmanaged site files (not in run_nginx_sites_config)"
       ansible.builtin.file:
         path: "{{ __run_nginx_stale_snippet_item['path'] }}"
         state: "absent"
+      when:
+        - (__run_nginx_snippet_conf_files['files'] | ansible.builtin.length) > 0
       loop: >-
         {{
           __run_nginx_snippet_conf_files['files']
@@ -266,12 +258,9 @@
       loop_control:
         loop_var: "__run_nginx_stale_snippet_item"
         label: "{{ __run_nginx_stale_snippet_item['path'] }}"
-      when:
-        - (__run_nginx_snippet_conf_files['files'] | ansible.builtin.length) > 0
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: reload nginx.service"
-
+        - "run_nginx_validate_configuration"
+        - "run_nginx_reload_nginx"
 
 ## Sites
 
@@ -280,17 +269,16 @@
     msg: >-
       Invalid site name "{{ __run_nginx_site_name_item['name'] }}".
       Allowed characters are: a-z, A-Z, 0-9, dot (.), underscore (_), and hyphen (-).
+  when:
+    - __run_nginx_site_name_item['name'] is not ansible.builtin.match('^[a-zA-Z0-9._-]+$')
+
+  # Each entry writes '<name>.conf' and manages the matching enable-symlink, so
+  # entries sharing a name rewrite the same file with different content on every
+  # run: the result is order-dependent and never idempotent.
   loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
   loop_control:
     loop_var: "__run_nginx_site_name_item"
     label: "{{ __run_nginx_site_name_item['name'] }}"
-  when:
-    - __run_nginx_site_name_item['name'] is not ansible.builtin.match('^[a-zA-Z0-9._-]+$')
-
-
-# Each entry writes '<name>.conf' and manages the matching enable-symlink, so
-# entries sharing a name rewrite the same file with different content on every
-# run: the result is order-dependent and never idempotent.
 - name: "Config | Default | Validate nginx site (config file) names are unique"
   ansible.builtin.fail:
     msg: >-
@@ -318,9 +306,7 @@
       {%- endfor -%}
       {{ _dupes }}
   when:
-    - (__run_nginx_site_names | ansible.builtin.length)
-      != (__run_nginx_site_names | ansible.builtin.unique | ansible.builtin.length)
-
+    - (__run_nginx_site_names | ansible.builtin.length) != (__run_nginx_site_names | ansible.builtin.unique | ansible.builtin.length)
 
 - name: "Config | Default | Create or update site config files"
   ansible.builtin.template:
@@ -333,53 +319,52 @@
     __run_nginx_loop_file_name: "{{ __run_nginx_site_item['name'] }}.conf"
     # Pass (and/or adjust) variables needed for the template
     tpl_content: "{{ __run_nginx_site_item['content'] }}"
+    tpl_config_file_marker: "{{ __run_nginx_config_file_marker }}"
+    tpl_managed: "{{ ansible_managed }}"
+  when:
+    - ((run_nginx_sites_config | ansible.builtin.default([])) | ansible.builtin.length) > 0
   loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
   loop_control:
     loop_var: "__run_nginx_site_item"
     label: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}"
-  when:
-    - ((run_nginx_sites_config | ansible.builtin.default([])) | ansible.builtin.length) > 0
   notify:
-    - "run_nginx: validate configuration"
-    - "run_nginx: reload nginx.service"
-
+    - "run_nginx_validate_configuration"
+    - "run_nginx_reload_nginx"
 
 - name: "Config | Default | Enable/disable site symlinks"
   ansible.builtin.file:
     # src/owner/group/mode must be omitted for state "absent": passing src
     # alongside state "absent" is a module error, so a disabled (or
     # enabled-by-default-false) site entry would otherwise fail the run.
-    src: >-
-      {{ __run_nginx_loop_enabled | ansible.builtin.ternary(
-           __run_nginx_config_service_dropin_sites_available_dir_path
-           ~ '/' ~ __run_nginx_loop_file_name, omit) }}
-    dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}"
     state: "{{ __run_nginx_loop_enabled | ansible.builtin.ternary('link', 'absent') }}"
     owner: "{{ __run_nginx_loop_enabled | ansible.builtin.ternary(__run_nginx_config_service_dropin_file_owner, omit) }}"
     group: "{{ __run_nginx_loop_enabled | ansible.builtin.ternary(__run_nginx_config_service_dropin_file_group, omit) }}"
     mode: "{{ __run_nginx_loop_enabled | ansible.builtin.ternary(__run_nginx_config_service_dropin_file_mode, omit) }}"
+    dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}"
     force: true
+    src: >-
+      {{ __run_nginx_loop_enabled | ansible.builtin.ternary(
+           __run_nginx_config_service_dropin_sites_available_dir_path
+           ~ '/' ~ __run_nginx_loop_file_name, omit) }}
   vars:
     __run_nginx_loop_file_name: "{{ __run_nginx_site_symlink_item['name'] }}.conf"
     __run_nginx_loop_enabled: "{{ __run_nginx_site_symlink_item['enabled'] | ansible.builtin.default(false) }}"
+  when:
+    - (run_nginx_sites_config | ansible.builtin.default([])) | ansible.builtin.length > 0
   loop: "{{ run_nginx_sites_config | ansible.builtin.default([]) }}"
   loop_control:
     loop_var: "__run_nginx_site_symlink_item"
     label: >-
       {{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}
       -> {{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}
-  when:
-    - (run_nginx_sites_config | ansible.builtin.default([])) | ansible.builtin.length > 0
   notify:
-    - "run_nginx: validate configuration"
-    - "run_nginx: reload nginx.service"
-
+    - "run_nginx_validate_configuration"
+    - "run_nginx_reload_nginx"
 
 - name: "Config | Default | Delete stale / unmanaged site configs"
   when:
     - run_nginx_sites_delete_unmanaged | ansible.builtin.bool
   block:
-
     - name: "Config | Default | Build list of expected site config filenames"
       ansible.builtin.set_fact:
         __run_nginx_expected_site_filenames: >-
@@ -407,11 +392,12 @@
         hidden: true
       register: __run_nginx_site_conf_files
 
-
     - name: "Config | Default | Remove stale, unmanaged site config files (not in run_nginx_sites_config)"
       ansible.builtin.file:
         path: "{{ __run_nginx_stale_site_item['path'] }}"
         state: "absent"
+      when:
+        - (__run_nginx_site_conf_files['files'] | ansible.builtin.length) > 0
       loop: >-
         {{
           __run_nginx_site_conf_files['files']
@@ -424,12 +410,9 @@
       loop_control:
         loop_var: "__run_nginx_stale_site_item"
         label: "{{ __run_nginx_stale_site_item['path'] }}"
-      when:
-        - (__run_nginx_site_conf_files['files'] | ansible.builtin.length) > 0
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: reload nginx.service"
-
+        - "run_nginx_validate_configuration"
+        - "run_nginx_reload_nginx"
 
 ### Modules
 #
@@ -443,15 +426,13 @@
   when:
     - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
   block:
-
     - name: "Config | Default | Ensure /etc/nginx/modules symlink exists (for relative load_module paths)"
       ansible.builtin.file:
-        src: "{{ __run_nginx_module_so_lib_dir_path }}"
-        dest: "/etc/nginx/modules"
         state: "link"
+        dest: "/etc/nginx/modules"
         force: true
 
-
+        src: "{{ __run_nginx_module_so_lib_dir_path }}"
     - name: "Config | Default | Build flat list of module conf_files entries for all enabled modules"
       ansible.builtin.set_fact:
         __run_nginx_module_conf_entries: >-
@@ -469,10 +450,10 @@
 
     - name: "Config | Default | Create symlinks for package-provided module config files"
       ansible.builtin.file:
-        src: "{{ __run_nginx_module_conf_item['target'] }}"
-        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_module_conf_item['name'] }}"
         state: "link"
+        dest: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_module_conf_item['name'] }}"
         force: true
+        src: "{{ __run_nginx_module_conf_item['target'] }}"
       when:
         - __run_nginx_module_conf_item['type'] == 'symlink'
       loop: "{{ __run_nginx_module_conf_entries }}"
@@ -482,9 +463,8 @@
           {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_module_conf_item['name'] }}
           -> {{ __run_nginx_module_conf_item['target'] }}
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: restart nginx.service"
-
+        - "run_nginx_validate_configuration"
+        - "run_nginx_restart_nginx"
 
     - name: "Config | Default | Create load_module config files for modules without package-provided ones"
       ansible.builtin.template:
@@ -501,6 +481,8 @@
             if (__run_nginx_load_module_item['target'] is ansible.builtin.string)
             else __run_nginx_load_module_item['target']
           }}
+        tpl_config_file_marker: "{{ __run_nginx_config_file_marker }}"
+        tpl_managed: "{{ ansible_managed }}"
       when:
         - __run_nginx_load_module_item['type'] == 'load_module'
       loop: "{{ __run_nginx_module_conf_entries }}"
@@ -508,9 +490,8 @@
         loop_var: "__run_nginx_load_module_item"
         label: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_load_module_item['name'] }}"
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: restart nginx.service"
-
+        - "run_nginx_validate_configuration"
+        - "run_nginx_restart_nginx"
 
 # Only files whose name is part of the role's module map are ever removed, so
 # distribution-provided files in modules-enabled/ (with names the role does not
@@ -520,7 +501,6 @@
   when:
     - run_nginx_modules_disable_unmanaged | ansible.builtin.bool
   block:
-
     - name: "Config | Default | Build the role-managed and currently-enabled module config filename sets"
       ansible.builtin.set_fact:
         # Every module config filename the role could deploy (across all modules
@@ -559,7 +539,6 @@
         hidden: true
       register: __run_nginx_module_conf_files
 
-
     - name: "Config | Default | Remove stale role-managed module configs (in the role's map, not currently enabled)"
       ansible.builtin.file:
         path: "{{ __run_nginx_stale_module_conf_item['path'] }}"
@@ -580,5 +559,5 @@
         loop_var: "__run_nginx_stale_module_conf_item"
         label: "{{ __run_nginx_stale_module_conf_item['path'] }}"
       notify:
-        - "run_nginx: validate configuration"
-        - "run_nginx: restart nginx.service"
+        - "run_nginx_validate_configuration"
+        - "run_nginx_restart_nginx"

@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 #}
-# {{ ansible_managed }}
+# {{ tpl_managed }}
 {%  set settings = tpl_settings['hsts'] | ansible.builtin.default({}) %}
 {%  set max_age = settings['max_age'] | ansible.builtin.default(31536000) %}
 {%  set include_subdomains = settings['include_subdomains'] | ansible.builtin.default(true) %}

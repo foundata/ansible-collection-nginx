@@ -29,7 +29,6 @@ __run_nginx_used_facts:
     - "distribution_version"
     - "os_family"
 
-
 # List of platforms this role supports and was designed for.
 #
 # A warning will be issued if the list contains values and the role is executed
@@ -70,12 +69,10 @@ __run_nginx_supported_platforms:
       - "24.04"
       - "26.04"
 
-
 # List of package names to be installed when run_nginx_state is
 # set to "present".
 __run_nginx_packages_install:
   - "nginx"
-
 
 # List of package names to be uninstalled when run_nginx_state is
 # set to "absent". This variable is useful when __run_nginx_packages_install
@@ -99,13 +96,11 @@ __run_nginx_packages_uninstall: >-
 # (e.g., to prevent conflicts or resolve incompatibilities).
 __run_nginx_packages_removal: []
 
-
 # List of paths of files and directories to be removed unconditionally after
 # installation. This is useful for removing default configuration resources
 # that would otherwise create confusion or conflict with custom configurations
 # managed by this role.
 __run_nginx_paths_removal: []
-
 
 # Dictionary of files to be overwritten with a managed comment instead of being
 # deleted. Keys are file paths; values are the single-line comment characters to
@@ -114,7 +109,6 @@ __run_nginx_paths_removal: []
 # configuration, while modified files are preserved. For example, RPM with
 # %config(noreplace) restores missing files but preserves modified ones.
 __run_nginx_paths_neutralize: {}
-
 
 # Mapping of NGINX dynamic module names to the packages and configuration
 # resources needed to enable them. Highly platform-specific; overwritten by
@@ -156,7 +150,6 @@ __run_nginx_paths_neutralize: {}
 #   shipped by the base nginx package and no extra install is needed.
 __run_nginx_modules_map_resources: {}
 
-
 # Configuration file paths, ownership, and permissions. These variables define
 # the different locations of configuration files, include directories, and
 # Ansible-managed files, ensuring consistent file handling across distributions.
@@ -193,7 +186,6 @@ __run_nginx_config_service_dropin_file_mode: "{{ __run_nginx_config_service_file
 __run_nginx_config_file_marker: "# Managed by Ansible (foundata.nginx.run)"
 
 __run_nginx_grep_exec_path: "/usr/bin/grep"
-
 
 __run_nginx_config_service_dropin_sites_available_dir_path: "/etc/nginx/sites-available"
 __run_nginx_config_service_dropin_sites_available_dir_owner: "{{ __run_nginx_config_service_dropin_dir_owner }}"
@@ -235,7 +227,6 @@ __run_nginx_config_service_dropin_snippets_server_dir_owner: "{{ __run_nginx_con
 __run_nginx_config_service_dropin_snippets_server_dir_group: "{{ __run_nginx_config_service_dropin_dir_group }}"
 __run_nginx_config_service_dropin_snippets_server_dir_mode: "{{ __run_nginx_config_service_dropin_dir_mode }}"
 
-
 # The platforms's default fallback logfiles
 # The log directory settings follow the platform's nginx package (see the
 # OS-specific vars files); a role that asserts a different value fights the
@@ -272,12 +263,10 @@ __run_nginx_main_directives_defaults:
   include:
     - "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/*.conf"
 
-
 # Platform-specific overrides for NGINX main config. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
 __run_nginx_main_directives_overwrite: {}
-
 
 # Effective NGINX main config directives: the defaults deep-merged with the
 # platform-specific overrides.
@@ -295,12 +284,10 @@ __run_nginx_effective_main_directives: >-
 __run_nginx_events_directives_defaults:
   worker_connections: 1024
 
-
 # Platform-specific overrides for NGINX events{} config. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
 __run_nginx_events_directives_overwrite: {}
-
 
 # Effective NGINX events{} directives: the defaults deep-merged with the
 # platform-specific overrides.
@@ -336,7 +323,7 @@ __run_nginx_http_directives_defaults:
     # for more information.
     - "/etc/nginx/conf.d/*.conf"
     - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/*.conf"
-  default_type: 'application/octet-stream'
+  default_type: "application/octet-stream"
   # gzip compression (cf. https://nginx.org/en/docs/http/ngx_http_gzip_module.html)
   gzip: true
   # Compression level 5 is a good trade-off between compression ratio and CPU
@@ -370,12 +357,10 @@ __run_nginx_http_directives_defaults:
   # documents or response headers
   server_tokens: false
 
-
 # Platform-specific overrides for NGINX http{} config. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
 __run_nginx_http_directives_overwrite: {}
-
 
 # Effective NGINX http{} directives: the defaults deep-merged with the
 # platform-specific overrides.
@@ -423,12 +408,10 @@ __run_nginx_snippet_settings_defaults:
       # - "1.0.0.1"
     resolver_timeout: "3s"
 
-
 # Platform-specific overrides for service settings. Overridden by platform
 # vars files (e.g., vars/debian.yml). Gets merged on top of the defaults
 # before user settings are applied.
 __run_nginx_snippet_settings_overwrite: {}
-
 
 # Effective snippet settings: defaults, then platform overrides, then the
 # user-supplied run_nginx_snippet_settings (highest priority), deep-merged.
@@ -446,7 +429,6 @@ __run_nginx_effective_snippet_settings: >-
 # Daemon service name and paths of executables for management and validation.
 __run_nginx_nginx_servicename: "nginx.service"
 __run_nginx_server_exec_path: "/usr/sbin/nginx"
-
 
 ### Override defaults of dependencies used by this role (if any).
 

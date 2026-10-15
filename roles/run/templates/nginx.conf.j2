@@ -6,7 +6,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 -#}
 {%- from '_nginx_macros.j2' import render_directives -%}
 
-# {{ ansible_managed }}
+# {{ tpl_managed }}
 
 {# <context>_config #}
 {%- set main_config_block = tpl_main_config_block | ansible.builtin.default('') -%}
@@ -60,7 +60,7 @@ http {
             this role still shipping nginx 1.18.x, so managing a dummy cert
             globally is not worth it (patches welcome though).
         -#}
-        {%  if not ((ansible_facts['distribution'] | ansible.builtin.lower) == 'ubuntu' and ansible_facts['distribution_major_version'] == '22') %}
+        {%  if not ((tpl_ansible_facts['distribution'] | ansible.builtin.lower) == 'ubuntu' and tpl_ansible_facts['distribution_major_version'] == '22') %}
         {{ '\n' }}
         listen 443 ssl default_server;
         listen [::]:443 ssl default_server;
