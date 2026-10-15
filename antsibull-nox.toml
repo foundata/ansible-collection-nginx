@@ -30,6 +30,8 @@ license_check_extra_ignore_paths = [
   "changelogs/changelog.yaml",
   "changelogs/fragments/*",
   "changelogs/fragments/archive/*",
+  # PEM data uses REUSE.toml annotations, which reuse lint checks above.
+  "roles/run/files/dhparam_ffdhe3072.pem",
 ]
 
 [sessions.extra_checks]
