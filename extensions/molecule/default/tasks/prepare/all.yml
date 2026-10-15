@@ -1,3 +1,4 @@
+---
 # Tasks for the Molecule prepare stage: Add resources needed for later steps
 # (e.g. verify) on all driver-created instances.
 #
@@ -18,7 +19,6 @@
       __testing_examplecom_wwwroot: "/var/www/example.com"
       __testing_examplecom_cert: "/etc/pki/tls/private/example.com.pem"
       __testing_examplecom_key: "/etc/pki/tls/private/example.com.key"
-
 
 - name: "Molecule | Prepare | Set __testing_* variables as facts from __testing_state"
   ansible.builtin.set_fact:
@@ -48,7 +48,6 @@
       group: "root"
       mode: "0755"
 
-
 - name: "Molecule | Prepare | Create demo index file for example.com server/vHost"
   ansible.builtin.copy:
     dest: "{{ __testing_examplecom_wwwroot }}/index.html"
@@ -59,18 +58,14 @@
       </html>
     owner: "root"
     group: "root"
-    mode: "0644"
-
-
+    mode: "u=rw,g=r,o=r" # 0644
 - name: "Molecule | Prepare | Create static test file for cache-static snippet testing"
   ansible.builtin.copy:
     dest: "{{ __testing_examplecom_wwwroot }}/test.css"
     content: "/* test */"
     owner: "root"
     group: "root"
-    mode: "0644"
-
-
+    mode: "u=rw,g=r,o=r" # 0644
 - name: "Molecule | Prepare | Install packages needed to create certificates and for later tests"
   ansible.builtin.package:
     name:
@@ -79,7 +74,6 @@
     state: "present"
     # work-around for conflicts with curl-minimal on Red Hat platforms
     allowerasing: "{{ true if ((ansible_facts['os_family'] | ansible.builtin.lower) == 'redhat') else omit }}"
-
 
 - name: "Molecule | Prepare | Generate self-signed dummy certificate and key"
   ansible.builtin.shell: |
@@ -107,14 +101,13 @@
       -addext 'keyUsage=critical,digitalSignature' \
       -addext 'extendedKeyUsage=serverAuth'
   args:
-    executable: "/bin/bash"
     creates:
       - "{{ item['cert'] }}"
       - "{{ item['key'] }}"
+    executable: "/bin/bash"
   loop:
     - cert: "{{ __testing_examplecom_cert }}"
       key: "{{ __testing_examplecom_key }}"
-
 
 # Regression fixture: a preinstalled module whose enable priority is not 50-.
 # Ubuntu 22.04's nginx metapackage drags in libnginx-mod-stream-geoip2, whose

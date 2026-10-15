@@ -1,3 +1,4 @@
+---
 # Check collection role "run" outcomes.
 #
 # SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
@@ -8,7 +9,6 @@
     name: "foundata.nginx.run"
     tasks_from: "init"
     public: true
-
 
 ## Preparation
 
@@ -31,7 +31,6 @@
     path: "{{ __run_nginx_config_service_file_path }}"
   register: __testing_config_file
 
-
 - name: "Molecule | Verify | Assert NGINX main configuration file exists"
   ansible.builtin.assert:
     that:
@@ -51,7 +50,6 @@
     path: "{{ __run_nginx_config_service_file_distbackup_path }}"
   register: __testing_distbackup_file
 
-
 - name: "Molecule | Verify | Assert NGINX distribution backup configuration file exists"
   ansible.builtin.assert:
     that:
@@ -68,7 +66,6 @@
   ansible.builtin.slurp:
     src: "{{ __run_nginx_config_service_file_distbackup_path }}"
   register: __testing_distbackup_content
-
 
 - name: "Molecule | Verify | Assert NGINX distribution backup contains backup notice comment"
   ansible.builtin.assert:
@@ -95,7 +92,6 @@
     var: ansible_facts['services']
     verbosity: 3
 
-
 - name: "Molecule | Verify | Assert NGINX service is running"
   ansible.builtin.assert:
     that:
@@ -104,19 +100,16 @@
     fail_msg: "NGINX service '{{ __run_nginx_nginx_servicename }}' is not running"
     success_msg: "NGINX service '{{ __run_nginx_nginx_servicename }}' is running"
 
-
 ## Unmanaged snippet cleanup (Debian)
 
 - name: "Molecule | Verify | Assert pre-existing unmanaged Debian snippets are removed"
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
   block:
-
     - name: "Molecule | Verify | Check if unmanaged Debian snakeoil snippet still exists"
       ansible.builtin.stat:
         path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/snakeoil.conf"
       register: __testing_snippet_snakeoil
-
 
     - name: "Molecule | Verify | Assert unmanaged Debian snakeoil snippet has been removed"
       ansible.builtin.assert:
@@ -134,7 +127,6 @@
       ansible.builtin.stat:
         path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/fastcgi-php.conf"
       register: __testing_snippet_fastcgi
-
 
     - name: "Molecule | Verify | Assert unmanaged Debian fastcgi-php snippet has been removed"
       ansible.builtin.assert:
@@ -154,14 +146,12 @@
   when:
     - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
   block:
-
     - name: "Molecule | Verify | Get NGINX full configuration dump"
       ansible.builtin.command:
         cmd: "nginx -T"
       changed_when:
         - false
       register: __testing_nginx_config_dump
-
 
     - name: "Molecule | Verify | Assert load_module directive present for each enabled module"
       ansible.builtin.assert:
@@ -181,7 +171,7 @@
         {{
           run_nginx_modules_enabled
           | ansible.builtin.default([])
-          | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+          | ansible.builtin.select('ansible.builtin.in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
           | ansible.builtin.list
         }}
 
@@ -190,15 +180,14 @@
   when:
     - (run_nginx_modules_enabled | ansible.builtin.default([]) | ansible.builtin.length) > 0
   block:
-
     - name: "Molecule | Verify | Build flat list of expected module conf_files entries"
       ansible.builtin.set_fact:
         __testing_module_conf_entries: >-
           {{
             run_nginx_modules_enabled
             | ansible.builtin.default([])
-            | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
-            | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
+            | ansible.builtin.select('ansible.builtin.in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+            | ansible.builtin.map('ansible.builtin.extract', __run_nginx_modules_map_resources)
             | ansible.builtin.map(attribute='conf_files')
             | ansible.builtin.flatten
             | ansible.builtin.unique(attribute='name')
@@ -209,14 +198,13 @@
     - name: "Molecule | Verify | Check module config files in modules-enabled"
       ansible.builtin.stat:
         path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item['name'] }}"
-      register: __testing_module_enabled_files
       when:
         - (__testing_module_conf_entries | ansible.builtin.length) > 0
       loop: "{{ __testing_module_conf_entries }}"
       loop_control:
         label: "{{ item['name'] }}"
 
-
+      register: __testing_module_enabled_files
     - name: "Molecule | Verify | Assert module config files exist in modules-enabled with correct type"
       ansible.builtin.assert:
         that:
@@ -240,7 +228,6 @@
       loop_control:
         label: "{{ item['item']['name'] | ansible.builtin.default('n/a') }}"
 
-
 ## HTTP connectivity: example.com
 
 - name: "Molecule | Verify | Connect to example.com on HTTP port 80"
@@ -250,7 +237,6 @@
       Host: "example.com"
     return_content: true
   register: __testing_http_example_result
-
 
 - name: "Molecule | Verify | Assert example.com HTTP response contains expected content and status"
   ansible.builtin.assert:
@@ -294,7 +280,6 @@
     - __testing_https_example_status is ansible.builtin.failed
   register: __testing_https_example_status
 
-
 - name: "Molecule | Verify | Connect to example.com on HTTPS port 443 (body)"
   # The command module is used intentionally:
   # see the status check task above for the reasoning.
@@ -313,7 +298,6 @@
   failed_when:
     - __testing_https_example_body is ansible.builtin.failed
   register: __testing_https_example_body
-
 
 - name: "Molecule | Verify | Assert example.com HTTPS response contains expected content and status"
   ansible.builtin.assert:
@@ -355,7 +339,6 @@
     - __testing_catchall_http_result['rc'] != 52 # 52 = empty reply from server (expected for NGINX 444)
   register: __testing_catchall_http_result
 
-
 - name: "Molecule | Verify | Assert HTTP catch-all returns empty response (NGINX 444)"
   ansible.builtin.assert:
     that:
@@ -395,7 +378,6 @@
     - __testing_catchall_https_result['rc'] != 35 # 35 = SSL connect error (expected for ssl_reject_handshake)
   register: __testing_catchall_https_result
 
-
 - name: "Molecule | Verify | Assert HTTPS catch-all returns empty response (NGINX ssl_reject_handshake)"
   ansible.builtin.assert:
     that:
@@ -411,7 +393,6 @@
     # NGINX is too old there for the catchall TLS/SSL, cf. j2 template file
     - not ((ansible_facts['distribution'] | ansible.builtin.lower) == 'ubuntu' and ansible_facts['distribution_major_version'] == '22')
 
-
 ## Response headers: NGINX version information
 
 - name: "Molecule | Verify | Connect to example.com and inspect response headers"
@@ -421,7 +402,6 @@
       Host: "example.com"
     return_content: false
   register: __testing_headers_result
-
 
 - name: "Molecule | Verify | Assert response headers do not contain NGINX version information"
   ansible.builtin.assert:
@@ -439,7 +419,6 @@
 - name: "Molecule | Verify | Check managed snippet files exist"
   ansible.builtin.stat:
     path: "{{ __run_nginx_config_service_dropin_snippets_dir_path }}/{{ item }}"
-  register: __testing_snippet_files
   loop:
     - "http/tls-baseline.conf"
     - "server/headers-security.conf"
@@ -447,7 +426,7 @@
     - "location/cache-static.conf"
     - "location/php-fpm.conf"
 
-
+  register: __testing_snippet_files
 - name: "Molecule | Verify | Assert all managed snippet files exist"
   ansible.builtin.assert:
     that:
@@ -461,14 +440,12 @@
   loop_control:
     label: "{{ item['item'] }}"
 
-
 ## DH parameters file deployed (RFC 7919 ffdhe3072)
 
 - name: "Molecule | Verify | Check DH parameters file exists at configured path"
   ansible.builtin.stat:
     path: "{{ __run_nginx_effective_snippet_settings['tls-baseline']['dhparam_path'] }}"
   register: __testing_dhparam_file
-
 
 - name: "Molecule | Verify | Assert DH parameters file exists and has correct permissions"
   ansible.builtin.assert:
@@ -493,7 +470,6 @@
   changed_when:
     - false
   register: __testing_nginx_full_config
-
 
 - name: "Molecule | Verify | Assert nginx -T succeeded (configuration is valid)"
   ansible.builtin.assert:
@@ -531,7 +507,6 @@
   changed_when:
     - false
   register: __testing_openssl_version
-
 
 - name: "Molecule | Verify | Parse OpenSSL version number"
   ansible.builtin.set_fact:
@@ -601,7 +576,6 @@
     - false
   register: __testing_https_headers
 
-
 - name: "Molecule | Verify | Assert security response headers are present"
   ansible.builtin.assert:
     that:
@@ -645,7 +619,6 @@
     - false
   register: __testing_static_headers
 
-
 - name: "Molecule | Verify | Assert Cache-Control header is present for static assets"
   ansible.builtin.assert:
     that:
@@ -663,36 +636,33 @@
 # without symlink-type modules (RedHat, SUSE) yield an empty managed set and remove
 # nothing.
 - name: "Molecule | Verify | Validate stale module cleanup on emptied list (Debian)"
-  when:
-    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
   vars:
     __testing_managed_module_filenames: >-
       {{
         (run_nginx_modules_enabled | ansible.builtin.default([]))
-        | ansible.builtin.select('in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
-        | ansible.builtin.map('extract', __run_nginx_modules_map_resources)
+        | ansible.builtin.select('ansible.builtin.in', __run_nginx_modules_map_resources.keys() | ansible.builtin.list)
+        | ansible.builtin.map('ansible.builtin.extract', __run_nginx_modules_map_resources)
         | ansible.builtin.map(attribute='conf_files')
         | ansible.builtin.flatten
         | ansible.builtin.map(attribute='name')
         | ansible.builtin.unique
         | ansible.builtin.list
       }}
+  when:
+    - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
   block:
-
     - name: "Molecule | Verify | Stat role-managed module configs before emptying the list"
       ansible.builtin.stat:
         path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}"
-      register: __testing_module_before
       loop: "{{ __testing_managed_module_filenames }}"
 
-
+      register: __testing_module_before
     - name: "Molecule | Verify | Assert at least one role-managed module config exists before"
       ansible.builtin.assert:
         that:
           - (__testing_module_before['results'] | ansible.builtin.selectattr('stat.exists') | ansible.builtin.list | ansible.builtin.length) > 0
         fail_msg: "No role-managed module configs found before test; setup invalid (managed={{ __testing_managed_module_filenames }})."
         success_msg: "Role-managed module configs exist before emptying the list."
-
 
     - name: "Molecule | Verify | Re-run role with an empty module list (disable_unmanaged)"
       ansible.builtin.include_role:
@@ -701,14 +671,12 @@
         run_nginx_modules_enabled: []
         run_nginx_modules_disable_unmanaged: true
 
-
     - name: "Molecule | Verify | Stat role-managed module configs after emptying the list"
       ansible.builtin.stat:
         path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}"
-      register: __testing_module_after
       loop: "{{ __testing_managed_module_filenames }}"
 
-
+      register: __testing_module_after
     - name: "Molecule | Verify | Assert role-managed module configs were removed"
       ansible.builtin.assert:
         that:
@@ -716,12 +684,11 @@
         fail_msg: "Stale module configs remained after emptying run_nginx_modules_enabled."
         success_msg: "Emptying run_nginx_modules_enabled removed the role-managed module configs."
 
-
 ## Module cleanup: preinstalled module with a non-default enable priority
 #
 # The prepare stage preinstalls libnginx-mod-stream-geoip2 on Debian-family
 # platforms; its postinst enables it as 70-mod-stream-geoip2.conf. The module
-# is not in run_nginx_modules_enabled, so the role's unmanaged-module cleanup
+# is not ansible.builtin.in run_nginx_modules_enabled, so the role's unmanaged-module cleanup
 # must remove exactly that file. When the module map records a wrong filename
 # (it once said 50-), the file survives while its prerequisite mod-stream is
 # removed, and nginx cannot start because of the orphaned dlopen - the
@@ -732,12 +699,10 @@
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
   block:
-
     - name: "Molecule | Verify | Stat the preinstalled module's enable symlink"
       ansible.builtin.stat:
         path: "/etc/nginx/modules-enabled/70-mod-stream-geoip2.conf"
       register: __testing_geoip2_module_conf
-
 
     - name: "Molecule | Verify | Assert the unmanaged module's enable symlink was removed"
       ansible.builtin.assert:
@@ -745,7 +710,7 @@
           - not __testing_geoip2_module_conf['stat']['exists']
         fail_msg: >-
           /etc/nginx/modules-enabled/70-mod-stream-geoip2.conf still exists although the
-          module is not in run_nginx_modules_enabled. The module map's conf filename does
+          module is not ansible.builtin.in run_nginx_modules_enabled. The module map's conf filename does
           not match the name the package enables, so the unmanaged-module cleanup cannot
           find it.
         success_msg: >-
@@ -776,7 +741,6 @@
     __testing_managed_site: >-
       {{ __run_nginx_config_service_dropin_sites_available_dir_path }}/example.com.conf
   block:
-
     - name: "Molecule | Verify | Plant a pre-existing, unmanaged site config"
       ansible.builtin.copy:
         content: |
@@ -792,19 +756,16 @@
         group: "{{ __run_nginx_config_service_dropin_sites_available_dir_group }}"
         mode: "u=rw,g=r,o=r" # 0644
 
-
     - name: "Molecule | Verify | Re-run the role with unmanaged site deletion disabled"
       ansible.builtin.include_role:
         name: "foundata.nginx.run"
       vars:
         run_nginx_sites_delete_unmanaged: false
 
-
     - name: "Molecule | Verify | Stat the unmanaged site after the run with deletion disabled"
       ansible.builtin.stat:
         path: "{{ __testing_unmanaged_site }}"
       register: __testing_unmanaged_site_kept
-
 
     - name: "Molecule | Verify | Assert the unmanaged site survives when deletion is disabled"
       ansible.builtin.assert:
@@ -825,7 +786,6 @@
       vars:
         run_nginx_sites_delete_unmanaged: true
 
-
     - name: "Molecule | Verify | Stat the unmanaged and a managed site after the run with deletion enabled"
       ansible.builtin.stat:
         path: "{{ item }}"
@@ -833,7 +793,6 @@
         - "{{ __testing_unmanaged_site }}"
         - "{{ __testing_managed_site }}"
       register: __testing_unmanaged_site_reaped
-
 
     - name: "Molecule | Verify | Assert the unmanaged site is removed while the managed one stays"
       ansible.builtin.assert:
@@ -853,8 +812,7 @@
 # installed and its configuration is valid, so they do not run at play end after
 # the uninstall regression below has removed the package and its config.
 - name: "Molecule | Verify | Flush handlers before the uninstall regression"
-  ansible.builtin.meta: flush_handlers
-
+  ansible.builtin.meta: "flush_handlers"
 
 ## Regression: uninstall removes managed site files/symlinks by absolute path
 #
@@ -870,15 +828,14 @@
     __testing_uninstall_site_available: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/example.com.conf"
     __testing_uninstall_site_enabled: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/example.com.conf"
   block:
-
     - name: "Molecule | Verify | Stat managed site file and symlink before uninstall"
       ansible.builtin.stat:
         path: "{{ item }}"
-      register: __testing_uninstall_before
       loop:
         - "{{ __testing_uninstall_site_available }}"
         - "{{ __testing_uninstall_site_enabled }}"
 
+      register: __testing_uninstall_before
     - name: "Molecule | Verify | Assert managed site file and symlink exist before uninstall"
       ansible.builtin.assert:
         that:
@@ -894,23 +851,21 @@
       ansible.builtin.copy:
         src: "{{ __testing_uninstall_site_available }}"
         dest: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
+        mode: "preserve"  # noqa: foundata-file-mode
         remote_src: true
-        mode: "preserve"
-
     - name: "Molecule | Verify | Plant the matching enabled symlink for the historical site"
       ansible.builtin.file:
-        src: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
-        dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/renamed-leftover.conf"
         state: "link"
 
-
-    # An administrator's own site file (no ownership marker). On Debian and
-    # SUSE the site directories are kept (stock respectively shared
-    # directories), so the file has to survive the marker sweep. On Red Hat
-    # platforms the role created the directories itself and removes them
-    # completely - nothing to plant there. The content mentions the marker as
-    # a substring on purpose: ownership requires the exact marker line, a mere
-    # mention (e.g. quoted in a comment) must not get the file deleted.
+        # An administrator's own site file (no ownership marker). On Debian and
+        # SUSE the site directories are kept (stock respectively shared
+        # directories), so the file has to survive the marker sweep. On Red Hat
+        # platforms the role created the directories itself and removes them
+        # completely - nothing to plant there. The content mentions the marker as
+        # a substring on purpose: ownership requires the exact marker line, a mere
+        # mention (e.g. quoted in a comment) must not get the file deleted.
+        dest: "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/renamed-leftover.conf"
+        src: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
     - name: "Molecule | Verify | Plant an administrator-owned site file without the marker"
       ansible.builtin.copy:
         dest: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/admin-own.conf"
@@ -920,7 +875,7 @@
           # this one merely quotes that marker.
         owner: "root"
         group: "root"
-        mode: "u=rw,g=r,o=r"
+        mode: "u=rw,g=r,o=r" # 0644
       when:
         - (ansible_facts['os_family'] | ansible.builtin.lower) in ['debian', 'suse']
 
@@ -933,11 +888,11 @@
     - name: "Molecule | Verify | Stat managed site file and symlink after uninstall"
       ansible.builtin.stat:
         path: "{{ item }}"
-      register: __testing_uninstall_after
       loop:
         - "{{ __testing_uninstall_site_available }}"
         - "{{ __testing_uninstall_site_enabled }}"
 
+      register: __testing_uninstall_after
     - name: "Molecule | Verify | Assert managed site file and symlink were removed by uninstall"
       ansible.builtin.assert:
         that:
@@ -951,11 +906,11 @@
     - name: "Molecule | Verify | Stat the planted historical site after uninstall"
       ansible.builtin.stat:
         path: "{{ item }}"
-      register: __testing_uninstall_leftover_after
       loop:
         - "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
         - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/renamed-leftover.conf"
 
+      register: __testing_uninstall_leftover_after
     - name: "Molecule | Verify | Assert the marker sweep removed the renamed historical site"
       ansible.builtin.assert:
         that:
@@ -966,37 +921,33 @@
           survived the uninstall (renamed historical sites would linger).
         success_msg: "The renamed historical site was removed by the marker sweep."
 
-
     - name: "Molecule | Verify | Check the site directories are gone after uninstall (Red Hat platforms)"
       ansible.builtin.stat:
         path: "{{ item }}"
-      register: __testing_uninstall_dirs_stat
+      when:
+        - (ansible_facts['os_family'] | ansible.builtin.lower) not in ['debian', 'suse']
+
       failed_when:
         - __testing_uninstall_dirs_stat['stat']['exists']
       loop:
         - "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}"
         - "{{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}"
-      when:
-        - (ansible_facts['os_family'] | ansible.builtin.lower) not in ['debian', 'suse']
-
-
+      register: __testing_uninstall_dirs_stat
     - name: "Molecule | Verify | Check the administrator's site file survived the uninstall (Debian, SUSE)"
       ansible.builtin.stat:
         path: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/admin-own.conf"
-      register: __testing_uninstall_admin_stat
-      failed_when:
-        - not __testing_uninstall_admin_stat['stat']['exists']
       when:
         - (ansible_facts['os_family'] | ansible.builtin.lower) in ['debian', 'suse']
 
-
+      failed_when:
+        - not __testing_uninstall_admin_stat['stat']['exists']
+      register: __testing_uninstall_admin_stat
     - name: "Molecule | Verify | Remove the administrator-owned test file (Debian, SUSE)"
       ansible.builtin.file:
         path: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/admin-own.conf"
         state: "absent"
       when:
         - (ansible_facts['os_family'] | ansible.builtin.lower) in ['debian', 'suse']
-
 
 ## Regression tests: init-only merged variable evaluation
 #
@@ -1016,7 +967,6 @@
 
 - name: "Molecule | Verify | Validate effective merged variables (init-only)"
   block:
-
     - name: "Molecule | Verify | Set controlled inputs for the merge checks"
       ansible.builtin.set_fact:
         __run_nginx_main_directives_overwrite:
@@ -1025,13 +975,11 @@
           hsts:
             max_age: 4321
 
-
     - name: "Molecule | Verify | Re-initialize nginx with controlled inputs"
       ansible.builtin.include_role:
         name: "foundata.nginx.run"
         tasks_from: "init"
         public: true
-
 
     - name: "Molecule | Verify | Assert effective main directives merged correctly"
       ansible.builtin.assert:
@@ -1043,7 +991,6 @@
         fail_msg: "__run_nginx_effective_main_directives did not merge defaults and overrides as expected."
         success_msg: "__run_nginx_effective_main_directives merged defaults and overrides correctly."
 
-
     - name: "Molecule | Verify | Assert effective events and http directives render defaults"
       ansible.builtin.assert:
         that:
@@ -1052,7 +999,6 @@
           - __run_nginx_effective_http_directives['keepalive_timeout'] == 65
         fail_msg: "__run_nginx_effective_events_directives / _http_directives did not render the expected defaults."
         success_msg: "__run_nginx_effective_events_directives and _http_directives rendered the expected defaults."
-
 
     - name: "Molecule | Verify | Assert effective snippet settings merged correctly"
       ansible.builtin.assert:
