@@ -256,27 +256,29 @@ There are also tags that are generally not intended to be called directly but ar
 
 Main entry point for the foundata.nginx.run role
 
+Manage NGINX (a HTTP web server, reverse proxy, cache, load balancer)
+
 The following variables can be configured for this role:
 
-| Variable | Type | Required | Default | Description (abstract) |
-|----------|------|----------|---------|------------------------|
-| `run_nginx_state` | `str` | No | `"present"` | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_nginx_state) |
-| `run_nginx_autoupgrade` | `bool` | No | `false` | If set to `true`, all managed packages will be upgraded during each Ansible run (e.g., when the package provider detects a newer version than the currently installed one). |
-| `run_nginx_service_state` | `str` | No | `"enabled"` | Defines the status of the service(s).<br><br>`enabled`: Service is running and will start automatically at boot.<br><br>`disabled`: Service is stopped and will not start automatically at boot.<br><br>`running` Service is running but will not start […](#variable-run_nginx_service_state) |
-| `run_nginx_main_config_block` | `str` | No | `""` | Additional NGINX configuration directives for the main (top-level) context of `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.<br><br>The value is inserted verbatim into the rendered configuration file. Only directives […](#variable-run_nginx_main_config_block) |
-| `run_nginx_events_config_block` | `str` | No | `""` | Additional NGINX configuration directives for the `events {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `events {}` block. Do not include the `events {` and `}` delimiters themselves - only […](#variable-run_nginx_events_config_block) |
-| `run_nginx_http_config_block` | `str` | No | `""` | Additional NGINX configuration directives for the `http {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `http {}` block. Do not include the `http {` and `}` delimiters themselves - only the […](#variable-run_nginx_http_config_block) |
-| `run_nginx_main_config_baseline_manage` | `bool` | No | `true` | Controls whether the role injects curated baseline directives into the main (top-level) context of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the main context (e.g., `worker_processes`, […](#variable-run_nginx_main_config_baseline_manage) |
-| `run_nginx_events_config_baseline_manage` | `bool` | No | `true` | Controls whether the role injects curated baseline directives into the `events {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the events context (e.g., `worker_connections`). […](#variable-run_nginx_events_config_baseline_manage) |
-| `run_nginx_http_config_baseline_manage` | `bool` | No | `true` | Controls whether the role injects curated baseline directives into the `http {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the HTTP context (e.g., `sendfile`, `tcp_nopush`, […](#variable-run_nginx_http_config_baseline_manage) |
-| `run_nginx_sites_config` | `list` | No | `[]` | List of site definitions (sometimes called vHosts) to manage. Each entry describes a site as a dictionary holding its name, enablement state, and raw NGINX configuration content.<br><br>For each entry, the role renders a config file at […](#variable-run_nginx_sites_config) |
-| `run_nginx_sites_delete_unmanaged` | `bool` | No | `true` | Controls whether the role removes stale site files that are not declared in `run_nginx_sites_config`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/sites-available/` or `/etc/nginx/sites-enabled/` whose name does not […](#variable-run_nginx_sites_delete_unmanaged) |
-| `run_nginx_sites_defaultserver_manage` | `bool` | No | `true` | Controls whether the role includes a hardened catch-all `server {}` block in the `http {}` section of the main configuration file (`nginx.conf`).<br><br>When set to `true`, a default server is rendered that listens on ports 80 and 443 with […](#variable-run_nginx_sites_defaultserver_manage) |
-| `run_nginx_modules_enabled` | `list` | No | `[]` | List of dynamic NGINX module names to enable at runtime.<br><br>Module names follow the canonical `.so` filename with the `ngx_` prefix and `_module` suffix stripped. The general pattern is `_` (e.g. `http_perl` from `ngx_http_perl_module.so`). See […](#variable-run_nginx_modules_enabled) |
-| `run_nginx_modules_disable_unmanaged` | `bool` | No | `true` | Controls whether the role removes dynamic module symlinks that are not declared in `run_nginx_modules_enabled`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/modules-enabled/` whose name does not match an entry in […](#variable-run_nginx_modules_disable_unmanaged) |
-| `run_nginx_snippets_manage` | `bool` | No | `true` | Controls whether the role ships and manages its curated NGINX config snippets (reusable, centrally maintained config blocks meant to be pulled into `server {}` / `location {}` blocks via `include snippets/.conf;`).<br><br>When set to `true`, the role […](#variable-run_nginx_snippets_manage) |
-| `run_nginx_snippet_settings` | `dict` | No | `{}` | User-level overrides for the configuration snippets shipped by this role.<br><br>Each top-level key corresponds to a snippet name (e.g. `hsts`, `php-fpm`, `tls-baseline`). Values are dictionaries whose keys map to template variables used when […](#variable-run_nginx_snippet_settings) |
-| `run_nginx_snippets_delete_unmanaged` | `bool` | No | `false` | Controls whether the role removes snippet files below `/etc/nginx/snippets/` that are not managed by this role.<br><br>When set to `true`, any files in the snippet subdirectories (`http/`, `server/`, `location/`) that were not rendered by the role's […](#variable-run_nginx_snippets_delete_unmanaged) |
+|                 Variable                  |  Type  | Required |   Default   | Description (abstract) |
+| ----------------------------------------- | ------ | -------- | ----------- | ---------------------- |
+| `run_nginx_state`                         | `str`  | No       | `"present"` | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_nginx_state) |
+| `run_nginx_autoupgrade`                   | `bool` | No       | `false`     | If set to `true`, all managed packages will be upgraded during each Ansible run (e.g., when the package provider detects a newer version than the currently installed one). |
+| `run_nginx_service_state`                 | `str`  | No       | `"enabled"` | Defines the status of the service(s).<br><br>`enabled`: Service is running and will start automatically at boot.<br><br>`disabled`: Service is stopped and will not start automatically at boot.<br><br>`running` Service is running but will not start […](#variable-run_nginx_service_state) |
+| `run_nginx_main_config_block`             | `str`  | No       | `""`        | Additional NGINX configuration directives for the main (top-level) context of `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.<br><br>The value is inserted verbatim into the rendered configuration file. Only directives […](#variable-run_nginx_main_config_block) |
+| `run_nginx_events_config_block`           | `str`  | No       | `""`        | Additional NGINX configuration directives for the `events {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `events {}` block. Do not include the `events {` and `}` delimiters themselves - only […](#variable-run_nginx_events_config_block) |
+| `run_nginx_http_config_block`             | `str`  | No       | `""`        | Additional NGINX configuration directives for the `http {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `http {}` block. Do not include the `http {` and `}` delimiters themselves - only the […](#variable-run_nginx_http_config_block) |
+| `run_nginx_main_config_baseline_manage`   | `bool` | No       | `true`      | Controls whether the role injects curated baseline directives into the main (top-level) context of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the main context (e.g., `worker_processes`, […](#variable-run_nginx_main_config_baseline_manage) |
+| `run_nginx_events_config_baseline_manage` | `bool` | No       | `true`      | Controls whether the role injects curated baseline directives into the `events {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the events context (e.g., `worker_connections`). […](#variable-run_nginx_events_config_baseline_manage) |
+| `run_nginx_http_config_baseline_manage`   | `bool` | No       | `true`      | Controls whether the role injects curated baseline directives into the `http {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the HTTP context (e.g., `sendfile`, `tcp_nopush`, […](#variable-run_nginx_http_config_baseline_manage) |
+| `run_nginx_sites_config`                  | `list` | No       | `[]`        | List of site definitions (sometimes called vHosts) to manage. Each entry describes a site as a dictionary holding its name, enablement state, and raw NGINX configuration content.<br><br>For each entry, the role renders a config file at […](#variable-run_nginx_sites_config) |
+| `run_nginx_sites_delete_unmanaged`        | `bool` | No       | `true`      | Controls whether the role removes stale site files that are not declared in `run_nginx_sites_config`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/sites-available/` or `/etc/nginx/sites-enabled/` whose name does not […](#variable-run_nginx_sites_delete_unmanaged) |
+| `run_nginx_sites_defaultserver_manage`    | `bool` | No       | `true`      | Controls whether the role includes a hardened catch-all `server {}` block in the `http {}` section of the main configuration file (`nginx.conf`).<br><br>When set to `true`, a default server is rendered that listens on ports 80 and 443 with […](#variable-run_nginx_sites_defaultserver_manage) |
+| `run_nginx_modules_enabled`               | `list` | No       | `[]`        | List of dynamic NGINX module names to enable at runtime.<br><br>Module names follow the canonical `.so` filename with the `ngx_` prefix and `_module` suffix stripped. The general pattern is `_` (e.g. `http_perl` from `ngx_http_perl_module.so`). See […](#variable-run_nginx_modules_enabled) |
+| `run_nginx_modules_disable_unmanaged`     | `bool` | No       | `true`      | Controls whether the role removes dynamic module symlinks that are not declared in `run_nginx_modules_enabled`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/modules-enabled/` whose name does not match an entry in […](#variable-run_nginx_modules_disable_unmanaged) |
+| `run_nginx_snippets_manage`               | `bool` | No       | `true`      | Controls whether the role ships and manages its curated NGINX config snippets (reusable, centrally maintained config blocks meant to be pulled into `server {}` / `location {}` blocks via `include snippets/.conf;`).<br><br>When set to `true`, the role […](#variable-run_nginx_snippets_manage) |
+| `run_nginx_snippet_settings`              | `dict` | No       | `{}`        | User-level overrides for the configuration snippets shipped by this role.<br><br>Each top-level key corresponds to a snippet name (e.g. `hsts`, `php-fpm`, `tls-baseline`). Values are dictionaries whose keys map to template variables used when […](#variable-run_nginx_snippet_settings) |
+| `run_nginx_snippets_delete_unmanaged`     | `bool` | No       | `false`     | Controls whether the role removes snippet files below `/etc/nginx/snippets/` that are not managed by this role.<br><br>When set to `true`, any files in the snippet subdirectories (`http/`, `server/`, `location/`) that were not rendered by the role's […](#variable-run_nginx_snippets_delete_unmanaged) |
 
 ### `run_nginx_state`<a id="variable-run_nginx_state"></a>
 
@@ -356,7 +358,6 @@ For block-specific configuration, use the dedicated variables instead:
 - `run_nginx_events_config_block` (for the `events {}` block)
 - `run_nginx_http_config_block` (for the `http {}` block)
 - `run_nginx_sites_config` (for `server {}` blocks)
-
 - **Type**: `str`
 - **Required**: No
 - **Default**: `""`
@@ -495,6 +496,7 @@ On SUSE-like platforms the directories `hosts.d-available/` (instead of
 are used as SUSE uses theses dirs and the "vHost" terminology by default.
 
 Example:
+
 ```yaml
 run_nginx_sites_config:
   - name: "example.com"
@@ -643,6 +645,7 @@ for Debian 12 and Ubuntu 24.04). Enabling a module that is not
 packaged for the target platform fails at the package installation.
 
 Example:
+
 ```yaml
 run_nginx_modules_enabled:
   - "http_echo"
@@ -752,6 +755,7 @@ and any platform-specific overrides. Only the keys you specify are
 overridden; all other settings keep their default values.
 
 Example:
+
 ```yaml
 run_nginx_snippet_settings:
   hsts:
@@ -783,13 +787,15 @@ the `Strict-Transport-Security` HTTP response header.
 Duration in seconds that the browser should remember to only
 access the site via HTTPS. The default of 31536000 corresponds
 to one year, which is the minimum recommended by
-https://hstspreload.org/.
+<https://hstspreload.org/>.
 
 - **Type**: `int`
 - **Required**: No
 - **Default**: `31536000`
 
-##### `run_nginx_snippet_settings['hsts']['include_subdomains']`<a id="variable-run_nginx_snippet_settings-sub-hsts-sub-include_subdomains"></a>
+<a id="variable-run_nginx_snippet_settings-sub-hsts-sub-include_subdomains"></a>
+
+##### `run_nginx_snippet_settings['hsts']['include_subdomains']`
 
 [*⇑ Back to ToC ⇑*](#toc)
 
@@ -884,7 +890,9 @@ TLS hardening following the Mozilla "Intermediate" profile
 - **Type**: `dict`
 - **Required**: No
 
-##### `run_nginx_snippet_settings['tls-baseline']['dhparam_path']`<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-dhparam_path"></a>
+<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-dhparam_path"></a>
+
+##### `run_nginx_snippet_settings['tls-baseline']['dhparam_path']`
 
 [*⇑ Back to ToC ⇑*](#toc)
 
@@ -898,7 +906,9 @@ this to match each distribution's conventional TLS directory
 - **Required**: No
 - **Default**: `"/etc/ssl/certs/dhparam_ffdhe3072.pem"`
 
-##### `run_nginx_snippet_settings['tls-baseline']['ecdh_curves']`<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-ecdh_curves"></a>
+<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-ecdh_curves"></a>
+
+##### `run_nginx_snippet_settings['tls-baseline']['ecdh_curves']`
 
 [*⇑ Back to ToC ⇑*](#toc)
 
@@ -912,7 +922,9 @@ classical-only list via version-specific vars files.
 - **Required**: No
 - **Default**: `"X25519MLKEM768:X25519:prime256v1:secp384r1"`
 
-##### `run_nginx_snippet_settings['tls-baseline']['resolvers']`<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolvers"></a>
+<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolvers"></a>
+
+##### `run_nginx_snippet_settings['tls-baseline']['resolvers']`
 
 [*⇑ Back to ToC ⇑*](#toc)
 
@@ -925,7 +937,9 @@ and latency.
 - **Required**: No
 - **List Elements**: `str`
 
-##### `run_nginx_snippet_settings['tls-baseline']['resolver_timeout']`<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolver_timeout"></a>
+<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolver_timeout"></a>
+
+##### `run_nginx_snippet_settings['tls-baseline']['resolver_timeout']`
 
 [*⇑ Back to ToC ⇑*](#toc)
 
@@ -934,7 +948,6 @@ Timeout for DNS resolver queries used by OCSP stapling.
 - **Type**: `str`
 - **Required**: No
 - **Default**: `"3s"`
-
 
 
 
@@ -958,7 +971,6 @@ Only takes effect when `run_nginx_snippets_manage` is `true`.
 - **Type**: `bool`
 - **Required**: No
 - **Default**: `false`
-
 
 
 

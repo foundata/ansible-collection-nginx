@@ -13,6 +13,8 @@ argument_specs:
   # foundata.nginx/roles/run/tasks/main.yml entry point
   main:
     short_description: "Main entry point for the foundata.nginx.run role"
+    description: |
+      Manage NGINX (a HTTP web server, reverse proxy, cache, load balancer)
     options:
 
       run_nginx_state:
