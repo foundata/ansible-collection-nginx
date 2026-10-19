@@ -261,7 +261,7 @@ upstream backends). Add this to your playbook before including the role:
 
 ## Supported tags<a id="tags"></a>
 
-It might be useful and faster to only call parts of the role by using tags:
+Run parts of the role with `--tags`:
 
 - `run_nginx_setup`: Manage basic resources, such as packages or service users.
 - `run_nginx_config`: Manage settings, such as adapting or creating
@@ -269,11 +269,9 @@ It might be useful and faster to only call parts of the role by using tags:
 - `run_nginx_service`: Manage services and daemons, such as running states and
   service boot configurations.
 
-There are also tags that are generally not intended to be called directly but
-are included for completeness and to cover edge cases:
-
-- `run_nginx_always`, `always`: Tasks needed by the role itself for internal
-  role setup and the Ansible environment.
+The init tasks check the environment and prepare the role. They carry the tags
+`run_nginx_always` and `always`, so they run with any `--tags` selection; do
+not skip them.
 
 
 <!-- ANSIBLE DOCSMITH MAIN START -->
