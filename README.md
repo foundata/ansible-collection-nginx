@@ -44,9 +44,8 @@ server, reverse proxy, cache, and load balancer.
 ### Role: `foundata.nginx.run`
 
 The primary role in this collection to configure and maintain NGINX, including
-sites / virtual hosts (`server {}`) and related configuration.
-[Its `README.md`](./roles/run/README.md) covers configuration, usage examples,
-and more:
+sites / virtual hosts (`server {}`) and related configuration. [Its
+`README.md`](./roles/run/README.md) covers configuration and usage examples.
 
 <!-- ANSIBLE DOCSMITH TOC-FULL run START -->
 - [Ansible role: `foundata.nginx.run`](./roles/run/README.md#ansible-role-foundatanginxrun)
