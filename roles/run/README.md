@@ -20,6 +20,8 @@ hardening of [NGINX](https://nginx.org/) across major Linux distributions.
   - [`run_nginx_state`](#variable-run_nginx_state)
   - [`run_nginx_autoupgrade`](#variable-run_nginx_autoupgrade)
   - [`run_nginx_service_state`](#variable-run_nginx_service_state)
+  - [`run_nginx_service_restart`](#variable-run_nginx_service_restart)
+  - [`run_nginx_service_restart_sec`](#variable-run_nginx_service_restart_sec)
   - [`run_nginx_main_config_block`](#variable-run_nginx_main_config_block)
   - [`run_nginx_events_config_block`](#variable-run_nginx_events_config_block)
   - [`run_nginx_http_config_block`](#variable-run_nginx_http_config_block)
@@ -248,6 +250,32 @@ Installation with PHP-FPM (TCP backend) and a custom events config:
               }
 ```
 
+To recover automatically from service failures, including OOM failures reported
+by systemd:
+
+```yaml
+run_nginx_service_restart: "on-failure"
+run_nginx_service_restart_sec: 5
+```
+
+The default empty policy preserves the distribution's behavior. Returning to an
+empty policy removes only the role's drop-in. Setting `"no"` explicitly disables
+automatic restarts. Policy changes use daemon-reload and do not restart a
+healthy service. `run_nginx_service_state: "unmanaged"` leaves the policy alone;
+`"disabled"` applies the policy but keeps NGINX stopped and disabled at boot.
+
+When replacing an application-specific override, remove its `Restart` and
+`RestartSec` settings after configuring the role, then reload systemd and check
+`systemctl show nginx -p Restart -p RestartUSec -p OOMPolicy`. The role
+preserves other drop-ins, which can override its settings. An explicit
+`systemctl stop` still stops the service. Package `OOMPolicy` and systemd start
+rate limits are unchanged; repeated failures may exhaust the start limit. With
+`OOMPolicy=stop` (as on Debian 13) or `kill`, systemd can restart the service
+after a worker OOM; with `continue`, NGINX replaces failed workers itself. See
+[systemd's service policy](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Restart=).
+Automatic recovery complements application fixes and capacity monitoring; it
+does not fix resource exhaustion.
+
 Uninstall:
 
 ```yaml
@@ -310,6 +338,8 @@ The following variables can be configured for this role:
 | `run_nginx_state`                         | `str`  | No       | `"present"` | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_nginx_state) |
 | `run_nginx_autoupgrade`                   | `bool` | No       | `false`     | If set to `true`, each Ansible run upgrades the managed packages to the newest version the package provider offers. |
 | `run_nginx_service_state`                 | `str`  | No       | `"enabled"` | Defines the status of the service(s). Possible values:<br><br>- `enabled`: Service is running and will start automatically at boot. - `disabled`: Service is stopped and will not start automatically at boot. - `running`: Service is running but will […](#variable-run_nginx_service_state) |
+| `run_nginx_service_restart`               | `str`  | No       | `""`        | Optional systemd `Restart` policy. An empty string (the default) removes the role's drop-in and uses the distribution's policy and any administrator overrides. `on-failure` recovers from unsuccessful exits, signals, timeouts and OOM failures. An […](#variable-run_nginx_service_restart) |
+| `run_nginx_service_restart_sec`           | `int`  | No       | `5`         | Non-negative delay in seconds before systemd automatically restarts NGINX. Written as `RestartSec` only when `run_nginx_service_restart` is non-empty. The default delay is five seconds. Systemd's existing start rate limits can still stop repeated […](#variable-run_nginx_service_restart_sec) |
 | `run_nginx_main_config_block`             | `str`  | No       | `""`        | Additional NGINX configuration directives for the main (top-level) context of `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.<br><br>The value is inserted verbatim into the rendered configuration file. Only directives […](#variable-run_nginx_main_config_block) |
 | `run_nginx_events_config_block`           | `str`  | No       | `""`        | Additional NGINX configuration directives for the `events {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `events {}` block. Do not include the `events {` and `}` delimiters themselves - only […](#variable-run_nginx_events_config_block) |
 | `run_nginx_http_config_block`             | `str`  | No       | `""`        | Additional NGINX configuration directives for the `http {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `http {}` block. Do not include the `http {` and `}` delimiters themselves - only the […](#variable-run_nginx_http_config_block) |
@@ -379,6 +409,52 @@ The defined status applies to all services if the role manages several.
 - **Required**: No
 - **Default**: `"enabled"`
 - **Choices**: `enabled`, `disabled`, `running`, `unmanaged`
+
+
+
+### `run_nginx_service_restart`<a id="variable-run_nginx_service_restart"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Optional systemd `Restart` policy. An empty string (the default)
+removes the role's drop-in and uses the distribution's policy and
+any administrator overrides. `on-failure` recovers from unsuccessful
+exits, signals, timeouts and OOM failures. An explicit service stop
+does not trigger automatic recovery.
+
+The role manages only
+`/etc/systemd/system/nginx.service.d/50-foundata-nginx-restart.conf`.
+Changes take effect through daemon-reload without restarting NGINX.
+Other drop-ins are preserved; remove conflicting application overrides
+when migrating. No policy changes are made while
+`run_nginx_service_state` is `unmanaged`.
+
+The package's `OOMPolicy` and systemd start rate limits remain in
+effect. Worker OOM recovery through systemd requires `OOMPolicy=stop`
+or `kill`; with `continue`, NGINX handles worker replacement itself.
+Recovery does not resolve memory exhaustion or replace resource
+limits, capacity monitoring and application fixes.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `""`
+- **Choices**: ``, `no`, `on-success`, `on-failure`, `on-abnormal`,
+  `on-watchdog`, `on-abort`, `always`
+
+
+
+### `run_nginx_service_restart_sec`<a id="variable-run_nginx_service_restart_sec"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Non-negative delay in seconds before systemd automatically restarts
+NGINX. Written as `RestartSec` only when `run_nginx_service_restart`
+is non-empty. The default delay is five seconds. Systemd's existing
+start rate limits can still stop repeated restart attempts.
+
+- **Type**: `int`
+- **Required**: No
+- **Default**: `5`
 
 
 

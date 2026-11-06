@@ -1,0 +1,210 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Molecule | Verify | Capture the original restart policy"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=Restart,RestartUSec,OOMPolicy"
+  changed_when:
+    - false
+  register: __testing_original_restart_policy
+
+- name: "Molecule | Verify | Capture the running master PID"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID"
+      - "--value"
+  changed_when:
+    - false
+  register: __testing_original_master_pid
+
+- name: "Molecule | Verify | Configure recovery from service failures"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "service/default"
+  vars:
+    run_nginx_service_restart: "on-failure"
+    run_nginx_service_restart_sec: 5
+
+- name: "Molecule | Verify | Read the effective recovery policy"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=Restart,RestartUSec,MainPID"
+  changed_when:
+    - false
+  register: __testing_restart_policy
+
+- name: "Molecule | Verify | Assert policy activation without a service restart"
+  ansible.builtin.assert:
+    that:
+      - "'Restart=on-failure' in __testing_restart_policy['stdout_lines']"
+      - "'RestartUSec=5s' in __testing_restart_policy['stdout_lines']"
+      - "('MainPID=' ~ __testing_original_master_pid['stdout']) in __testing_restart_policy['stdout_lines']"
+
+- name: "Molecule | Verify | Reapply the restart policy"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "service/default"
+  vars:
+    run_nginx_service_restart: "on-failure"
+    run_nginx_service_restart_sec: "5"
+
+- name: "Molecule | Verify | Assert the restart policy is idempotent"
+  ansible.builtin.assert:
+    that:
+      - __run_nginx_restart_policy_write is not ansible.builtin.changed
+      - __run_nginx_restart_policy_remove is not ansible.builtin.changed
+
+# Send the signal directly: an explicit systemctl stop must not recover.
+- name: "Molecule | Verify | Kill the NGINX master process"
+  ansible.builtin.command:
+    argv:
+      - "kill"
+      - "-KILL"
+      - "{{ __testing_original_master_pid['stdout'] }}"
+  changed_when:
+    - true
+
+- name: "Molecule | Verify | Wait for a replacement master process"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID"
+      - "--value"
+  changed_when:
+    - false
+  until:
+    - __testing_recovered_master_pid['stdout'] | ansible.builtin.int > 0
+    - __testing_recovered_master_pid['stdout'] != __testing_original_master_pid['stdout']
+  retries: 20
+  delay: 1
+  register: __testing_recovered_master_pid
+
+- name: "Molecule | Verify | Confirm HTTPS works after recovery"
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--fail"
+      - "--silent"
+      - "--show-error"
+      - "--insecure"
+      - "--noproxy"
+      - "*"
+      - "--resolve"
+      - "example.com:443:127.0.0.1"
+      - "https://example.com/"
+  changed_when:
+    - false
+  register: __testing_recovered_https
+
+- name: "Molecule | Verify | Assert the recovered server returns the expected page"
+  ansible.builtin.assert:
+    that:
+      - "'🚀 It works!' in __testing_recovered_https['stdout']"
+
+- name: "Molecule | Verify | Disable the service with recovery configured"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "service/default"
+  vars:
+    run_nginx_service_restart: "on-failure"
+    run_nginx_service_state: "disabled"
+
+- name: "Molecule | Verify | Leave the stopped service unmanaged"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "service/default"
+  vars:
+    run_nginx_service_restart: "no"
+    run_nginx_service_state: "unmanaged"
+
+- name: "Molecule | Verify | Wait beyond the restart delay after an intentional stop"
+  ansible.builtin.wait_for:
+    port: 443
+    state: "stopped"
+    delay: 6
+    timeout: 10
+
+- name: "Molecule | Verify | Read the stopped service state and policy"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=Restart,ActiveState,UnitFileState"
+  changed_when:
+    - false
+  register: __testing_stopped_policy
+
+- name: "Molecule | Verify | Assert disabled and unmanaged states are respected"
+  ansible.builtin.assert:
+    that:
+      - "'Restart=on-failure' in __testing_stopped_policy['stdout_lines']"
+      - "'ActiveState=inactive' in __testing_stopped_policy['stdout_lines']"
+      - "'UnitFileState=disabled' in __testing_stopped_policy['stdout_lines']"
+
+- name: "Molecule | Verify | Plant an unrelated administrator drop-in"
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/nginx.service.d/90-molecule-admin.conf"
+    content: |
+      [Service]
+      Environment=MOLECULE_NGINX_ADMIN=preserved
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=r,o=r" # 0644
+
+- name: "Molecule | Verify | Restore the distribution policy and start the service"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "service/default"
+  vars:
+    run_nginx_service_restart: ""
+
+- name: "Molecule | Verify | Read the restored policy"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=Restart,RestartUSec,OOMPolicy"
+  changed_when:
+    - false
+  register: __testing_restored_restart_policy
+
+- name: "Molecule | Verify | Assert clearing the setting restores the original policy"
+  ansible.builtin.assert:
+    that:
+      - __testing_restored_restart_policy['stdout'] == __testing_original_restart_policy['stdout']
+
+- name: "Molecule | Verify | Check only the role-owned drop-in was removed"
+  ansible.builtin.stat:
+    path: "{{ item['path'] }}"
+  failed_when:
+    - __testing_restart_file['stat']['exists'] != item['exists']
+  loop:
+    - path: "/etc/systemd/system/nginx.service.d/50-foundata-nginx-restart.conf"
+      exists: false
+    - path: "/etc/systemd/system/nginx.service.d/90-molecule-admin.conf"
+      exists: true
+  register: __testing_restart_file
+
+- name: "Molecule | Verify | Remove the unrelated test drop-in"
+  ansible.builtin.file:
+    path: "/etc/systemd/system/nginx.service.d/90-molecule-admin.conf"
+    state: "absent"
+
+- name: "Molecule | Verify | Reload systemd after removing the test drop-in"
+  ansible.builtin.systemd_service:
+    daemon_reload: true

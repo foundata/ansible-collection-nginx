@@ -1,0 +1,5 @@
+---
+minor_changes:
+  - >-
+    run role - add opt-in systemd restart policy and delay settings, retaining
+    distribution defaults when unset and preserving unrelated service overrides.

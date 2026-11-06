@@ -57,6 +57,8 @@ sites / virtual hosts (`server {}`) and related configuration. [Its
     - [`run_nginx_state`](./roles/run/README.md#variable-run_nginx_state)
     - [`run_nginx_autoupgrade`](./roles/run/README.md#variable-run_nginx_autoupgrade)
     - [`run_nginx_service_state`](./roles/run/README.md#variable-run_nginx_service_state)
+    - [`run_nginx_service_restart`](./roles/run/README.md#variable-run_nginx_service_restart)
+    - [`run_nginx_service_restart_sec`](./roles/run/README.md#variable-run_nginx_service_restart_sec)
     - [`run_nginx_main_config_block`](./roles/run/README.md#variable-run_nginx_main_config_block)
     - [`run_nginx_events_config_block`](./roles/run/README.md#variable-run_nginx_events_config_block)
     - [`run_nginx_http_config_block`](./roles/run/README.md#variable-run_nginx_http_config_block)

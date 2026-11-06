@@ -564,6 +564,10 @@
   ansible.builtin.include_tasks:
     file: "tls-stapling.yml"
 
+- name: "Molecule | Verify | Check configurable service recovery"
+  ansible.builtin.include_tasks:
+    file: "service-restart.yml"
+
 ## Security response headers
 
 - name: "Molecule | Verify | Fetch HTTPS response headers from example.com"
@@ -855,7 +859,7 @@
       ansible.builtin.copy:
         src: "{{ __testing_uninstall_site_available }}"
         dest: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/renamed-leftover.conf"
-        mode: "preserve"  # noqa: foundata-file-mode
+        mode: "preserve" # noqa: foundata-file-mode
         remote_src: true
     - name: "Molecule | Verify | Plant the matching enabled symlink for the historical site"
       ansible.builtin.file:
@@ -883,11 +887,25 @@
       when:
         - (ansible_facts['os_family'] | ansible.builtin.lower) in ['debian', 'suse']
 
+    - name: "Molecule | Verify | Configure recovery before uninstall"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+        tasks_from: "service/default"
+      vars:
+        run_nginx_service_restart: "on-failure"
+
     - name: "Molecule | Verify | Uninstall the role (run_nginx_state: absent)"
       ansible.builtin.include_role:
         name: "foundata.nginx.run"
       vars:
         run_nginx_state: "absent"
+
+    - name: "Molecule | Verify | Check the restart policy was removed by uninstall"
+      ansible.builtin.stat:
+        path: "/etc/systemd/system/nginx.service.d/50-foundata-nginx-restart.conf"
+      failed_when:
+        - __testing_uninstalled_restart_policy['stat']['exists']
+      register: __testing_uninstalled_restart_policy
 
     - name: "Molecule | Verify | Stat managed site file and symlink after uninstall"
       ansible.builtin.stat:

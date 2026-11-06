@@ -63,6 +63,47 @@ argument_specs:
           - "running"
           - "unmanaged"
 
+      run_nginx_service_restart:
+        description: |
+          Optional systemd `Restart` policy. An empty string (the default)
+          removes the role's drop-in and uses the distribution's policy and
+          any administrator overrides. `on-failure` recovers from unsuccessful
+          exits, signals, timeouts and OOM failures. An explicit service stop
+          does not trigger automatic recovery.
+
+          The role manages only
+          `/etc/systemd/system/nginx.service.d/50-foundata-nginx-restart.conf`.
+          Changes take effect through daemon-reload without restarting NGINX.
+          Other drop-ins are preserved; remove conflicting application overrides
+          when migrating. No policy changes are made while
+          `run_nginx_service_state` is `unmanaged`.
+
+          The package's `OOMPolicy` and systemd start rate limits remain in
+          effect. Worker OOM recovery through systemd requires `OOMPolicy=stop`
+          or `kill`; with `continue`, NGINX handles worker replacement itself.
+          Recovery does not resolve memory exhaustion or replace resource
+          limits, capacity monitoring and application fixes.
+        type: "str"
+        default: ""
+        choices:
+          - ""
+          - "no"
+          - "on-success"
+          - "on-failure"
+          - "on-abnormal"
+          - "on-watchdog"
+          - "on-abort"
+          - "always"
+
+      run_nginx_service_restart_sec:
+        description: |
+          Non-negative delay in seconds before systemd automatically restarts
+          NGINX. Written as `RestartSec` only when `run_nginx_service_restart`
+          is non-empty. The default delay is five seconds. Systemd's existing
+          start rate limits can still stop repeated restart attempts.
+        type: "int"
+        default: 5
+
       run_nginx_main_config_block:
         description: |
           Additional NGINX configuration directives for the main (top-level) context

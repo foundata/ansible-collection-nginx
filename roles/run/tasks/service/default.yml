@@ -5,6 +5,51 @@
 
 ---
 
+- name: "Service | Default | Configure automatic recovery"
+  when:
+    - run_nginx_service_state != 'unmanaged'
+  block:
+    - name: "Service | Default | Create the systemd drop-in directory"
+      ansible.builtin.file:
+        path: "{{ __run_nginx_systemd_dropin_dir_path }}"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "u=rwx,g=rx,o=rx" # 0755
+      when:
+        - run_nginx_service_restart | ansible.builtin.length > 0
+
+    - name: "Service | Default | Write the restart policy"
+      ansible.builtin.template:
+        src: "systemd-restart.conf.j2"
+        dest: "{{ __run_nginx_systemd_restart_file_path }}"
+        owner: "root"
+        group: "root"
+        mode: "u=rw,g=r,o=r" # 0644
+      vars:
+        tpl_managed: "{{ ansible_managed }}"
+        tpl_restart: "{{ run_nginx_service_restart }}"
+        tpl_restart_sec: "{{ run_nginx_service_restart_sec | ansible.builtin.int }}"
+      when:
+        - run_nginx_service_restart | ansible.builtin.length > 0
+      register: __run_nginx_restart_policy_write
+
+    - name: "Service | Default | Remove the restart policy when unset"
+      ansible.builtin.file:
+        path: "{{ __run_nginx_systemd_restart_file_path }}"
+        state: "absent"
+      when:
+        - run_nginx_service_restart | ansible.builtin.length == 0
+      register: __run_nginx_restart_policy_remove
+
+    # Load the policy before managing service state, without flushing unrelated
+    # handlers or restarting a healthy NGINX process.
+    - name: "Service | Default | Load the changed restart policy"
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+      when:
+        - __run_nginx_restart_policy_write is ansible.builtin.changed or __run_nginx_restart_policy_remove is ansible.builtin.changed
+
 - name: "Service | Default | Ensure service state: {{ __run_nginx_nginx_servicename }}"
   ansible.builtin.service:
     name: "{{ __run_nginx_nginx_servicename }}"

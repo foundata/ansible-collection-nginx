@@ -7,6 +7,12 @@
 - name: "Setup | Uninstall | Gather service facts"
   ansible.builtin.service_facts:
 
+- name: "Setup | Uninstall | Remove the role's restart policy"
+  ansible.builtin.file:
+    path: "{{ __run_nginx_systemd_restart_file_path }}"
+    state: "absent"
+  notify:
+    - "run_nginx_reload_systemd_daemon"
 
 - name: "Setup | Uninstall | Stop and disable service (best-effort): {{ __run_nginx_nginx_servicename }}"
   ansible.builtin.systemd_service:

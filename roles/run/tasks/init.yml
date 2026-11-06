@@ -10,7 +10,6 @@
     file: "../meta/main.yml"
     name: "__run_nginx_meta"
 
-
 - name: "Init | Check Ansible version requirement and fail if unmet"
   ansible.builtin.fail:
     msg: >
@@ -41,12 +40,9 @@
       or distribution facts are missing.
     verbosity: 1
   when:
-    - ansible_facts['os_family'] is not ansible.builtin.defined or
-      ansible_facts['distribution'] is not ansible.builtin.defined or
-      ansible_facts['distribution_version'] is not ansible.builtin.defined or
-      ansible_facts['distribution_major_version'] is not ansible.builtin.defined or
+    - ansible_facts['os_family'] is not ansible.builtin.defined or ansible_facts['distribution'] is not ansible.builtin.defined or
+      ansible_facts['distribution_version'] is not ansible.builtin.defined or ansible_facts['distribution_major_version'] is not ansible.builtin.defined or
       ((__run_nginx_supported_platforms | ansible.builtin.length) == 0)
-
 
 - name: "Init | Warn when platform is unsupported"
   ansible.builtin.fail:
@@ -72,7 +68,6 @@
     - (__run_nginx_supported_platforms | ansible.builtin.length) > 0
     - (__run_nginx_matched_versions | ansible.builtin.length) == 0
   ignore_errors: true # noqa: ignore-errors
-
 
 - name: "Init | Set platform-specific filename list (most to least specific; raw with possible duplicates)"
   ansible.builtin.set_fact:
@@ -138,9 +133,13 @@
   loop_control:
     loop_var: "__run_nginx_varsfile_item"
 
-
 ## nginx specific
 
+- name: "Init | Validate the automatic restart delay"
+  ansible.builtin.assert:
+    that:
+      - run_nginx_service_restart_sec | ansible.builtin.int >= 0
+    fail_msg: "run_nginx_service_restart_sec must be a non-negative number of seconds."
 
 - name: "Init | Show effective merged variables (computed lazily in vars/main.yml)"
   ansible.builtin.debug:

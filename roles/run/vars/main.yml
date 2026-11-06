@@ -432,6 +432,10 @@ __run_nginx_effective_snippet_settings: >-
 __run_nginx_nginx_servicename: "nginx.service"
 __run_nginx_server_exec_path: "/usr/sbin/nginx"
 
+# Only this drop-in belongs to the role; preserve administrator overrides.
+__run_nginx_systemd_dropin_dir_path: "/etc/systemd/system/{{ __run_nginx_nginx_servicename }}.d"
+__run_nginx_systemd_restart_file_path: "{{ __run_nginx_systemd_dropin_dir_path }}/50-foundata-nginx-restart.conf"
+
 ### Override defaults of dependencies used by this role (if any).
 
 # nothing right now
