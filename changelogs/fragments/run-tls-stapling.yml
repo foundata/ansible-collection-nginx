@@ -1,0 +1,6 @@
+---
+bugfixes:
+  - >-
+    run role - allow disabling OCSP stapling and response verification through
+    the TLS baseline snippet settings for certificates without an OCSP responder
+    URL, preserving existing defaults and the remaining TLS baseline.

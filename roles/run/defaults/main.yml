@@ -407,6 +407,21 @@ run_nginx_snippets_delete_unmanaged: false
 #     - Type: dict
 #     - Required: No
 #     - Dict attributes:
+#       - stapling: Enable OCSP stapling via `ssl_stapling`. Set to `false` for
+#         certificates without an OCSP responder URL to avoid NGINX
+#         configuration warnings. All other TLS baseline settings remain active.
+#         The default preserves the existing stapling behavior.
+#         - Type: bool
+#         - Required: No
+#         - Default: true
+#       - stapling_verify:
+#         Verify stapled OCSP responses via `ssl_stapling_verify`. Verification
+#         requires the issuer, root and intermediate certificates in
+#         `ssl_trusted_certificate`. This setting has no effect while stapling
+#         is disabled.
+#         - Type: bool
+#         - Required: No
+#         - Default: true
 #       - dhparam_path:
 #         Absolute path where the DH parameters file is deployed. The role ships
 #         RFC 7919 ffdhe3072 parameters and deploys them to this path

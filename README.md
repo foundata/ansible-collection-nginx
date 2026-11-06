@@ -83,6 +83,8 @@ sites / virtual hosts (`server {}`) and related configuration. [Its
         - [`run_nginx_snippet_settings['php-fpm']['tcp_host']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-php-fpm-sub-tcp_host)
         - [`run_nginx_snippet_settings['php-fpm']['tcp_port']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-php-fpm-sub-tcp_port)
       - [`run_nginx_snippet_settings['tls-baseline']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline)
+        - [`run_nginx_snippet_settings['tls-baseline']['stapling']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-stapling)
+        - [`run_nginx_snippet_settings['tls-baseline']['stapling_verify']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-stapling_verify)
         - [`run_nginx_snippet_settings['tls-baseline']['dhparam_path']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-dhparam_path)
         - [`run_nginx_snippet_settings['tls-baseline']['ecdh_curves']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-ecdh_curves)
         - [`run_nginx_snippet_settings['tls-baseline']['resolvers']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolvers)

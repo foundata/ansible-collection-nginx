@@ -46,6 +46,8 @@ hardening of [NGINX](https://nginx.org/) across major Linux distributions.
       - [`run_nginx_snippet_settings['php-fpm']['tcp_host']`](#variable-run_nginx_snippet_settings-sub-php-fpm-sub-tcp_host)
       - [`run_nginx_snippet_settings['php-fpm']['tcp_port']`](#variable-run_nginx_snippet_settings-sub-php-fpm-sub-tcp_port)
     - [`run_nginx_snippet_settings['tls-baseline']`](#variable-run_nginx_snippet_settings-sub-tls-baseline)
+      - [`run_nginx_snippet_settings['tls-baseline']['stapling']`](#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-stapling)
+      - [`run_nginx_snippet_settings['tls-baseline']['stapling_verify']`](#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-stapling_verify)
       - [`run_nginx_snippet_settings['tls-baseline']['dhparam_path']`](#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-dhparam_path)
       - [`run_nginx_snippet_settings['tls-baseline']['ecdh_curves']`](#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-ecdh_curves)
       - [`run_nginx_snippet_settings['tls-baseline']['resolvers']`](#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolvers)
@@ -176,6 +178,25 @@ settings:
         run_nginx_modules_enabled:
           - "http_headers_more_filter"
 ```
+
+For certificates without an OCSP responder URL, disable stapling through the
+snippet settings and keep the TLS baseline included in the site's `server`
+block:
+
+```yaml
+run_nginx_snippet_settings:
+  tls-baseline:
+    stapling: false
+    stapling_verify: false
+```
+
+This preserves the remaining TLS hardening. Remove any HTTP-scope include added
+solely to work around stapling, and replace server-level `ssl_stapling off` and
+`ssl_stapling_verify off` directives with
+`include snippets/http/tls-baseline.conf;`. Include the baseline only once per
+context to avoid duplicate directives. See the
+[NGINX stapling documentation](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_stapling)
+for certificate-chain and resolver requirements when stapling is enabled.
 
 Installation with PHP-FPM (TCP backend) and a custom events config:
 
@@ -908,6 +929,36 @@ TLS hardening following the Mozilla "Intermediate" profile
 
 - **Type**: `dict`
 - **Required**: No
+
+<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-stapling"></a>
+
+##### `run_nginx_snippet_settings['tls-baseline']['stapling']`
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Enable OCSP stapling via `ssl_stapling`. Set to `false` for
+certificates without an OCSP responder URL to avoid NGINX
+configuration warnings. All other TLS baseline settings remain
+active. The default preserves the existing stapling behavior.
+
+- **Type**: `bool`
+- **Required**: No
+- **Default**: `true`
+
+<a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-stapling_verify"></a>
+
+##### `run_nginx_snippet_settings['tls-baseline']['stapling_verify']`
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Verify stapled OCSP responses via `ssl_stapling_verify`.
+Verification requires the issuer, root and intermediate
+certificates in `ssl_trusted_certificate`. This setting has
+no effect while stapling is disabled.
+
+- **Type**: `bool`
+- **Required**: No
+- **Default**: `true`
 
 <a id="variable-run_nginx_snippet_settings-sub-tls-baseline-sub-dhparam_path"></a>
 

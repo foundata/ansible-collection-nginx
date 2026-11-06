@@ -389,6 +389,8 @@ __run_nginx_snippet_settings_defaults:
     tcp_host: "127.0.0.1"
     tcp_port: 9000
   tls-baseline:
+    stapling: true
+    stapling_verify: true
     dhparam_path: "{{ __run_nginx_dhparam_ffdhe3072_path }}"
     # ECDHE curves for key exchange, following Mozilla Guideline v6.0.
     # X25519MLKEM768 is a post-quantum hybrid (ML-KEM/Kyber + X25519) key

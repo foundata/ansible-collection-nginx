@@ -560,6 +560,10 @@
       ECDH curves: {{ __testing_expected_ecdh_curves }}
 
 
+- name: "Molecule | Verify | Check configurable OCSP stapling"
+  ansible.builtin.include_tasks:
+    file: "tls-stapling.yml"
+
 ## Security response headers
 
 - name: "Molecule | Verify | Fetch HTTPS response headers from example.com"

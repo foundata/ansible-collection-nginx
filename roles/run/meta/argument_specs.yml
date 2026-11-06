@@ -470,6 +470,22 @@ argument_specs:
               (Guideline v6.0).
             type: "dict"
             options:
+              stapling:
+                description: |
+                  Enable OCSP stapling via `ssl_stapling`. Set to `false` for
+                  certificates without an OCSP responder URL to avoid NGINX
+                  configuration warnings. All other TLS baseline settings remain
+                  active. The default preserves the existing stapling behavior.
+                type: "bool"
+                default: true
+              stapling_verify:
+                description: |
+                  Verify stapled OCSP responses via `ssl_stapling_verify`.
+                  Verification requires the issuer, root and intermediate
+                  certificates in `ssl_trusted_certificate`. This setting has
+                  no effect while stapling is disabled.
+                type: "bool"
+                default: true
               dhparam_path:
                 description: |
                   Absolute path where the DH parameters file is deployed. The

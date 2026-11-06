@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Molecule | Verify | Read the test certificate's OCSP responder URL"
+  ansible.builtin.command:
+    argv:
+      - "openssl"
+      - "x509"
+      - "-in"
+      - "{{ __testing_examplecom_cert }}"
+      - "-noout"
+      - "-ocsp_uri"
+  changed_when:
+    - false
+  register: __testing_ocsp_uri
+
+- name: "Molecule | Verify | Assert the certificate has no OCSP responder URL"
+  ansible.builtin.assert:
+    that:
+      - __testing_ocsp_uri['stdout'] | ansible.builtin.trim == ''
+
+- name: "Molecule | Verify | Disable stapling while retaining verification's default"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "config/default"
+  vars:
+    run_nginx_snippet_settings:
+      tls-baseline:
+        stapling: false
+
+- name: "Molecule | Verify | Read the configuration with stapling disabled"
+  ansible.builtin.command:
+    argv:
+      - "nginx"
+      - "-T"
+  changed_when:
+    - false
+  register: __testing_stapling_disabled
+
+- name: "Molecule | Verify | Assert stapling can be disabled independently"
+  ansible.builtin.assert:
+    that:
+      - "'ssl_stapling off;' in __testing_stapling_disabled['stdout']"
+      - "'ssl_stapling_verify on;' in __testing_stapling_disabled['stdout']"
+      - "'[warn]' not in __testing_stapling_disabled['stderr']"
+
+- name: "Molecule | Verify | Disable stapling and verification using string booleans"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "config/default"
+  vars:
+    run_nginx_snippet_settings:
+      tls-baseline:
+        stapling: "false"
+        stapling_verify: "false"
+
+- name: "Molecule | Verify | Apply disabled stapling through the role's handlers"
+  ansible.builtin.meta: "flush_handlers"
+
+# Capture NGINX's own configuration diagnostics from a reload request.
+- name: "Molecule | Verify | Reload NGINX with stapling disabled"
+  ansible.builtin.command:
+    argv:
+      - "nginx"
+      - "-s"
+      - "reload"
+  changed_when:
+    - true
+  register: __testing_stapling_reload
+
+- name: "Molecule | Verify | Read the configuration after reload"
+  ansible.builtin.command:
+    argv:
+      - "nginx"
+      - "-T"
+  changed_when:
+    - false
+  register: __testing_stapling_disabled
+
+- name: "Molecule | Verify | Assert clean validation and preserved TLS baseline"
+  ansible.builtin.assert:
+    that:
+      - "'[warn]' not in __testing_stapling_reload['stderr']"
+      - "'[warn]' not in __testing_stapling_disabled['stderr']"
+      - >-
+        (__testing_stapling_disabled['stdout']
+        | ansible.builtin.regex_replace('ssl_stapling off;', 'ssl_stapling on;')
+        | ansible.builtin.regex_replace('ssl_stapling_verify off;', 'ssl_stapling_verify on;'))
+        == __testing_nginx_full_config['stdout']
+
+# The following HTTPS/header checks use the reloaded configuration. Later
+# full role runs restore the scenario's defaults.

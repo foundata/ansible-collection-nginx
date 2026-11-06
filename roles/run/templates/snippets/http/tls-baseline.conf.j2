@@ -109,7 +109,7 @@ ssl_session_cache shared:MozSSL:10m; # about 40000 sessions
 # - https://ssl-config.mozilla.org/
 # - https://wiki.mozilla.org/Security/Server_Side_TLS#OCSP_Stapling
 # - https://raymii.org/s/tutorials/OCSP_Stapling_on_nginx.html
-ssl_stapling on;
-ssl_stapling_verify on;
+ssl_stapling {{ settings['stapling'] | ansible.builtin.bool | ansible.builtin.ternary('on', 'off') }};
+ssl_stapling_verify {{ settings['stapling_verify'] | ansible.builtin.bool | ansible.builtin.ternary('on', 'off') }};
 resolver {{ settings['resolvers'] | ansible.builtin.join(' ') }} valid=300s;
 resolver_timeout {{ settings['resolver_timeout'] }};
