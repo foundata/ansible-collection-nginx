@@ -4,6 +4,27 @@ foundata.nginx Ansible collection Release Notes
 
 .. contents:: Topics
 
+v1.4.0
+======
+
+Minor Changes
+-------------
+
+- Add role-prefixed handler topics and use them for internal notifications. Retain the previous topics as migration aliases until version 2.0.0.
+- Add the handler topic run_nginx_reload_nginx as the replacement for "run_nginx: reload nginx.service".
+- Add the handler topic run_nginx_reload_systemd_daemon as the replacement for "run_nginx: systemd daemon-reload".
+- Add the handler topic run_nginx_restart_nginx as the replacement for "run_nginx: restart nginx.service".
+- Add the handler topic run_nginx_validate_configuration as the replacement for "run_nginx: validate configuration".
+- run role - add opt-in systemd restart policy and delay settings, retaining distribution defaults when unset and preserving unrelated service overrides.
+
+Bugfixes
+--------
+
+- Check the minimum ansible-core version before gathering role facts so unsupported versions fail with the intended diagnostic.
+- Limit automatic fact gathering to each role's declared subsets while retaining missing-fact recovery and reuse of cached facts.
+- The declared ansible-core minimum is corrected from 2.16 to 2.19. The roles write Jinja's own filters and tests as ``ansible.builtin.<name>``, which ansible-core resolves from 2.19 only; on 2.16 to 2.18 every run failed at the first such expression, so no working installation is affected.
+- run role - allow disabling OCSP stapling and response verification through the TLS baseline snippet settings for certificates without an OCSP responder URL, preserving existing defaults and the remaining TLS baseline.
+
 v1.3.0
 ======
 
