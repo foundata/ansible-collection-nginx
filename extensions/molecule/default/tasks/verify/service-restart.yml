@@ -65,13 +65,15 @@
       - __run_nginx_restart_policy_write is not ansible.builtin.changed
       - __run_nginx_restart_policy_remove is not ansible.builtin.changed
 
-# Send the signal directly: an explicit systemctl stop must not recover.
+# Signal the current service master: an explicit systemctl stop must not recover.
 - name: "Molecule | Verify | Kill the NGINX master process"
   ansible.builtin.command:
     argv:
+      - "systemctl"
       - "kill"
-      - "-KILL"
-      - "{{ __testing_original_master_pid['stdout'] }}"
+      - "--signal=SIGKILL"
+      - "--kill-whom=main"
+      - "nginx.service"
   changed_when:
     - true
 
