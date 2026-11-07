@@ -24,6 +24,13 @@
     }}
 
 
+- name: "Molecule | Verify | Check the converge after packaged log rotation"
+  ansible.builtin.include_tasks:
+    file: "role-run/log-files.yml"
+  when:
+    - __testing_nginx_before_rotation is ansible.builtin.defined
+
+
 ## Main configuration
 
 - name: "Molecule | Verify | Check if NGINX main configuration file exists"

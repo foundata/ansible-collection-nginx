@@ -70,6 +70,7 @@
   ansible.builtin.package:
     name:
       - "curl"
+      - "logrotate"
       - "openssl"
     state: "present"
     # work-around for conflicts with curl-minimal on Red Hat platforms

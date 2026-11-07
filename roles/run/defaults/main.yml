@@ -103,6 +103,90 @@ run_nginx_service_restart_sec: 5
 # - Default: true
 run_nginx_sites_defaultserver_manage: true
 
+# Owner of `/var/log/nginx/access.log`. Defaults to `www-data` on Debian and
+# Ubuntu, and `nginx` on RHEL-family and SUSE systems.
+#
+# The role creates the file if missing and preserves existing contents and
+# timestamps. Attribute changes do not restart NGINX. This option does not
+# manage per-site logs or logrotate configuration. Align custom values with any
+# explicit logrotate `create` directive; SUSE's bare global `create` preserves
+# existing attributes.
+#
+# - Type: str
+# - Required: No
+# - Default: {{ __run_nginx_access_log_default_file_owner }}
+run_nginx_access_log_default_file_owner: "{{ __run_nginx_access_log_default_file_owner }}"
+
+# Group of `/var/log/nginx/access.log`. Defaults to `adm` on Debian and Ubuntu,
+# `root` on RHEL-family systems, and `nginx` on SUSE.
+#
+# The role creates the file if missing and preserves existing contents and
+# timestamps. Attribute changes do not restart NGINX. This option does not
+# manage per-site logs or logrotate configuration. Align custom values with any
+# explicit logrotate `create` directive; SUSE's bare global `create` preserves
+# existing attributes.
+#
+# - Type: str
+# - Required: No
+# - Default: {{ __run_nginx_access_log_default_file_group }}
+run_nginx_access_log_default_file_group: "{{ __run_nginx_access_log_default_file_group }}"
+
+# Permissions of `/var/log/nginx/access.log`, as a quoted octal or symbolic
+# mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
+#
+# The role creates the file if missing and preserves existing contents and
+# timestamps. Attribute changes do not restart NGINX. This option does not
+# manage per-site logs or logrotate configuration. Align custom values with any
+# explicit logrotate `create` directive; SUSE's bare global `create` preserves
+# existing attributes.
+#
+# - Type: str
+# - Required: No
+# - Default: {{ __run_nginx_access_log_default_file_mode }}
+run_nginx_access_log_default_file_mode: "{{ __run_nginx_access_log_default_file_mode }}"
+
+# Owner of `/var/log/nginx/error.log`. Defaults to `www-data` on Debian and
+# Ubuntu, and `nginx` on RHEL-family and SUSE systems.
+#
+# The role creates the file if missing and preserves existing contents and
+# timestamps. Attribute changes do not restart NGINX. This option does not
+# manage per-site logs or logrotate configuration. Align custom values with any
+# explicit logrotate `create` directive; SUSE's bare global `create` preserves
+# existing attributes.
+#
+# - Type: str
+# - Required: No
+# - Default: {{ __run_nginx_error_log_default_file_owner }}
+run_nginx_error_log_default_file_owner: "{{ __run_nginx_error_log_default_file_owner }}"
+
+# Group of `/var/log/nginx/error.log`. Defaults to `adm` on Debian and Ubuntu,
+# `root` on RHEL-family systems, and `nginx` on SUSE.
+#
+# The role creates the file if missing and preserves existing contents and
+# timestamps. Attribute changes do not restart NGINX. This option does not
+# manage per-site logs or logrotate configuration. Align custom values with any
+# explicit logrotate `create` directive; SUSE's bare global `create` preserves
+# existing attributes.
+#
+# - Type: str
+# - Required: No
+# - Default: {{ __run_nginx_error_log_default_file_group }}
+run_nginx_error_log_default_file_group: "{{ __run_nginx_error_log_default_file_group }}"
+
+# Permissions of `/var/log/nginx/error.log`, as a quoted octal or symbolic mode.
+# Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
+#
+# The role creates the file if missing and preserves existing contents and
+# timestamps. Attribute changes do not restart NGINX. This option does not
+# manage per-site logs or logrotate configuration. Align custom values with any
+# explicit logrotate `create` directive; SUSE's bare global `create` preserves
+# existing attributes.
+#
+# - Type: str
+# - Required: No
+# - Default: {{ __run_nginx_error_log_default_file_mode }}
+run_nginx_error_log_default_file_mode: "{{ __run_nginx_error_log_default_file_mode }}"
+
 # Additional NGINX configuration directives for the main (top-level) context of
 # `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.
 #

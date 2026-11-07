@@ -163,3 +163,20 @@ provisioner:
 verifier:
   name: "ansible"
   enabled: true
+
+scenario:
+  test_sequence:
+    - "dependency"
+    - "cleanup"
+    - "destroy"
+    - "syntax"
+    - "create"
+    - "prepare"
+    - "converge"
+    - "idempotence"
+    - "side_effect"
+    # A packaged log rotation must leave the role idempotent too.
+    - "idempotence"
+    - "verify"
+    - "cleanup"
+    - "destroy"

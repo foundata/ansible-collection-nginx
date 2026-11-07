@@ -1,0 +1,105 @@
+---
+# Check the converge after packaged log rotation before other service tests run.
+#
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: "Molecule | Verify | Read NGINX process identity after rotation and converge"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID,ExecMainStartTimestampMonotonic"
+  changed_when:
+    - false
+  register: __testing_nginx_after_rotation
+
+- name: "Molecule | Verify | Assert rotation and converge did not restart NGINX"
+  ansible.builtin.assert:
+    that:
+      - __testing_nginx_after_rotation['stdout'] == __testing_nginx_before_rotation
+      - "'MainPID=0' not in __testing_nginx_after_rotation['stdout_lines']"
+
+- name: "Molecule | Verify | Inspect the default log attributes after converge"
+  ansible.builtin.stat:
+    path: "/var/log/nginx/{{ item }}.log"
+  loop:
+    - "access"
+    - "error"
+  register: __testing_rotated_logs
+
+- name: "Molecule | Verify | Assert the default logs retain packaged attributes"
+  ansible.builtin.assert:
+    that:
+      - item['stat']['pw_name'] == __testing_logrotate_attributes[item['item']][1]
+      - item['stat']['gr_name'] == __testing_logrotate_attributes[item['item']][2]
+      - item['stat']['mode'] | ansible.builtin.int == __testing_logrotate_attributes[item['item']][0] | ansible.builtin.int
+  loop: "{{ __testing_rotated_logs['results'] }}"
+  loop_control:
+    label: "{{ item['stat']['path'] }}"
+
+- name: "Molecule | Verify | Read the rotated access log"
+  ansible.builtin.slurp:
+    src: "/var/log/nginx/access.log"
+  register: __testing_rotated_access_log
+
+- name: "Molecule | Verify | Assert converge preserved the access log contents"
+  ansible.builtin.assert:
+    that:
+      - "'Molecule rotation sentinel' in (__testing_rotated_access_log['content'] | ansible.builtin.b64decode)"
+
+- name: "Molecule | Verify | Apply independent custom attributes to both default logs"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+  vars:
+    run_nginx_access_log_default_file_owner: "root"
+    run_nginx_access_log_default_file_group: "root"
+    run_nginx_access_log_default_file_mode: "0600"
+    run_nginx_error_log_default_file_owner: "root"
+    run_nginx_error_log_default_file_group: "root"
+    run_nginx_error_log_default_file_mode: "0644"
+
+- name: "Molecule | Verify | Inspect the customized logs"
+  ansible.builtin.stat:
+    path: "/var/log/nginx/{{ item }}.log"
+  loop:
+    - "access"
+    - "error"
+  register: __testing_custom_logs
+
+- name: "Molecule | Verify | Assert custom attributes preserve existing log files"
+  ansible.builtin.assert:
+    that:
+      - item['stat']['pw_name'] == 'root'
+      - item['stat']['gr_name'] == 'root'
+      - item['stat']['mode'] == ('0600' if item['item'] == 'access' else '0644')
+      - item['stat']['inode'] == __testing_rotated_logs['results'][__testing_log_index]['stat']['inode']
+      - item['stat']['mtime'] == __testing_rotated_logs['results'][__testing_log_index]['stat']['mtime']
+  loop: "{{ __testing_custom_logs['results'] }}"
+  loop_control:
+    label: "{{ item['stat']['path'] }}"
+    index_var: "__testing_log_index"
+
+- name: "Molecule | Verify | Restore the platform's default log attributes"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+
+- name: "Molecule | Verify | Flush handlers before checking log attribute changes"
+  ansible.builtin.meta: "flush_handlers"
+
+- name: "Molecule | Verify | Read NGINX process identity after attribute changes"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID,ExecMainStartTimestampMonotonic"
+  changed_when:
+    - false
+  register: __testing_nginx_after_attributes
+
+- name: "Molecule | Verify | Assert attribute changes did not restart NGINX"
+  ansible.builtin.assert:
+    that:
+      - __testing_nginx_after_attributes['stdout'] == __testing_nginx_before_rotation

@@ -1,0 +1,13 @@
+---
+bugfixes:
+  - >-
+    run role - manage default access and error log attributes without restarting
+    NGINX. Use mode 0640 and the distribution's log ownership so packaged log
+    rotation no longer causes permission drift on Debian, Ubuntu or RHEL-family
+    systems. SUSE's inherited logrotate creation preserves these attributes.
+minor_changes:
+  - >-
+    run role - expose owner, group and mode for both default log files through
+    run_nginx_access_log_default_file_* and run_nginx_error_log_default_file_*
+    options. Custom values must also be reflected in the caller's logrotate
+    policy where it specifies creation attributes.

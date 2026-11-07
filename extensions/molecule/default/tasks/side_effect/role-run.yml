@@ -1,0 +1,106 @@
+---
+# Recreate the default logs as the distribution's logrotate configuration does.
+#
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: "Molecule | Side effect | Read the packaged logrotate configuration"
+  ansible.builtin.slurp:
+    src: "/etc/logrotate.d/nginx"
+  register: __testing_logrotate_file
+
+- name: "Molecule | Side effect | Extract the packaged log creation attributes"
+  ansible.builtin.set_fact:
+    __testing_logrotate_create: >-
+      {{
+        (__testing_logrotate_file['content'] | ansible.builtin.b64decode)
+        | ansible.builtin.regex_findall('(?m)^\s*create\s+(0?[0-7]{3})\s+(\S+)\s+(\S+)\s*$')
+      }}
+
+- name: "Molecule | Side effect | Read the global logrotate configuration when creation is inherited"
+  ansible.builtin.slurp:
+    src: "/etc/logrotate.conf"
+  when:
+    - __testing_logrotate_create | ansible.builtin.length == 0
+  register: __testing_logrotate_global
+
+- name: "Molecule | Side effect | Require explicit or inherited creation attributes"
+  ansible.builtin.assert:
+    that:
+      - >-
+        (__testing_logrotate_create | ansible.builtin.length == 1) or
+        ((__testing_logrotate_create | ansible.builtin.length == 0) and
+         ((__testing_logrotate_global['content'] | ansible.builtin.b64decode)
+          is ansible.builtin.search('(?m)^\s*create\s*$')))
+
+- name: "Molecule | Side effect | Inspect attributes inherited by bare create directives"
+  ansible.builtin.stat:
+    path: "/var/log/nginx/{{ item }}.log"
+  loop:
+    - "access"
+    - "error"
+  register: __testing_logs_before_rotation
+
+- name: "Molecule | Side effect | Resolve rotation attributes for each default log"
+  ansible.builtin.set_fact:
+    __testing_logrotate_attributes: >-
+      {{
+        (__testing_logrotate_attributes | ansible.builtin.default({}))
+        | ansible.builtin.combine({item['item']: (
+            __testing_logrotate_create[0]
+            if __testing_logrotate_create | ansible.builtin.length == 1
+            else [item['stat']['mode'], item['stat']['pw_name'], item['stat']['gr_name']]
+          )})
+      }}
+  loop: "{{ __testing_logs_before_rotation['results'] }}"
+  loop_control:
+    label: "{{ item['item'] }}"
+
+- name: "Molecule | Side effect | Record NGINX process identity before rotation"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID,ExecMainStartTimestampMonotonic"
+  changed_when:
+    - false
+  register: __testing_nginx_before_rotation
+
+- name: "Molecule | Side effect | Remove the default log files"
+  ansible.builtin.file:
+    path: "/var/log/nginx/{{ item }}.log"
+    state: "absent"
+  loop:
+    - "access"
+    - "error"
+
+- name: "Molecule | Side effect | Recreate the default logs with packaged attributes"
+  ansible.builtin.copy:
+    content: "Molecule rotation sentinel\n"
+    dest: "/var/log/nginx/{{ item }}.log"
+    owner: "{{ __testing_logrotate_attributes[item][1] }}"
+    group: "{{ __testing_logrotate_attributes[item][2] }}"
+    mode: "{{ __testing_logrotate_attributes[item][0] }}"
+  loop:
+    - "access"
+    - "error"
+
+- name: "Molecule | Side effect | Reopen the logs without restarting NGINX"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "kill"
+      - "--kill-whom=main"
+      - "--signal=USR1"
+      - "nginx.service"
+  changed_when:
+    - true
+
+- name: "Molecule | Side effect | Store rotation expectations for verification"
+  ansible.builtin.include_tasks:
+    file: "../tasks/state_update.yml"
+  vars:
+    __testing_state_update:
+      __testing_nginx_before_rotation: "{{ __testing_nginx_before_rotation['stdout'] }}"
+      __testing_logrotate_attributes: "{{ __testing_logrotate_attributes }}"

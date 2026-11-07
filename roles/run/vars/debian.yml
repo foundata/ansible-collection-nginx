@@ -250,3 +250,6 @@ __run_nginx_modules_map_resources:
 __run_nginx_log_dir_owner: "root"
 __run_nginx_log_dir_group: "adm"
 __run_nginx_log_dir_mode: "u=rwx,g=rx,o=rx" # 0755
+
+# Match nginx-common's logrotate create directive on Debian and Ubuntu.
+__run_nginx_access_log_default_file_owner: "www-data"

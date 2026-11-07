@@ -22,6 +22,12 @@ hardening of [NGINX](https://nginx.org/) across major Linux distributions.
   - [`run_nginx_service_state`](#variable-run_nginx_service_state)
   - [`run_nginx_service_restart`](#variable-run_nginx_service_restart)
   - [`run_nginx_service_restart_sec`](#variable-run_nginx_service_restart_sec)
+  - [`run_nginx_access_log_default_file_owner`](#variable-run_nginx_access_log_default_file_owner)
+  - [`run_nginx_access_log_default_file_group`](#variable-run_nginx_access_log_default_file_group)
+  - [`run_nginx_access_log_default_file_mode`](#variable-run_nginx_access_log_default_file_mode)
+  - [`run_nginx_error_log_default_file_owner`](#variable-run_nginx_error_log_default_file_owner)
+  - [`run_nginx_error_log_default_file_group`](#variable-run_nginx_error_log_default_file_group)
+  - [`run_nginx_error_log_default_file_mode`](#variable-run_nginx_error_log_default_file_mode)
   - [`run_nginx_main_config_block`](#variable-run_nginx_main_config_block)
   - [`run_nginx_events_config_block`](#variable-run_nginx_events_config_block)
   - [`run_nginx_http_config_block`](#variable-run_nginx_http_config_block)
@@ -333,27 +339,33 @@ Manage NGINX (a HTTP web server, reverse proxy, cache, load balancer)
 
 The following variables can be configured for this role:
 
-|                 Variable                  |  Type  | Required |   Default   | Description (abstract) |
-| ----------------------------------------- | ------ | -------- | ----------- | ---------------------- |
-| `run_nginx_state`                         | `str`  | No       | `"present"` | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_nginx_state) |
-| `run_nginx_autoupgrade`                   | `bool` | No       | `false`     | If set to `true`, each Ansible run upgrades the managed packages to the newest version the package provider offers. |
-| `run_nginx_service_state`                 | `str`  | No       | `"enabled"` | Defines the status of the service(s). Possible values:<br><br>- `enabled`: Service is running and will start automatically at boot. - `disabled`: Service is stopped and will not start automatically at boot. - `running`: Service is running but will […](#variable-run_nginx_service_state) |
-| `run_nginx_service_restart`               | `str`  | No       | `""`        | Optional systemd `Restart` policy. An empty string (the default) removes the role's drop-in and uses the distribution's policy and any administrator overrides. `on-failure` recovers from unsuccessful exits, signals, timeouts and OOM failures. An […](#variable-run_nginx_service_restart) |
-| `run_nginx_service_restart_sec`           | `int`  | No       | `5`         | Non-negative delay in seconds before systemd automatically restarts NGINX. Written as `RestartSec` only when `run_nginx_service_restart` is non-empty. The default delay is five seconds. Systemd's existing start rate limits can still stop repeated […](#variable-run_nginx_service_restart_sec) |
-| `run_nginx_main_config_block`             | `str`  | No       | `""`        | Additional NGINX configuration directives for the main (top-level) context of `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.<br><br>The value is inserted verbatim into the rendered configuration file. Only directives […](#variable-run_nginx_main_config_block) |
-| `run_nginx_events_config_block`           | `str`  | No       | `""`        | Additional NGINX configuration directives for the `events {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `events {}` block. Do not include the `events {` and `}` delimiters themselves - only […](#variable-run_nginx_events_config_block) |
-| `run_nginx_http_config_block`             | `str`  | No       | `""`        | Additional NGINX configuration directives for the `http {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `http {}` block. Do not include the `http {` and `}` delimiters themselves - only the […](#variable-run_nginx_http_config_block) |
-| `run_nginx_main_config_baseline_manage`   | `bool` | No       | `true`      | Controls whether the role injects curated baseline directives into the main (top-level) context of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the main context (e.g., `worker_processes`, […](#variable-run_nginx_main_config_baseline_manage) |
-| `run_nginx_events_config_baseline_manage` | `bool` | No       | `true`      | Controls whether the role injects curated baseline directives into the `events {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the events context (e.g., `worker_connections`). […](#variable-run_nginx_events_config_baseline_manage) |
-| `run_nginx_http_config_baseline_manage`   | `bool` | No       | `true`      | Controls whether the role injects curated baseline directives into the `http {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the HTTP context (e.g., `sendfile`, `tcp_nopush`, […](#variable-run_nginx_http_config_baseline_manage) |
-| `run_nginx_sites_config`                  | `list` | No       | `[]`        | List of site definitions (sometimes called vHosts) to manage. Each entry describes a site as a dictionary holding its name, enablement state, and raw NGINX configuration content.<br><br>For each entry, the role renders a config file at […](#variable-run_nginx_sites_config) |
-| `run_nginx_sites_delete_unmanaged`        | `bool` | No       | `true`      | Controls whether the role removes stale site files that are not declared in `run_nginx_sites_config`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/sites-available/` or `/etc/nginx/sites-enabled/` whose name does not […](#variable-run_nginx_sites_delete_unmanaged) |
-| `run_nginx_sites_defaultserver_manage`    | `bool` | No       | `true`      | Controls whether the role includes a hardened catch-all `server {}` block in the `http {}` section of the main configuration file (`nginx.conf`).<br><br>When set to `true`, a default server is rendered that listens on ports 80 and 443 with […](#variable-run_nginx_sites_defaultserver_manage) |
-| `run_nginx_modules_enabled`               | `list` | No       | `[]`        | List of dynamic NGINX module names to enable at runtime.<br><br>Module names follow the canonical `.so` filename with the `ngx_` prefix and `_module` suffix stripped. The general pattern is `_` (e.g. `http_perl` from `ngx_http_perl_module.so`). See […](#variable-run_nginx_modules_enabled) |
-| `run_nginx_modules_disable_unmanaged`     | `bool` | No       | `true`      | Controls whether the role removes dynamic module symlinks that are not declared in `run_nginx_modules_enabled`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/modules-enabled/` whose name does not match an entry in […](#variable-run_nginx_modules_disable_unmanaged) |
-| `run_nginx_snippets_manage`               | `bool` | No       | `true`      | Controls whether the role ships and manages its curated NGINX config snippets (reusable, centrally maintained config blocks meant to be pulled into `server {}` / `location {}` blocks via `include snippets/.conf;`).<br><br>When set to `true`, the role […](#variable-run_nginx_snippets_manage) |
-| `run_nginx_snippet_settings`              | `dict` | No       | `{}`        | User-level overrides for the configuration snippets shipped by this role.<br><br>Each top-level key corresponds to a snippet name (e.g. `hsts`, `php-fpm`, `tls-baseline`). Values are dictionaries whose keys map to template variables used when […](#variable-run_nginx_snippet_settings) |
-| `run_nginx_snippets_delete_unmanaged`     | `bool` | No       | `false`     | Controls whether the role removes snippet files below `/etc/nginx/snippets/` that are not managed by this role.<br><br>When set to `true`, any files in the snippet subdirectories (`http/`, `server/`, `location/`) that were not rendered by the role's […](#variable-run_nginx_snippets_delete_unmanaged) |
+|                 Variable                  |  Type  | Required |                       Default                       | Description (abstract) |
+| ----------------------------------------- | ------ | -------- | --------------------------------------------------- | ---------------------- |
+| `run_nginx_state`                         | `str`  | No       | `"present"`                                         | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_nginx_state) |
+| `run_nginx_autoupgrade`                   | `bool` | No       | `false`                                             | If set to `true`, each Ansible run upgrades the managed packages to the newest version the package provider offers. |
+| `run_nginx_service_state`                 | `str`  | No       | `"enabled"`                                         | Defines the status of the service(s). Possible values:<br><br>- `enabled`: Service is running and will start automatically at boot. - `disabled`: Service is stopped and will not start automatically at boot. - `running`: Service is running but will […](#variable-run_nginx_service_state) |
+| `run_nginx_service_restart`               | `str`  | No       | `""`                                                | Optional systemd `Restart` policy. An empty string (the default) removes the role's drop-in and uses the distribution's policy and any administrator overrides. `on-failure` recovers from unsuccessful exits, signals, timeouts and OOM failures. An […](#variable-run_nginx_service_restart) |
+| `run_nginx_service_restart_sec`           | `int`  | No       | `5`                                                 | Non-negative delay in seconds before systemd automatically restarts NGINX. Written as `RestartSec` only when `run_nginx_service_restart` is non-empty. The default delay is five seconds. Systemd's existing start rate limits can still stop repeated […](#variable-run_nginx_service_restart_sec) |
+| `run_nginx_access_log_default_file_owner` | `str`  | No       | `"{{ __run_nginx_access_log_default_file_owner }}"` | Owner of `/var/log/nginx/access.log`. Defaults to `www-data` on Debian and Ubuntu, and `nginx` on RHEL-family and SUSE systems.<br><br>The role creates the file if missing and preserves existing contents and timestamps. Attribute changes do not […](#variable-run_nginx_access_log_default_file_owner) |
+| `run_nginx_access_log_default_file_group` | `str`  | No       | `"{{ __run_nginx_access_log_default_file_group }}"` | Group of `/var/log/nginx/access.log`. Defaults to `adm` on Debian and Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.<br><br>The role creates the file if missing and preserves existing contents and timestamps. Attribute changes do not […](#variable-run_nginx_access_log_default_file_group) |
+| `run_nginx_access_log_default_file_mode`  | `str`  | No       | `"{{ __run_nginx_access_log_default_file_mode }}"`  | Permissions of `/var/log/nginx/access.log`, as a quoted octal or symbolic mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.<br><br>The role creates the file if missing and preserves existing contents and timestamps. Attribute […](#variable-run_nginx_access_log_default_file_mode) |
+| `run_nginx_error_log_default_file_owner`  | `str`  | No       | `"{{ __run_nginx_error_log_default_file_owner }}"`  | Owner of `/var/log/nginx/error.log`. Defaults to `www-data` on Debian and Ubuntu, and `nginx` on RHEL-family and SUSE systems.<br><br>The role creates the file if missing and preserves existing contents and timestamps. Attribute changes do not […](#variable-run_nginx_error_log_default_file_owner) |
+| `run_nginx_error_log_default_file_group`  | `str`  | No       | `"{{ __run_nginx_error_log_default_file_group }}"`  | Group of `/var/log/nginx/error.log`. Defaults to `adm` on Debian and Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.<br><br>The role creates the file if missing and preserves existing contents and timestamps. Attribute changes do not […](#variable-run_nginx_error_log_default_file_group) |
+| `run_nginx_error_log_default_file_mode`   | `str`  | No       | `"{{ __run_nginx_error_log_default_file_mode }}"`   | Permissions of `/var/log/nginx/error.log`, as a quoted octal or symbolic mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.<br><br>The role creates the file if missing and preserves existing contents and timestamps. Attribute […](#variable-run_nginx_error_log_default_file_mode) |
+| `run_nginx_main_config_block`             | `str`  | No       | `""`                                                | Additional NGINX configuration directives for the main (top-level) context of `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.<br><br>The value is inserted verbatim into the rendered configuration file. Only directives […](#variable-run_nginx_main_config_block) |
+| `run_nginx_events_config_block`           | `str`  | No       | `""`                                                | Additional NGINX configuration directives for the `events {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `events {}` block. Do not include the `events {` and `}` delimiters themselves - only […](#variable-run_nginx_events_config_block) |
+| `run_nginx_http_config_block`             | `str`  | No       | `""`                                                | Additional NGINX configuration directives for the `http {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `http {}` block. Do not include the `http {` and `}` delimiters themselves - only the […](#variable-run_nginx_http_config_block) |
+| `run_nginx_main_config_baseline_manage`   | `bool` | No       | `true`                                              | Controls whether the role injects curated baseline directives into the main (top-level) context of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the main context (e.g., `worker_processes`, […](#variable-run_nginx_main_config_baseline_manage) |
+| `run_nginx_events_config_baseline_manage` | `bool` | No       | `true`                                              | Controls whether the role injects curated baseline directives into the `events {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the events context (e.g., `worker_connections`). […](#variable-run_nginx_events_config_baseline_manage) |
+| `run_nginx_http_config_baseline_manage`   | `bool` | No       | `true`                                              | Controls whether the role injects curated baseline directives into the `http {}` block of the main configuration file (`nginx.conf`).<br><br>When set to `true`, the role provides sane defaults for the HTTP context (e.g., `sendfile`, `tcp_nopush`, […](#variable-run_nginx_http_config_baseline_manage) |
+| `run_nginx_sites_config`                  | `list` | No       | `[]`                                                | List of site definitions (sometimes called vHosts) to manage. Each entry describes a site as a dictionary holding its name, enablement state, and raw NGINX configuration content.<br><br>For each entry, the role renders a config file at […](#variable-run_nginx_sites_config) |
+| `run_nginx_sites_delete_unmanaged`        | `bool` | No       | `true`                                              | Controls whether the role removes stale site files that are not declared in `run_nginx_sites_config`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/sites-available/` or `/etc/nginx/sites-enabled/` whose name does not […](#variable-run_nginx_sites_delete_unmanaged) |
+| `run_nginx_sites_defaultserver_manage`    | `bool` | No       | `true`                                              | Controls whether the role includes a hardened catch-all `server {}` block in the `http {}` section of the main configuration file (`nginx.conf`).<br><br>When set to `true`, a default server is rendered that listens on ports 80 and 443 with […](#variable-run_nginx_sites_defaultserver_manage) |
+| `run_nginx_modules_enabled`               | `list` | No       | `[]`                                                | List of dynamic NGINX module names to enable at runtime.<br><br>Module names follow the canonical `.so` filename with the `ngx_` prefix and `_module` suffix stripped. The general pattern is `_` (e.g. `http_perl` from `ngx_http_perl_module.so`). See […](#variable-run_nginx_modules_enabled) |
+| `run_nginx_modules_disable_unmanaged`     | `bool` | No       | `true`                                              | Controls whether the role removes dynamic module symlinks that are not declared in `run_nginx_modules_enabled`.<br><br>When set to `true`, any `*.conf` file or symlink found in `/etc/nginx/modules-enabled/` whose name does not match an entry in […](#variable-run_nginx_modules_disable_unmanaged) |
+| `run_nginx_snippets_manage`               | `bool` | No       | `true`                                              | Controls whether the role ships and manages its curated NGINX config snippets (reusable, centrally maintained config blocks meant to be pulled into `server {}` / `location {}` blocks via `include snippets/.conf;`).<br><br>When set to `true`, the role […](#variable-run_nginx_snippets_manage) |
+| `run_nginx_snippet_settings`              | `dict` | No       | `{}`                                                | User-level overrides for the configuration snippets shipped by this role.<br><br>Each top-level key corresponds to a snippet name (e.g. `hsts`, `php-fpm`, `tls-baseline`). Values are dictionaries whose keys map to template variables used when […](#variable-run_nginx_snippet_settings) |
+| `run_nginx_snippets_delete_unmanaged`     | `bool` | No       | `false`                                             | Controls whether the role removes snippet files below `/etc/nginx/snippets/` that are not managed by this role.<br><br>When set to `true`, any files in the snippet subdirectories (`http/`, `server/`, `location/`) that were not rendered by the role's […](#variable-run_nginx_snippets_delete_unmanaged) |
 
 ### `run_nginx_state`<a id="variable-run_nginx_state"></a>
 
@@ -455,6 +467,120 @@ start rate limits can still stop repeated restart attempts.
 - **Type**: `int`
 - **Required**: No
 - **Default**: `5`
+
+
+
+### `run_nginx_access_log_default_file_owner`<a id="variable-run_nginx_access_log_default_file_owner"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Owner of `/var/log/nginx/access.log`. Defaults to `www-data` on Debian and
+Ubuntu, and `nginx` on RHEL-family and SUSE systems.
+
+The role creates the file if missing and preserves existing contents and
+timestamps. Attribute changes do not restart NGINX. This option does not
+manage per-site logs or logrotate configuration. Align custom values with
+any explicit logrotate `create` directive; SUSE's bare global `create`
+preserves existing attributes.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"{{ __run_nginx_access_log_default_file_owner }}"`
+
+
+
+### `run_nginx_access_log_default_file_group`<a id="variable-run_nginx_access_log_default_file_group"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Group of `/var/log/nginx/access.log`. Defaults to `adm` on Debian and
+Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.
+
+The role creates the file if missing and preserves existing contents and
+timestamps. Attribute changes do not restart NGINX. This option does not
+manage per-site logs or logrotate configuration. Align custom values with
+any explicit logrotate `create` directive; SUSE's bare global `create`
+preserves existing attributes.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"{{ __run_nginx_access_log_default_file_group }}"`
+
+
+
+### `run_nginx_access_log_default_file_mode`<a id="variable-run_nginx_access_log_default_file_mode"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Permissions of `/var/log/nginx/access.log`, as a quoted octal or symbolic
+mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
+
+The role creates the file if missing and preserves existing contents and
+timestamps. Attribute changes do not restart NGINX. This option does not
+manage per-site logs or logrotate configuration. Align custom values with
+any explicit logrotate `create` directive; SUSE's bare global `create`
+preserves existing attributes.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"{{ __run_nginx_access_log_default_file_mode }}"`
+
+
+
+### `run_nginx_error_log_default_file_owner`<a id="variable-run_nginx_error_log_default_file_owner"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Owner of `/var/log/nginx/error.log`. Defaults to `www-data` on Debian and
+Ubuntu, and `nginx` on RHEL-family and SUSE systems.
+
+The role creates the file if missing and preserves existing contents and
+timestamps. Attribute changes do not restart NGINX. This option does not
+manage per-site logs or logrotate configuration. Align custom values with
+any explicit logrotate `create` directive; SUSE's bare global `create`
+preserves existing attributes.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"{{ __run_nginx_error_log_default_file_owner }}"`
+
+
+
+### `run_nginx_error_log_default_file_group`<a id="variable-run_nginx_error_log_default_file_group"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Group of `/var/log/nginx/error.log`. Defaults to `adm` on Debian and
+Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.
+
+The role creates the file if missing and preserves existing contents and
+timestamps. Attribute changes do not restart NGINX. This option does not
+manage per-site logs or logrotate configuration. Align custom values with
+any explicit logrotate `create` directive; SUSE's bare global `create`
+preserves existing attributes.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"{{ __run_nginx_error_log_default_file_group }}"`
+
+
+
+### `run_nginx_error_log_default_file_mode`<a id="variable-run_nginx_error_log_default_file_mode"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Permissions of `/var/log/nginx/error.log`, as a quoted octal or symbolic
+mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
+
+The role creates the file if missing and preserves existing contents and
+timestamps. Attribute changes do not restart NGINX. This option does not
+manage per-site logs or logrotate configuration. Align custom values with
+any explicit logrotate `create` directive; SUSE's bare global `create`
+preserves existing attributes.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"{{ __run_nginx_error_log_default_file_mode }}"`
 
 
 
