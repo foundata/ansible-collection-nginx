@@ -17,9 +17,18 @@
         | ansible.builtin.regex_findall('(?m)^\s*create\s+(0?[0-7]{3})\s+(\S+)\s+(\S+)\s*$')
       }}
 
+- name: "Molecule | Side effect | Locate the global logrotate configuration when creation is inherited"
+  ansible.builtin.stat:
+    path: "/etc/logrotate.conf"
+  when:
+    - __testing_logrotate_create | ansible.builtin.length == 0
+  register: __testing_logrotate_global_stat
+
 - name: "Molecule | Side effect | Read the global logrotate configuration when creation is inherited"
   ansible.builtin.slurp:
-    src: "/etc/logrotate.conf"
+    src: >-
+      {{ '/etc/logrotate.conf' if __testing_logrotate_global_stat['stat']['exists']
+         else '/usr/etc/logrotate.conf' }}
   when:
     - __testing_logrotate_create | ansible.builtin.length == 0
   register: __testing_logrotate_global
