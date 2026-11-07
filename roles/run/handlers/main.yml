@@ -16,8 +16,6 @@
   register: __run_nginx_validation_result
   listen:
     - "run_nginx_validate_configuration"
-    # Migration alias; remove in 2.0.0.
-    - "run_nginx: validate configuration"
 - name: "Handlers | NGINX service restart"
   ansible.builtin.systemd_service:
     name: "{{ __run_nginx_nginx_servicename }}"
@@ -26,8 +24,6 @@
     - run_nginx_service_state in ['enabled', 'running']
   listen:
     - "run_nginx_restart_nginx"
-    # Migration alias; remove in 2.0.0.
-    - "run_nginx: restart nginx.service"
 - name: "Handlers | NGINX service reload"
   ansible.builtin.systemd_service:
     name: "{{ __run_nginx_nginx_servicename }}"
@@ -36,12 +32,8 @@
     - run_nginx_service_state in ['enabled', 'running']
   listen:
     - "run_nginx_reload_nginx"
-    # Migration alias; remove in 2.0.0.
-    - "run_nginx: reload nginx.service"
 - name: "Handlers | systemd daemon-reload"
   ansible.builtin.systemd_service:
     daemon_reload: true
   listen:
     - "run_nginx_reload_systemd_daemon"
-    # Migration alias; remove in 2.0.0.
-    - "run_nginx: systemd daemon-reload"
