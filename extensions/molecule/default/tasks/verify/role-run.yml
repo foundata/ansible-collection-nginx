@@ -562,11 +562,11 @@
 
 - name: "Molecule | Verify | Check configurable OCSP stapling"
   ansible.builtin.include_tasks:
-    file: "tls-stapling.yml"
+    file: "role-run/tls-stapling.yml"
 
 - name: "Molecule | Verify | Check configurable service recovery"
   ansible.builtin.include_tasks:
-    file: "service-restart.yml"
+    file: "role-run/service-restart.yml"
 
 ## Security response headers
 
