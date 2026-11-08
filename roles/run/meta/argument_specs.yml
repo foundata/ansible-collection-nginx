@@ -104,84 +104,6 @@ argument_specs:
         type: "int"
         default: 5
 
-      run_nginx_access_log_default_file_owner:
-        description: |
-          Owner of `/var/log/nginx/access.log`. Defaults to `www-data` on Debian and
-          Ubuntu, and `nginx` on RHEL-family and SUSE systems.
-
-          The role creates the file if missing and preserves existing contents and
-          timestamps. Attribute changes do not restart NGINX. This option does not
-          manage per-site logs or logrotate configuration. Align custom values with
-          any explicit logrotate `create` directive; SUSE's bare global `create`
-          preserves existing attributes.
-        type: "str"
-        default: "{{ __run_nginx_access_log_default_file_owner }}"
-
-      run_nginx_access_log_default_file_group:
-        description: |
-          Group of `/var/log/nginx/access.log`. Defaults to `adm` on Debian and
-          Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.
-
-          The role creates the file if missing and preserves existing contents and
-          timestamps. Attribute changes do not restart NGINX. This option does not
-          manage per-site logs or logrotate configuration. Align custom values with
-          any explicit logrotate `create` directive; SUSE's bare global `create`
-          preserves existing attributes.
-        type: "str"
-        default: "{{ __run_nginx_access_log_default_file_group }}"
-
-      run_nginx_access_log_default_file_mode:
-        description: |
-          Permissions of `/var/log/nginx/access.log`, as a quoted octal or symbolic
-          mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
-
-          The role creates the file if missing and preserves existing contents and
-          timestamps. Attribute changes do not restart NGINX. This option does not
-          manage per-site logs or logrotate configuration. Align custom values with
-          any explicit logrotate `create` directive; SUSE's bare global `create`
-          preserves existing attributes.
-        type: "str"
-        default: "{{ __run_nginx_access_log_default_file_mode }}"
-
-      run_nginx_error_log_default_file_owner:
-        description: |
-          Owner of `/var/log/nginx/error.log`. Defaults to `www-data` on Debian and
-          Ubuntu, and `nginx` on RHEL-family and SUSE systems.
-
-          The role creates the file if missing and preserves existing contents and
-          timestamps. Attribute changes do not restart NGINX. This option does not
-          manage per-site logs or logrotate configuration. Align custom values with
-          any explicit logrotate `create` directive; SUSE's bare global `create`
-          preserves existing attributes.
-        type: "str"
-        default: "{{ __run_nginx_error_log_default_file_owner }}"
-
-      run_nginx_error_log_default_file_group:
-        description: |
-          Group of `/var/log/nginx/error.log`. Defaults to `adm` on Debian and
-          Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.
-
-          The role creates the file if missing and preserves existing contents and
-          timestamps. Attribute changes do not restart NGINX. This option does not
-          manage per-site logs or logrotate configuration. Align custom values with
-          any explicit logrotate `create` directive; SUSE's bare global `create`
-          preserves existing attributes.
-        type: "str"
-        default: "{{ __run_nginx_error_log_default_file_group }}"
-
-      run_nginx_error_log_default_file_mode:
-        description: |
-          Permissions of `/var/log/nginx/error.log`, as a quoted octal or symbolic
-          mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
-
-          The role creates the file if missing and preserves existing contents and
-          timestamps. Attribute changes do not restart NGINX. This option does not
-          manage per-site logs or logrotate configuration. Align custom values with
-          any explicit logrotate `create` directive; SUSE's bare global `create`
-          preserves existing attributes.
-        type: "str"
-        default: "{{ __run_nginx_error_log_default_file_mode }}"
-
       run_nginx_main_config_block:
         description: |
           Additional NGINX configuration directives for the main (top-level) context
@@ -653,3 +575,81 @@ argument_specs:
           Only takes effect when `run_nginx_snippets_manage` is `true`.
         type: "bool"
         default: false
+
+      run_nginx_access_log_default_file_owner:
+        description: |
+          Owner of `/var/log/nginx/access.log`. Defaults to `www-data` on Debian and
+          Ubuntu, and `nginx` on RHEL-family and SUSE systems.
+
+          The role creates the file if missing and preserves existing contents and
+          timestamps. Attribute changes do not restart NGINX. This option does not
+          manage per-site logs or logrotate configuration. Align custom values with
+          any explicit logrotate `create` directive; SUSE's bare global `create`
+          preserves existing attributes.
+        type: "str"
+        default: "{{ __run_nginx_access_log_default_file_owner }}"
+
+      run_nginx_access_log_default_file_group:
+        description: |
+          Group of `/var/log/nginx/access.log`. Defaults to `adm` on Debian and
+          Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.
+
+          The role creates the file if missing and preserves existing contents and
+          timestamps. Attribute changes do not restart NGINX. This option does not
+          manage per-site logs or logrotate configuration. Align custom values with
+          any explicit logrotate `create` directive; SUSE's bare global `create`
+          preserves existing attributes.
+        type: "str"
+        default: "{{ __run_nginx_access_log_default_file_group }}"
+
+      run_nginx_access_log_default_file_mode:
+        description: |
+          Permissions of `/var/log/nginx/access.log`, as a quoted octal or symbolic
+          mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
+
+          The role creates the file if missing and preserves existing contents and
+          timestamps. Attribute changes do not restart NGINX. This option does not
+          manage per-site logs or logrotate configuration. Align custom values with
+          any explicit logrotate `create` directive; SUSE's bare global `create`
+          preserves existing attributes.
+        type: "str"
+        default: "{{ __run_nginx_access_log_default_file_mode }}"
+
+      run_nginx_error_log_default_file_owner:
+        description: |
+          Owner of `/var/log/nginx/error.log`. Defaults to `www-data` on Debian and
+          Ubuntu, and `nginx` on RHEL-family and SUSE systems.
+
+          The role creates the file if missing and preserves existing contents and
+          timestamps. Attribute changes do not restart NGINX. This option does not
+          manage per-site logs or logrotate configuration. Align custom values with
+          any explicit logrotate `create` directive; SUSE's bare global `create`
+          preserves existing attributes.
+        type: "str"
+        default: "{{ __run_nginx_error_log_default_file_owner }}"
+
+      run_nginx_error_log_default_file_group:
+        description: |
+          Group of `/var/log/nginx/error.log`. Defaults to `adm` on Debian and
+          Ubuntu, `root` on RHEL-family systems, and `nginx` on SUSE.
+
+          The role creates the file if missing and preserves existing contents and
+          timestamps. Attribute changes do not restart NGINX. This option does not
+          manage per-site logs or logrotate configuration. Align custom values with
+          any explicit logrotate `create` directive; SUSE's bare global `create`
+          preserves existing attributes.
+        type: "str"
+        default: "{{ __run_nginx_error_log_default_file_group }}"
+
+      run_nginx_error_log_default_file_mode:
+        description: |
+          Permissions of `/var/log/nginx/error.log`, as a quoted octal or symbolic
+          mode. Defaults to `u=rw,g=r,o=` (`0640`) on all supported platforms.
+
+          The role creates the file if missing and preserves existing contents and
+          timestamps. Attribute changes do not restart NGINX. This option does not
+          manage per-site logs or logrotate configuration. Align custom values with
+          any explicit logrotate `create` directive; SUSE's bare global `create`
+          preserves existing attributes.
+        type: "str"
+        default: "{{ __run_nginx_error_log_default_file_mode }}"

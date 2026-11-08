@@ -47,17 +47,6 @@ The primary role in this collection to configure and maintain NGINX, including
 sites / virtual hosts (`server {}`) and related configuration. [Its
 `README.md`](./roles/run/README.md) covers configuration and usage examples.
 
-The role creates the default `access.log` and `error.log` with mode `0640` and
-distribution-specific ownership: `www-data:adm` on Debian and Ubuntu,
-`nginx:root` on RHEL-family systems, and `nginx:nginx` on SUSE. Debian, Ubuntu
-and RHEL-family defaults match their packaged logrotate `create` directives.
-SUSE inherits a bare global `create`, which preserves the existing attributes.
-Use the `run_nginx_access_log_default_file_*` and
-`run_nginx_error_log_default_file_*` options to override owner, group and mode.
-Attribute changes preserve log contents and timestamps and do not restart NGINX.
-If you override these values, align any explicit logrotate creation attributes
-as well; the role does not manage log rotation or per-site log permissions.
-
 <!-- ANSIBLE DOCSMITH TOC-FULL run START -->
 - [Ansible role: `foundata.nginx.run`](./roles/run/README.md#ansible-role-foundatanginxrun)
   - [Table of contents](./roles/run/README.md#toc)
@@ -70,12 +59,6 @@ as well; the role does not manage log rotation or per-site log permissions.
     - [`run_nginx_service_state`](./roles/run/README.md#variable-run_nginx_service_state)
     - [`run_nginx_service_restart`](./roles/run/README.md#variable-run_nginx_service_restart)
     - [`run_nginx_service_restart_sec`](./roles/run/README.md#variable-run_nginx_service_restart_sec)
-    - [`run_nginx_access_log_default_file_owner`](./roles/run/README.md#variable-run_nginx_access_log_default_file_owner)
-    - [`run_nginx_access_log_default_file_group`](./roles/run/README.md#variable-run_nginx_access_log_default_file_group)
-    - [`run_nginx_access_log_default_file_mode`](./roles/run/README.md#variable-run_nginx_access_log_default_file_mode)
-    - [`run_nginx_error_log_default_file_owner`](./roles/run/README.md#variable-run_nginx_error_log_default_file_owner)
-    - [`run_nginx_error_log_default_file_group`](./roles/run/README.md#variable-run_nginx_error_log_default_file_group)
-    - [`run_nginx_error_log_default_file_mode`](./roles/run/README.md#variable-run_nginx_error_log_default_file_mode)
     - [`run_nginx_main_config_block`](./roles/run/README.md#variable-run_nginx_main_config_block)
     - [`run_nginx_events_config_block`](./roles/run/README.md#variable-run_nginx_events_config_block)
     - [`run_nginx_http_config_block`](./roles/run/README.md#variable-run_nginx_http_config_block)
@@ -109,6 +92,12 @@ as well; the role does not manage log rotation or per-site log permissions.
         - [`run_nginx_snippet_settings['tls-baseline']['resolvers']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolvers)
         - [`run_nginx_snippet_settings['tls-baseline']['resolver_timeout']`](./roles/run/README.md#variable-run_nginx_snippet_settings-sub-tls-baseline-sub-resolver_timeout)
     - [`run_nginx_snippets_delete_unmanaged`](./roles/run/README.md#variable-run_nginx_snippets_delete_unmanaged)
+    - [`run_nginx_access_log_default_file_owner`](./roles/run/README.md#variable-run_nginx_access_log_default_file_owner)
+    - [`run_nginx_access_log_default_file_group`](./roles/run/README.md#variable-run_nginx_access_log_default_file_group)
+    - [`run_nginx_access_log_default_file_mode`](./roles/run/README.md#variable-run_nginx_access_log_default_file_mode)
+    - [`run_nginx_error_log_default_file_owner`](./roles/run/README.md#variable-run_nginx_error_log_default_file_owner)
+    - [`run_nginx_error_log_default_file_group`](./roles/run/README.md#variable-run_nginx_error_log_default_file_group)
+    - [`run_nginx_error_log_default_file_mode`](./roles/run/README.md#variable-run_nginx_error_log_default_file_mode)
   - [Dependencies](./roles/run/README.md#dependencies)
   - [Compatibility](./roles/run/README.md#compatibility)
   - [External requirements](./roles/run/README.md#requirements)
