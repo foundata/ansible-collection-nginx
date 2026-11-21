@@ -187,7 +187,7 @@ settings:
                   }
 
                   location ~* \.(css|js|svg|png|jpg|gif|ico|woff2?)$ {
-                      # A local add_header replaces the headers inherited from the server.
+                      # With default inheritance, repeat all selected parent headers here.
                       include snippets/server/headers-security.conf;
                       include snippets/server/headers-hsts.conf;
                       include snippets/location/cache-static.conf;
@@ -196,6 +196,10 @@ settings:
         run_nginx_modules_enabled:
           - "http_headers_more_filter"
 ```
+
+If you explicitly set `add_header_inherit merge` (NGINX 1.29.3 or later), omit
+the repeated security and HSTS includes in the static location to avoid
+duplicate headers.
 
 To log request and upstream timings as JSON for one site, define a named format
 in the HTTP block and select it in that site's `server` block:

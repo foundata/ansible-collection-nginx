@@ -28,8 +28,8 @@
   ansible.builtin.assert:
     that:
       - >-
-        (__testing_https_headers['stdout_lines'] | ansible.builtin.map('lower')
-        | ansible.builtin.select('match', '^' ~ item.split(':')[0] ~ ':') | ansible.builtin.list) == [item]
+        (__testing_https_headers['stdout_lines'] | ansible.builtin.map('ansible.builtin.lower')
+        | ansible.builtin.select('ansible.builtin.match', '^' ~ item.split(':')[0] ~ ':') | ansible.builtin.list) == [item]
   loop:
     - "x-content-type-options: nosniff"
     - "x-frame-options: sameorigin"
