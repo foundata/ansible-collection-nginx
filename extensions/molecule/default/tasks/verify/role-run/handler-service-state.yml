@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Molecule | Verify | Stop NGINX on one host"
+  ansible.builtin.systemd_service:
+    name: "nginx.service"
+    state: "stopped"
+  when:
+    - inventory_hostname == ansible_play_hosts_all[0]
+
+- name: "Molecule | Verify | Register role handlers for the stopped host"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "init"
+  vars:
+    run_nginx_service_state: "disabled"
+  when:
+    - inventory_hostname == ansible_play_hosts_all[0]
+
+- name: "Molecule | Verify | Register role handlers for the running hosts"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "init"
+  vars:
+    run_nginx_service_state: "enabled"
+  when:
+    - inventory_hostname != ansible_play_hosts_all[0]
+
+- name: "Molecule | Verify | Notify the public reload handler on every host"
+  ansible.builtin.debug:
+    msg: "Requesting a reload from outside the role."
+    verbosity: 0
+  changed_when:
+    - true
+  notify:
+    - "run_nginx_reload_nginx"
+
+- name: "Molecule | Verify | Flush the public reload notification"
+  ansible.builtin.meta: "flush_handlers"
+
+- name: "Molecule | Verify | Read the resulting service state"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=ActiveState"
+      - "--value"
+  changed_when:
+    - false
+  register: __testing_state_after_notification
+
+- name: "Molecule | Verify | Assert that the stopped host stayed stopped"
+  ansible.builtin.assert:
+    that:
+      - __testing_state_after_notification['stdout'] == ('inactive' if inventory_hostname == ansible_play_hosts_all[0] else 'active')
+
+- name: "Molecule | Verify | Restore the role service state for later checks"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+    tasks_from: "init"
+
+- name: "Molecule | Verify | Restore service on the stopped host"
+  ansible.builtin.systemd_service:
+    name: "nginx.service"
+    state: "started"
+  when:
+    - inventory_hostname == ansible_play_hosts_all[0]

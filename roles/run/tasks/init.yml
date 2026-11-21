@@ -135,6 +135,12 @@
 
 ## nginx specific
 
+# Ansible registers handlers for the whole play. Separate conditional role
+# calls can pass different literal service states to different hosts.
+- name: "Init | Record whether handlers may activate NGINX on this host"
+  ansible.builtin.set_fact:
+    __run_nginx_may_activate: "{{ run_nginx_state == 'present' and run_nginx_service_state in ['enabled', 'running'] }}"
+
 - name: "Init | Validate the automatic restart delay"
   ansible.builtin.assert:
     that:

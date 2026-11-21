@@ -131,3 +131,7 @@
 
 - name: "Molecule | Verify | Activate the restored configuration"
   ansible.builtin.meta: "flush_handlers"
+
+- name: "Molecule | Verify | Exercise host-specific public handler notifications"
+  ansible.builtin.include_tasks:
+    file: "handler-service-state.yml"

@@ -7,14 +7,16 @@
     __run_nginx_apply_state: "{{ 'restarted' if (__run_nginx_restart_pending | ansible.builtin.default(false)) else 'reloaded' }}"
     __run_nginx_restart_pending: false
 
-- name: "Apply | Validate before reloading or restarting NGINX"
-  ansible.builtin.import_tasks: "validate.yml"
+- name: "Apply | Activate the configuration when the service should be running"
   when:
-    - run_nginx_service_state in ['enabled', 'running']
+    - >-
+      __run_nginx_may_activate | ansible.builtin.default(
+        run_nginx_state == 'present' and run_nginx_service_state in ['enabled', 'running'])
+  block:
+    - name: "Apply | Validate before reloading or restarting NGINX"
+      ansible.builtin.import_tasks: "validate.yml"
 
-- name: "Apply | Reload or restart NGINX"
-  ansible.builtin.systemd_service:
-    name: "{{ __run_nginx_nginx_servicename }}"
-    state: "{{ __run_nginx_apply_state }}"
-  when:
-    - run_nginx_service_state in ['enabled', 'running']
+    - name: "Apply | Reload or restart NGINX"
+      ansible.builtin.systemd_service:
+        name: "{{ __run_nginx_nginx_servicename }}"
+        state: "{{ __run_nginx_apply_state }}"
