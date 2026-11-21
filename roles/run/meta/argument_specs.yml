@@ -104,6 +104,22 @@ argument_specs:
         type: "int"
         default: 5
 
+      run_nginx_main_config_change_action:
+        description: |
+          Service action when the role changes `nginx.conf`, including its
+          events and HTTP blocks. The default `restart` supports configurations
+          that require a new master process. Select `reload` for configurations
+          that NGINX can apply gracefully.
+
+          Site and snippet changes request a reload. Module configuration
+          changes request a restart, which takes precedence in the same handler
+          flush. The role acts on running or enabled services.
+        type: "str"
+        default: "restart"
+        choices:
+          - "restart"
+          - "reload"
+
       run_nginx_main_config_block:
         description: |
           Additional NGINX configuration directives for the main (top-level) context

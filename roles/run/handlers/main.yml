@@ -5,33 +5,24 @@
 
 ---
 - name: "Handlers | Validate NGINX configuration"
-  ansible.builtin.command:
-    argv:
-      - "{{ __run_nginx_server_exec_path }}"
-      - "-t"
-  changed_when:
-    - false
-  failed_when:
-    - __run_nginx_validation_result is ansible.builtin.failed
-  register: __run_nginx_validation_result
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate.yml"
   listen:
     - "run_nginx_validate_configuration"
-- name: "Handlers | NGINX service restart"
-  ansible.builtin.systemd_service:
-    name: "{{ __run_nginx_nginx_servicename }}"
-    state: "restarted"
-  when:
-    - run_nginx_service_state in ['enabled', 'running']
+
+# Both topics can be notified in the same flush. Record the stronger request
+# before the shared handler runs; a restart also applies pending reloads.
+- name: "Handlers | Request a restart for this flush"
+  ansible.builtin.set_fact:
+    __run_nginx_restart_pending: true
   listen:
     - "run_nginx_restart_nginx"
-- name: "Handlers | NGINX service reload"
-  ansible.builtin.systemd_service:
-    name: "{{ __run_nginx_nginx_servicename }}"
-    state: "reloaded"
-  when:
-    - run_nginx_service_state in ['enabled', 'running']
+
+- name: "Handlers | Apply the requested NGINX configuration change"
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/apply.yml"
   listen:
+    - "run_nginx_restart_nginx"
     - "run_nginx_reload_nginx"
+
 - name: "Handlers | systemd daemon-reload"
   ansible.builtin.systemd_service:
     daemon_reload: true

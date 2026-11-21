@@ -103,6 +103,21 @@ run_nginx_service_restart_sec: 5
 # - Default: true
 run_nginx_sites_defaultserver_manage: true
 
+# Service action when the role changes `nginx.conf`, including its events and
+# HTTP blocks. The default `restart` supports configurations that require a new
+# master process. Select `reload` for configurations that NGINX can apply
+# gracefully.
+#
+# Site and snippet changes request a reload. Module configuration changes
+# request a restart, which takes precedence in the same handler flush. The role
+# acts on running or enabled services.
+#
+# - Type: str
+# - Required: No
+# - Default: restart
+# - Choices: restart, reload
+run_nginx_main_config_change_action: "restart"
+
 # Additional NGINX configuration directives for the main (top-level) context of
 # `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.
 #

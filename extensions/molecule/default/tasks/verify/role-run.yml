@@ -31,6 +31,11 @@
     - __testing_nginx_before_rotation is ansible.builtin.defined
 
 
+- name: "Molecule | Verify | Check configuration validation and activation"
+  ansible.builtin.include_tasks:
+    file: "role-run/configuration-actions.yml"
+
+
 ## Main configuration
 
 - name: "Molecule | Verify | Check if NGINX main configuration file exists"

@@ -1,0 +1,8 @@
+---
+minor_changes:
+  - >-
+    run - support ``run_nginx_main_config_change_action`` to reload NGINX for
+    compatible main configuration changes. The default remains restart.
+  - >-
+    run - reload for snippet changes and apply one validated service action
+    per handler flush, giving restart requests precedence over reloads.

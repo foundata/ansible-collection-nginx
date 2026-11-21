@@ -1,0 +1,6 @@
+---
+bugfixes:
+  - >-
+    run - validate the installed configuration before managing the service on
+    every configuration run, including unchanged runs after failed validation.
+    Install referenced certificates, keys and includes before invoking the role.

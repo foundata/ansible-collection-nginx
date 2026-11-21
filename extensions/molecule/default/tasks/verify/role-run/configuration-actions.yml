@@ -1,0 +1,103 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Molecule | Verify | Read master before changing the main configuration"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID"
+      - "--value"
+  changed_when:
+    - false
+  register: __testing_master_before_config
+
+- name: "Molecule | Verify | Change the main configuration and a site together"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+  vars:
+    run_nginx_http_config_block: "map $host $molecule_generation { default first; }"
+    run_nginx_sites_config: "{{ __testing_state['run_nginx_sites_config'] + [__testing_generation_site] }}"
+    __testing_generation_site:
+      name: "molecule-generation"
+      enabled: true
+      content: "server { listen 80; server_name generation.example; return 200 $molecule_generation; }"
+
+- name: "Molecule | Verify | Apply the combined restart and reload requests"
+  ansible.builtin.meta: "flush_handlers"
+
+- name: "Molecule | Verify | Read master after the default main configuration action"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID"
+      - "--value"
+  changed_when:
+    - false
+  register: __testing_master_after_restart
+
+- name: "Molecule | Verify | Assert the default main configuration action restarted NGINX"
+  ansible.builtin.assert:
+    that:
+      - __testing_master_after_restart['stdout'] != __testing_master_before_config['stdout']
+
+- name: "Molecule | Verify | Change the response with graceful main configuration updates"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+  vars:
+    run_nginx_main_config_change_action: "reload"
+    run_nginx_http_config_block: "server { listen 80; server_name generation.example; return 200 second; }"
+
+- name: "Molecule | Verify | Apply the new generation"
+  ansible.builtin.meta: "flush_handlers"
+
+- name: "Molecule | Verify | Wait for new workers to serve the new generation"
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/"
+    headers:
+      Host: "generation.example"
+    return_content: true
+  until:
+    - __testing_generation_response['content'] | ansible.builtin.default('') == 'second'
+  retries: 10
+  delay: 1
+  register: __testing_generation_response
+
+- name: "Molecule | Verify | Read master after the graceful update"
+  ansible.builtin.command:
+    argv:
+      - "systemctl"
+      - "show"
+      - "nginx.service"
+      - "--property=MainPID"
+      - "--value"
+  changed_when:
+    - false
+  register: __testing_master_after_reload
+
+- name: "Molecule | Verify | Assert a restart request did not carry over to another flush"
+  ansible.builtin.assert:
+    that:
+      - __testing_master_after_reload['stdout'] == __testing_master_after_restart['stdout']
+
+- name: "Molecule | Verify | Apply identical invalid configuration twice"
+  ansible.builtin.include_tasks:
+    file: "invalid-config.yml"
+  loop:
+    - 1
+    - 2
+  loop_control:
+    loop_var: "__testing_invalid_attempt"
+
+- name: "Molecule | Verify | Restore the valid main configuration"
+  ansible.builtin.include_role:
+    name: "foundata.nginx.run"
+  vars:
+    run_nginx_main_config_change_action: "reload"
+
+- name: "Molecule | Verify | Activate the restored configuration"
+  ansible.builtin.meta: "flush_handlers"

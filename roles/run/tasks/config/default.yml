@@ -47,9 +47,6 @@
   loop_control:
     loop_var: "__run_nginx_path_item"
     label: "{{ __run_nginx_path_item['path'] }}"
-  notify:
-    - "run_nginx_validate_configuration"
-    - "run_nginx_restart_nginx"
 
 # Log attributes take effect on the open files without a service restart.
 - name: "Config | Default | Ensure existence and permissions of default log files"
@@ -133,8 +130,7 @@
     tpl_ansible_facts: "{{ ansible_facts }}"
     tpl_managed: "{{ ansible_managed }}"
   notify:
-    - "run_nginx_validate_configuration"
-    - "run_nginx_restart_nginx"
+    - "run_nginx_{{ run_nginx_main_config_change_action }}_nginx"
 
 ## Config snippets
 
@@ -174,9 +170,6 @@
       loop_control:
         loop_var: "__run_nginx_snippet_dir_item"
         label: "{{ __run_nginx_snippet_dir_item['path'] }}"
-      notify:
-        - "run_nginx_validate_configuration"
-        - "run_nginx_restart_nginx"
 
     - name: "Config | Default | Deploy Diffie-Hellman (DH) parameters file for TLS baseline snippet"
       ansible.builtin.copy:
@@ -186,8 +179,7 @@
         group: "{{ __run_nginx_dhparam_ffdhe3072_group }}"
         mode: "{{ __run_nginx_dhparam_ffdhe3072_mode }}"
       notify:
-        - "run_nginx_validate_configuration"
-        - "run_nginx_restart_nginx"
+        - "run_nginx_reload_nginx"
 
     - name: "Config | Default | Create or update config snippet files (to provide common, centrally maintained config blocks to include)"
       ansible.builtin.template:
@@ -218,8 +210,7 @@
         - "templates/snippets/location/*.conf.j2"
         - "templates/snippets/server/*.conf.j2"
       notify:
-        - "run_nginx_validate_configuration"
-        - "run_nginx_restart_nginx"
+        - "run_nginx_reload_nginx"
 
 - name: "Config | Default | Delete stale / unmanaged config snippets"
   when:
@@ -270,7 +261,6 @@
         loop_var: "__run_nginx_stale_snippet_item"
         label: "{{ __run_nginx_stale_snippet_item['path'] }}"
       notify:
-        - "run_nginx_validate_configuration"
         - "run_nginx_reload_nginx"
 
 ## Sites
@@ -339,7 +329,6 @@
     loop_var: "__run_nginx_site_item"
     label: "{{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}"
   notify:
-    - "run_nginx_validate_configuration"
     - "run_nginx_reload_nginx"
 
 - name: "Config | Default | Enable/disable site symlinks"
@@ -369,7 +358,6 @@
       {{ __run_nginx_config_service_dropin_sites_enabled_dir_path }}/{{ __run_nginx_loop_file_name }}
       -> {{ __run_nginx_config_service_dropin_sites_available_dir_path }}/{{ __run_nginx_loop_file_name }}
   notify:
-    - "run_nginx_validate_configuration"
     - "run_nginx_reload_nginx"
 
 - name: "Config | Default | Delete stale / unmanaged site configs"
@@ -422,7 +410,6 @@
         loop_var: "__run_nginx_stale_site_item"
         label: "{{ __run_nginx_stale_site_item['path'] }}"
       notify:
-        - "run_nginx_validate_configuration"
         - "run_nginx_reload_nginx"
 
 ### Modules
@@ -474,7 +461,6 @@
           {{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_module_conf_item['name'] }}
           -> {{ __run_nginx_module_conf_item['target'] }}
       notify:
-        - "run_nginx_validate_configuration"
         - "run_nginx_restart_nginx"
 
     - name: "Config | Default | Create load_module config files for modules without package-provided ones"
@@ -501,7 +487,6 @@
         loop_var: "__run_nginx_load_module_item"
         label: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ __run_nginx_load_module_item['name'] }}"
       notify:
-        - "run_nginx_validate_configuration"
         - "run_nginx_restart_nginx"
 
 # Only files whose name is part of the role's module map are ever removed, so
@@ -570,5 +555,7 @@
         loop_var: "__run_nginx_stale_module_conf_item"
         label: "{{ __run_nginx_stale_module_conf_item['path'] }}"
       notify:
-        - "run_nginx_validate_configuration"
         - "run_nginx_restart_nginx"
+
+- name: "Config | Default | Validate the complete configuration before service management"
+  ansible.builtin.import_tasks: "../validate.yml"

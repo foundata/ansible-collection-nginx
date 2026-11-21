@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Validate | Check the installed NGINX configuration"
+  ansible.builtin.command:
+    argv:
+      - "{{ __run_nginx_server_exec_path }}"
+      - "-t"
+  changed_when:
+    - false
+  when:
+    - not ansible_check_mode

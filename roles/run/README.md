@@ -22,6 +22,7 @@ hardening of [NGINX](https://nginx.org/) across major Linux distributions.
   - [`run_nginx_service_state`](#variable-run_nginx_service_state)
   - [`run_nginx_service_restart`](#variable-run_nginx_service_restart)
   - [`run_nginx_service_restart_sec`](#variable-run_nginx_service_restart_sec)
+  - [`run_nginx_main_config_change_action`](#variable-run_nginx_main_config_change_action)
   - [`run_nginx_main_config_block`](#variable-run_nginx_main_config_block)
   - [`run_nginx_events_config_block`](#variable-run_nginx_events_config_block)
   - [`run_nginx_http_config_block`](#variable-run_nginx_http_config_block)
@@ -107,6 +108,12 @@ Main features:
 
 
 ## Example playbooks, using this role<a id="examples"></a>
+
+Install referenced files such as TLS certificates and private keys before
+calling the role. On every configuration run the role checks the installed
+configuration with `nginx -t` before managing service state. It checks again
+before a requested reload or restart. Correct any invalid files on disk before
+restarting the service.
 
 Installation with automatic upgrade:
 
@@ -346,6 +353,7 @@ The following variables can be configured for this role:
 | `run_nginx_service_state`                 | `str`  | No       | `"enabled"`                                         | Defines the status of the service(s). Possible values:<br><br>- `enabled`: Service is running and will start automatically at boot. - `disabled`: Service is stopped and will not start automatically at boot. - `running`: Service is running but will […](#variable-run_nginx_service_state) |
 | `run_nginx_service_restart`               | `str`  | No       | `""`                                                | Optional systemd `Restart` policy. An empty string (the default) removes the role's drop-in and uses the distribution's policy and any administrator overrides. `on-failure` recovers from unsuccessful exits, signals, timeouts and OOM failures. An […](#variable-run_nginx_service_restart) |
 | `run_nginx_service_restart_sec`           | `int`  | No       | `5`                                                 | Non-negative delay in seconds before systemd automatically restarts NGINX. Written as `RestartSec` only when `run_nginx_service_restart` is non-empty. The default delay is five seconds. Systemd's existing start rate limits can still stop repeated […](#variable-run_nginx_service_restart_sec) |
+| `run_nginx_main_config_change_action`     | `str`  | No       | `"restart"`                                         | Service action when the role changes `nginx.conf`, including its events and HTTP blocks. The default `restart` supports configurations that require a new master process. Select `reload` for configurations that NGINX can apply gracefully.<br><br>Site […](#variable-run_nginx_main_config_change_action) |
 | `run_nginx_main_config_block`             | `str`  | No       | `""`                                                | Additional NGINX configuration directives for the main (top-level) context of `nginx.conf`, placed outside of any block such as `events {}` or `http {}`.<br><br>The value is inserted verbatim into the rendered configuration file. Only directives […](#variable-run_nginx_main_config_block) |
 | `run_nginx_events_config_block`           | `str`  | No       | `""`                                                | Additional NGINX configuration directives for the `events {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `events {}` block. Do not include the `events {` and `}` delimiters themselves - only […](#variable-run_nginx_events_config_block) |
 | `run_nginx_http_config_block`             | `str`  | No       | `""`                                                | Additional NGINX configuration directives for the `http {}` block in the main configuration file (`nginx.conf`).<br><br>The value is inserted verbatim inside the `http {}` block. Do not include the `http {` and `}` delimiters themselves - only the […](#variable-run_nginx_http_config_block) |
@@ -467,6 +475,26 @@ start rate limits can still stop repeated restart attempts.
 - **Type**: `int`
 - **Required**: No
 - **Default**: `5`
+
+
+
+### `run_nginx_main_config_change_action`<a id="variable-run_nginx_main_config_change_action"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Service action when the role changes `nginx.conf`, including its
+events and HTTP blocks. The default `restart` supports configurations
+that require a new master process. Select `reload` for configurations
+that NGINX can apply gracefully.
+
+Site and snippet changes request a reload. Module configuration
+changes request a restart, which takes precedence in the same handler
+flush. The role acts on running or enabled services.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"restart"`
+- **Choices**: `restart`, `reload`
 
 
 

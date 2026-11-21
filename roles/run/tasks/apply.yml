@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Apply | Activate the validated configuration"
+  block:
+    - name: "Apply | Validate before reloading or restarting NGINX"
+      ansible.builtin.import_tasks: "validate.yml"
+      when:
+        - run_nginx_service_state in ['enabled', 'running']
+
+    - name: "Apply | Reload or restart NGINX"
+      ansible.builtin.systemd_service:
+        name: "{{ __run_nginx_nginx_servicename }}"
+        state: "{{ 'restarted' if (__run_nginx_restart_pending | ansible.builtin.default(false)) else 'reloaded' }}"
+      when:
+        - run_nginx_service_state in ['enabled', 'running']
+
+  always:
+    - name: "Apply | Clear the restart request"
+      ansible.builtin.set_fact:
+        __run_nginx_restart_pending: false

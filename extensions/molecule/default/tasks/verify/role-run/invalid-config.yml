@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Molecule | Verify | Reject an invalid configuration on attempt {{ __testing_invalid_attempt }}"
+  block:
+    - name: "Molecule | Verify | Apply a configuration referencing a missing file"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+      vars:
+        run_nginx_http_config_block: "include /etc/nginx/molecule-missing.conf;"
+
+    - name: "Molecule | Verify | Fail if the invalid configuration passed"
+      ansible.builtin.fail:
+        msg: "The role accepted a missing include on attempt {{ __testing_invalid_attempt }}."
+
+  rescue:
+    - name: "Molecule | Verify | Verify that nginx -t rejected the missing include"
+      ansible.builtin.assert:
+        that:
+          - ansible_failed_result['rc'] | ansible.builtin.default(0) != 0
+          - "'molecule-missing.conf' in (ansible_failed_result['stderr'] | ansible.builtin.default(''))"
+
+- name: "Molecule | Verify | Confirm the last valid configuration still serves traffic"
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/"
+    headers:
+      Host: "generation.example"
+    return_content: true
+  failed_when:
+    - __testing_last_valid_response['content'] | ansible.builtin.default('') != 'second'
+  register: __testing_last_valid_response
