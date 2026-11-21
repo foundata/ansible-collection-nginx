@@ -49,6 +49,11 @@
     that:
       - "'Molecule rotation sentinel' in (__testing_rotated_access_log['content'] | ansible.builtin.b64decode)"
 
+- name: "Molecule | Verify | Read the error log before changing attributes"
+  ansible.builtin.slurp:
+    src: "/var/log/nginx/error.log"
+  register: __testing_error_log_before_attributes
+
 - name: "Molecule | Verify | Apply independent custom attributes to both default logs"
   ansible.builtin.include_role:
     name: "foundata.nginx.run"
@@ -75,11 +80,26 @@
       - item['stat']['gr_name'] == 'root'
       - item['stat']['mode'] == ('0600' if item['item'] == 'access' else '0644')
       - item['stat']['inode'] == __testing_rotated_logs['results'][__testing_log_index]['stat']['inode']
-      - item['stat']['mtime'] == __testing_rotated_logs['results'][__testing_log_index]['stat']['mtime']
+      # On Fedora, nginx -t appends its warning about the test certificate to error.log.
+      - >-
+        item['stat']['mtime'] == __testing_rotated_logs['results'][__testing_log_index]['stat']['mtime'] or
+        (item['item'] == 'error' and item['stat']['size'] > __testing_rotated_logs['results'][__testing_log_index]['stat']['size'])
   loop: "{{ __testing_custom_logs['results'] }}"
   loop_control:
     label: "{{ item['stat']['path'] }}"
     index_var: "__testing_log_index"
+
+- name: "Molecule | Verify | Read the error log after changing attributes"
+  ansible.builtin.slurp:
+    src: "/var/log/nginx/error.log"
+  register: __testing_error_log_after_attributes
+
+- name: "Molecule | Verify | Assert the original error log contents are intact"
+  ansible.builtin.assert:
+    that:
+      - >-
+        (__testing_error_log_after_attributes['content'] | ansible.builtin.b64decode).startswith(
+        __testing_error_log_before_attributes['content'] | ansible.builtin.b64decode)
 
 - name: "Molecule | Verify | Restore the platform's default log attributes"
   ansible.builtin.include_role:
