@@ -197,6 +197,36 @@ settings:
           - "http_headers_more_filter"
 ```
 
+To log request and upstream timings as JSON for one site, define a named format
+in the HTTP block and select it in that site's `server` block:
+
+```yaml
+run_nginx_http_config_block: |
+  log_format ops escape=json
+    '{"time":"$time_iso8601","host":"$host","method":"$request_method",'
+    '"status":"$status","request_time":"$request_time","upstream_status":"$upstream_status",'
+    '"upstream_response_time":"$upstream_response_time","request_id":"$request_id"}';
+run_nginx_sites_config:
+  - name: "shop"
+    enabled: true
+    content: |
+      server {
+          listen 80;
+          server_name shop.example.com;
+          access_log /var/log/nginx/shop-ops.log ops;
+          location / { return 200 "shop"; }
+      }
+```
+
+Provision the site's log with appropriate permissions and rotation before
+running the role. The role's log-file options manage only the default access
+and error logs. Sites that inherit the HTTP baseline keep its `main` format.
+The example omits request paths, query strings and Referer values, which may
+contain tokens. Keep upstream status and timing as strings: requests served
+locally have no upstream values, and retried requests can record multiple
+attempts. To correlate requests with application logs, set
+`proxy_set_header X-Request-ID $request_id;` in the site's proxy location.
+
 For certificates without an OCSP responder URL, disable stapling through the
 snippet settings and keep the TLS baseline included in the site's `server`
 block:
