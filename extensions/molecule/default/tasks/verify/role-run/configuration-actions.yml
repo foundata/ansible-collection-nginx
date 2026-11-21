@@ -14,6 +14,20 @@
     - false
   register: __testing_master_before_config
 
+- name: "Molecule | Verify | Read completed systemd reloads before the mixed change"
+  ansible.builtin.command: &__testing_read_completed_reloads
+    argv:
+      - "journalctl"
+      - "--boot"
+      - "--unit=nginx.service"
+      - "--quiet"
+      - "--no-pager"
+      - "--output=cat"
+      - "MESSAGE_ID=7b05ebc668384222baa8881179cfda54" # SD_MESSAGE_UNIT_RELOADED
+  changed_when:
+    - false
+  register: __testing_reloads_before
+
 - name: "Molecule | Verify | Change the main configuration and a site together"
   ansible.builtin.include_role:
     name: "foundata.nginx.run"
@@ -40,10 +54,17 @@
     - false
   register: __testing_master_after_restart
 
+- name: "Molecule | Verify | Read completed systemd reloads after the mixed change"
+  ansible.builtin.command: *__testing_read_completed_reloads
+  changed_when:
+    - false
+  register: __testing_reloads_after_restart
+
 - name: "Molecule | Verify | Assert the default main configuration action restarted NGINX"
   ansible.builtin.assert:
     that:
       - __testing_master_after_restart['stdout'] != __testing_master_before_config['stdout']
+      - __testing_reloads_after_restart['stdout_lines'] == __testing_reloads_before['stdout_lines']
 
 - name: "Molecule | Verify | Change the response with graceful main configuration updates"
   ansible.builtin.include_role:
@@ -79,10 +100,19 @@
     - false
   register: __testing_master_after_reload
 
+- name: "Molecule | Verify | Read completed systemd reloads after the graceful change"
+  ansible.builtin.command: *__testing_read_completed_reloads
+  changed_when:
+    - false
+  register: __testing_reloads_after_reload
+
 - name: "Molecule | Verify | Assert a restart request did not carry over to another flush"
   ansible.builtin.assert:
     that:
       - __testing_master_after_reload['stdout'] == __testing_master_after_restart['stdout']
+      - >-
+        (__testing_reloads_after_reload['stdout_lines'] | ansible.builtin.length) ==
+        (__testing_reloads_before['stdout_lines'] | ansible.builtin.length) + 1
 
 - name: "Molecule | Verify | Apply identical invalid configuration twice"
   ansible.builtin.include_tasks:

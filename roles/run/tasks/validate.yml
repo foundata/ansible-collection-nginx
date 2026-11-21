@@ -7,7 +7,7 @@
     argv:
       - "{{ __run_nginx_server_exec_path }}"
       - "-t"
-  changed_when:
-    - false
   when:
     - not ansible_check_mode
+  changed_when:
+    - false
