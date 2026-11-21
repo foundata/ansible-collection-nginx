@@ -619,6 +619,53 @@
   when:
     - (ansible_facts['os_family'] | ansible.builtin.lower) == 'debian'
   block:
+    - name: "Molecule | Verify | Apply pending changes before installing a module"
+      ansible.builtin.meta: "flush_handlers"
+
+    - name: "Molecule | Verify | Read the master before installing headers-more"
+      ansible.builtin.command:
+        argv:
+          - "systemctl"
+          - "show"
+          - "nginx.service"
+          - "--property=MainPID"
+          - "--value"
+      changed_when:
+        - false
+      register: __testing_master_before_module_install
+
+    - name: "Molecule | Verify | Install the module with its package-provided enable symlink"
+      ansible.builtin.include_role:
+        name: "foundata.nginx.run"
+      vars:
+        run_nginx_modules_enabled: "{{ __testing_state['run_nginx_modules_enabled'] + ['http_headers_more_filter'] }}"
+
+    - name: "Molecule | Verify | Apply the installed module"
+      ansible.builtin.meta: "flush_handlers"
+
+    - name: "Molecule | Verify | Read the master after installing headers-more"
+      ansible.builtin.command:
+        argv:
+          - "systemctl"
+          - "show"
+          - "nginx.service"
+          - "--property=MainPID"
+          - "--value"
+      changed_when:
+        - false
+      register: __testing_master_after_module_install
+
+    - name: "Molecule | Verify | Check the new master loaded the installed module"
+      ansible.builtin.slurp:
+        src: "/proc/{{ __testing_master_after_module_install['stdout'] }}/maps"
+      register: __testing_master_module_maps
+
+    - name: "Molecule | Verify | Assert that installing the module activated it"
+      ansible.builtin.assert:
+        that:
+          - __testing_master_before_module_install['stdout'] != __testing_master_after_module_install['stdout']
+          - "'ngx_http_headers_more_filter_module.so' in (__testing_master_module_maps['content'] | ansible.builtin.b64decode)"
+
     - name: "Molecule | Verify | Stat role-managed module configs before emptying the list"
       ansible.builtin.stat:
         path: "{{ __run_nginx_config_service_dropin_modules_enabled_dir_path }}/{{ item }}"

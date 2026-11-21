@@ -6,3 +6,7 @@ minor_changes:
   - >-
     run - reload for snippet changes and apply one validated service action
     per handler flush, giving restart requests precedence over reloads.
+bugfixes:
+  - >-
+    run - restart NGINX after installing or upgrading an enabled module package,
+    including packages that create their own enable symlinks.

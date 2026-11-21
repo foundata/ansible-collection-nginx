@@ -65,6 +65,10 @@
     }}
   loop_control:
     loop_var: "__run_nginx_module_item"
+  # On Debian, package installation can enable the module before the role
+  # reaches the task that manages its load_module symlink.
+  notify:
+    - "run_nginx_restart_nginx"
 
 - name: "Setup | Install | Default | Remove unwanted files and directories (e.g., to prevent conflicts or resolve incompatibilities)"
   ansible.builtin.file:
