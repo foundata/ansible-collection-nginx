@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+---
+- name: "Molecule | Verify | Fetch HTTPS headers for {{ __testing_header_case['path'] }}"
+  ansible.builtin.command:
+    argv:
+      - "curl"
+      - "--head"
+      - "--silent"
+      - "--insecure"
+      - "--resolve"
+      - "example.com:443:127.0.0.1"
+      - "https://example.com{{ __testing_header_case['path'] }}"
+  changed_when:
+    - false
+  register: __testing_https_headers
+
+- name: "Molecule | Verify | Check status and cache policy"
+  ansible.builtin.assert:
+    that:
+      - __testing_https_headers['stdout_lines'][0].split()[1] | ansible.builtin.int == __testing_header_case['status']
+      - >-
+        (__testing_https_headers['stdout'] is ansible.builtin.search('(?im)^Cache-Control:.*public.*immutable'))
+        == (__testing_header_case['path'] == '/test.css')
+
+- name: "Molecule | Verify | Check each selected security header appears exactly once"
+  ansible.builtin.assert:
+    that:
+      - >-
+        (__testing_https_headers['stdout_lines'] | ansible.builtin.map('lower')
+        | ansible.builtin.select('match', '^' ~ item.split(':')[0] ~ ':') | ansible.builtin.list) == [item]
+  loop:
+    - "x-content-type-options: nosniff"
+    - "x-frame-options: sameorigin"
+    - "referrer-policy: strict-origin-when-cross-origin"
+    - "strict-transport-security: max-age=31536000; includesubdomains"

@@ -17,7 +17,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #
 # - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
 # - https://owasp.org/www-project-secure-headers/#x-content-type-options
-add_header X-Content-Type-Options nosniff;
+add_header X-Content-Type-Options nosniff always;
 
 
 # Control embedding into (i)frames (which might bypass HTTPS with
@@ -33,7 +33,7 @@ add_header X-Content-Type-Options nosniff;
 # - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
 # - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors
 # - https://owasp.org/www-project-secure-headers/#x-frame-options
-add_header X-Frame-Options sameorigin;
+add_header X-Frame-Options sameorigin always;
 
 
 # Controls how much referrer information is sent when navigating from one
@@ -50,4 +50,4 @@ add_header X-Frame-Options sameorigin;
 # - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
 # - https://owasp.org/www-project-secure-headers/#referrer-policy
 # - https://w3c.github.io/webappsec-referrer-policy/
-add_header Referrer-Policy "strict-origin-when-cross-origin";
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;

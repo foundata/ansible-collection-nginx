@@ -35,4 +35,4 @@ SPDX-License-Identifier: GPL-3.0-or-later
 {% set hsts_value = 'max-age=' ~ max_age %}
 {% if include_subdomains %}{% set hsts_value = hsts_value ~ '; includeSubDomains' %}{% endif %}
 {% if preload %}{% set hsts_value = hsts_value ~ '; preload' %}{% endif %}
-add_header Strict-Transport-Security "{{ hsts_value }}";
+add_header Strict-Transport-Security "{{ hsts_value }}" always;

@@ -580,75 +580,23 @@
   ansible.builtin.include_tasks:
     file: "role-run/service-restart.yml"
 
-## Security response headers
-
-- name: "Molecule | Verify | Fetch HTTPS response headers from example.com"
-  ansible.builtin.command:
-    argv:
-      - "curl"
-      - "--head"
-      - "--silent"
-      - "--insecure"
-      - "--resolve"
-      - "example.com:443:127.0.0.1"
-      - "https://example.com/"
-  changed_when:
-    - false
-  register: __testing_https_headers
-
-- name: "Molecule | Verify | Assert security response headers are present"
-  ansible.builtin.assert:
-    that:
-      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)X-Content-Type-Options:\s*nosniff')
-      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)X-Frame-Options:\s*sameorigin')
-      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)Referrer-Policy:\s*strict-origin-when-cross-origin')
-    fail_msg: >-
-      One or more expected security headers are missing from the HTTPS response.
-      Response headers: {{ __testing_https_headers['stdout'] }}
-    success_msg: >-
-      All expected security headers (X-Content-Type-Options, X-Frame-Options,
-      Referrer-Policy) are present in the HTTPS response.
-
-
-## HSTS response header
-
-- name: "Molecule | Verify | Assert HSTS header is present in HTTPS response"
-  ansible.builtin.assert:
-    that:
-      - __testing_https_headers['stdout'] is ansible.builtin.search('(?i)Strict-Transport-Security:.*max-age=31536000.*includeSubDomains')
-    fail_msg: >-
-      The HSTS header is missing or has unexpected values in the HTTPS response.
-      Response headers: {{ __testing_https_headers['stdout'] }}
-    success_msg: >-
-      The HSTS header is present with expected values (max-age=31536000; includeSubDomains).
-
-
-## Cache-Control for static assets
-
-- name: "Molecule | Verify | Fetch HTTPS response headers for static asset"
-  ansible.builtin.command:
-    argv:
-      - "curl"
-      - "--head"
-      - "--silent"
-      - "--insecure"
-      - "--resolve"
-      - "example.com:443:127.0.0.1"
-      - "https://example.com/test.css"
-  changed_when:
-    - false
-  register: __testing_static_headers
-
-- name: "Molecule | Verify | Assert Cache-Control header is present for static assets"
-  ansible.builtin.assert:
-    that:
-      - __testing_static_headers['stdout'] is ansible.builtin.search('(?i)Cache-Control:.*public.*immutable')
-    fail_msg: >-
-      The Cache-Control header for static assets is missing or has unexpected values.
-      Response headers: {{ __testing_static_headers['stdout'] }}
-    success_msg: >-
-      The Cache-Control header for static assets contains 'public' and 'immutable'.
-
+- name: "Molecule | Verify | Check HTTPS headers on ordinary and static responses"
+  ansible.builtin.include_tasks:
+    file: "role-run/response-headers.yml"
+  loop:
+    - path: "/"
+      status: 200
+    - path: "/not-found"
+      status: 404
+    - path: "/molecule-error"
+      status: 500
+    - path: "/test.css"
+      status: 200
+    - path: "/not-found.css"
+      status: 404
+  loop_control:
+    loop_var: "__testing_header_case"
+    label: "{{ __testing_header_case['path'] }}"
 
 ## Regression: stale module cleanup runs when the enabled list is emptied
 #

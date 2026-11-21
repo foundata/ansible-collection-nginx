@@ -187,6 +187,9 @@ settings:
                   }
 
                   location ~* \.(css|js|svg|png|jpg|gif|ico|woff2?)$ {
+                      # A local add_header replaces the headers inherited from the server.
+                      include snippets/server/headers-security.conf;
+                      include snippets/server/headers-hsts.conf;
                       include snippets/location/cache-static.conf;
                   }
               }

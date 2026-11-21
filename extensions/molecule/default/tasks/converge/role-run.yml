@@ -31,6 +31,8 @@
                 ssl_certificate /etc/pki/tls/private/example.com.pem;
                 ssl_certificate_key /etc/pki/tls/private/example.com.key;
 
+                location = /molecule-error { return 500; }
+
                 location / {
                     try_files $uri $uri/ =404;
                     root /var/www/example.com;
@@ -39,6 +41,9 @@
 
                 location ~* \.(css|js|svg|png|jpg|gif|ico|woff2?)$ {
                     root /var/www/example.com;
+                    # A local add_header replaces the headers inherited from the server.
+                    include snippets/server/headers-security.conf;
+                    include snippets/server/headers-hsts.conf;
                     include snippets/location/cache-static.conf;
                 }
             }

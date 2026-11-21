@@ -1,0 +1,5 @@
+---
+bugfixes:
+  - >-
+    run - send the selected security and HSTS headers on error responses.
+    Show how to retain them in locations that add their own cache headers.
