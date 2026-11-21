@@ -558,4 +558,8 @@
         - "run_nginx_restart_nginx"
 
 - name: "Config | Default | Validate the complete configuration before service management"
-  ansible.builtin.import_tasks: "../validate.yml"
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/validate.yml"
+    apply:
+      tags:
+        - "run_nginx_config"
