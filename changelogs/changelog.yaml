@@ -1,6 +1,42 @@
 ---
 ancestor: null
 releases:
+  1.5.0:
+    changes:
+      bugfixes:
+        - run - restart NGINX after installing or upgrading an enabled module package,
+          including packages that create their own enable symlinks.
+        - run - send the selected security and HSTS headers on error responses. Show
+          how to retain them in locations that add their own cache headers.
+        - run - validate the installed configuration before managing the service on
+          every configuration run, including unchanged runs after failed validation.
+          Install referenced certificates, keys and includes before invoking the role.
+        - run role - manage default access and error log attributes without restarting
+          NGINX. Use mode 0640 and the distribution's log ownership so packaged log
+          rotation no longer causes permission drift on Debian, Ubuntu or RHEL-family
+          systems. SUSE's inherited logrotate creation preserves these attributes.
+      minor_changes:
+        - 'Remove the previous handler topics ahead of the announced version 2.0.0:
+          "run_nginx: validate configuration", "run_nginx: restart nginx.service",
+          "run_nginx: reload nginx.service" and "run_nginx: systemd daemon-reload".
+          Notify the role-prefixed topics instead. We decided that this is a non-breaking
+          change: the topics are role internals, and their use by third parties is
+          very unlikely.'
+        - run - reload for snippet changes and apply one validated service action
+          per handler flush, giving restart requests precedence over reloads.
+        - run - support ``run_nginx_main_config_change_action`` to reload NGINX for
+          compatible main configuration changes. The default remains restart.
+        - run role - expose owner, group and mode for both default log files through
+          run_nginx_access_log_default_file_* and run_nginx_error_log_default_file_*
+          options. Custom values must also be reflected in the caller's logrotate
+          policy where it specifies creation attributes.
+    fragments:
+      - configuration-actions.yml
+      - default-log-attributes.yml
+      - drop-handler-topic-aliases.yml
+      - security-headers-on-errors.yml
+      - validate-config-on-converge.yml
+    release_date: '2026-11-22'
   1.4.0:
     changes:
       bugfixes:
